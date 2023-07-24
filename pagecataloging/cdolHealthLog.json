@@ -1,0 +1,24 @@
+{
+	"pages": [
+		{
+			"htmlID": "cdol-health-log-header",
+			"title": "Health Logs",
+			"version": "0",
+			"contextType": "student",
+			"districtLevelContext": 0,
+			"parentHTMLID": "navStudentHealthSection",
+			"sortOrder": 250,
+			"children": [
+				{
+					"htmlID": "cdol-health-log",
+					"title": "Health Log Entry",
+					"version": "0",
+					"contextType": "student",
+					"districtLevelContext": 0,
+					"sortOrder": 0,
+					"pageURL": "/admin/students/cdol_health_log_list.html?frn=~(studentfrn)"
+				}
+			]
+		}
+	]
+}

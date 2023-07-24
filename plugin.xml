@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://plugin.powerschool.pearson.com"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://plugin.powerschool.pearson.com plugin.xsd" description="Custom Health Logs" name="CDOL Health Log" version="0.0">
+	<publisher name="Adrian Carlson">
+		<contact email="adrian-carlson@cdolinc.net"/>
+	</publisher>
+	<access_request>
+		<cdn_request>
+			<cdn name="https://cdn.jsdelivr.net" />
+			<cdn name="https://*.jsdelivr.net" />
+		</cdn_request>
+	</access_request>
+</plugin>

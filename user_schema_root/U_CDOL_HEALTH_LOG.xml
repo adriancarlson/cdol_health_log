@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<psExtension xmlns="http://www.powerschool.com"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.powerschool.com psextension.xsd">
+    <extensionname>U_CDOL_HEALTH_LOG</extensionname>
+    <extendedTable coreTable="students" dbTableName="U_CDOL_HEALTH_LOG" childName="U_CDOL_HEALTH_LOG" comment="Custom Health Log Table">
+        <field name="log_type" type="String" length="250" />
+        <field name="log_date" type="Date" />
+        <field name="log_time" type="Integer" />
+        <field name="sport" type="String" length="250" />
+        <field name="complaint" type="String" length="250" />
+        <field name="treatment" type="String" length="250" />
+        <field name="destination" type="String" length="250" />
+        <field name="time_left" type="Integer" />
+        <field name="users_dcid" type="Integer" />
+        <field name="injury_site" type="String" length="250" />
+        <field name="injury_date" type="Date" />
+        <field name="total_systems_score" type="Integer" />
+        <field name="systems_score" type="Integer" />
+        <field name="systems_score" type="Integer" />
+        <field name="notes" type="String" length="4000" />
+        <field name="yearid" type="Integer" />
+    </extendedTable>
+</psExtension>
