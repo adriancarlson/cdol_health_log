@@ -16,8 +16,8 @@
         <field name="injury_date" type="Date" />
         <field name="total_systems_score" type="Integer" />
         <field name="systems_score" type="Integer" />
-        <field name="systems_score" type="Integer" />
         <field name="notes" type="String" length="4000" />
+        <field name="schoolid" type="Integer" />
         <field name="yearid" type="Integer" />
     </extendedTable>
 </psExtension>
