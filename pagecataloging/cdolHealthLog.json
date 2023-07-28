@@ -16,7 +16,34 @@
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 0,
-					"pageURL": "/admin/students/cdol_health_log_daily.html?frn=~(studentfrn)"
+					"pageURL": "/admin/students/health_log/health_log_daily.html?frn=~(studentfrn)"
+				},
+				{
+					"htmlID": "cdol-athletic-injury",
+					"title": "Athletic Injury",
+					"version": "0",
+					"contextType": "student",
+					"districtLevelContext": 0,
+					"sortOrder": 100,
+					"pageURL": "/admin/students/health_log/health_log_athletic.html?frn=~(studentfrn)"
+				},
+				{
+					"htmlID": "cdol-concussion-eval",
+					"title": "Concussion Eval",
+					"version": "0",
+					"contextType": "student",
+					"districtLevelContext": 0,
+					"sortOrder": 200,
+					"pageURL": "/admin/students/health_log/health_log_concussion.html?frn=~(studentfrn)"
+				},
+				{
+					"htmlID": "cdol-injury-eval",
+					"title": "Injury Evaluation",
+					"version": "0",
+					"contextType": "student",
+					"districtLevelContext": 0,
+					"sortOrder": 300,
+					"pageURL": "/admin/students/health_log/health_log_eval.html?frn=~(studentfrn)"
 				}
 			]
 		}

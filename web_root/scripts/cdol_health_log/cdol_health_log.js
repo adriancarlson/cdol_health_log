@@ -14,43 +14,42 @@ define(['angular', 'components/shared/index', '/scripts/cdol/services/pqService.
 		$scope.loadData = async logData => {
 			loadingDialog()
 			//only make API call to get the data if
-			if (!$scope.healthLogList.hasOwnProperty(logData)) {
-				//setting up arguments for PQ call
-				const pqData = { curSchoolID: $scope.curSchoolId, yearID: $scope.curYearId, curStudentID: $scope.curStudentID, logType: $scope.curContext }
+			// 			if (!$scope.healthLogList) {
+			//setting up arguments for PQ call
+			const pqData = { curSchoolID: $scope.curSchoolId, yearID: $scope.curYearId, curStudentID: $scope.curStudentID, logType: logData }
 
-				// getting staff counts
-				const countRes = await pqService.getPQResults('net.cdolinc.health.healthLog.counts', pqData)
-				$scope.healthLogCounts = countRes[0]
+			// // getting staff counts
+			// const countRes = await pqService.getPQResults('net.cdolinc.health.healthLog.counts', pqData)
+			// $scope.healthLogCounts = countRes[0]
 
-				// adding new new change type key/value pair for PQ call to staff list
-				pqData.logData = logData
+			// adding new new change type key/value pair for PQ call to staff list
+			// pqData.logData = logData
 
-				//setting up function to add key and value staff list to staffList object
-				const updateHealthLogList = (key, value) => ($scope.healthLogList[key] = value)
+			//setting up function to add key and value staff list to staffList object
+			// const updateHealthLogList = (key, value) => ($scope.healthLogList[key] = value)
 
-				// getting staff List for current change type
-				const res = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
+			// getting staff List for current change type
+			const res = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
 
-				//updating staffList obj
-				updateHealthLogList(logType, res)
+			$scope.healthLogList = res
+			//updating staffList obj
+			// updateHealthLogList(logData, res)
 
-				$scope.$digest()
-			}
+			$scope.$digest()
+			// 			}
 			closeLoading()
+			console.log($scope.healthLogList)
 		}
 
 		// fire the function to load the data
-		$scope.loadData($scope.selectedTab)
+		$scope.loadData($scope.curContext)
 
 		// grab selected tab reload data and have the selected tab display data
 		$scope.reloadData = () => {
 			$scope.healthLogCounts = []
 			$scope.healthLogList = {}
-			$scope.loadData($scope.selectedTab)
+			$scope.loadData($scope.curContext)
 		}
 	})
-	cdolStaffListApp.directive('dailyList', () => ({ templateUrl: '/admin/cdol/staff_change/directives/tabs/daily_list.html' }))
-	cdolStaffListApp.directive('athleticList', () => ({ templateUrl: '/admin/cdol/staff_change/directives/tabs/athletic_list.html' }))
-	cdolStaffListApp.directive('concussionList', () => ({ templateUrl: '/admin/cdol/staff_change/directives/tabs/concussion_list.html' }))
-	cdolStaffListApp.directive('injuryList', () => ({ templateUrl: '/admin/cdol/staff_change/directives/tabs/evaluation_list.html' }))
+	cdolHealthLogApp.directive('logList', () => ({ templateUrl: '/admin/students/health_log/directives/log_list.html' }))
 })

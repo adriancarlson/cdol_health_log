@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Injury Evaluation</title>
+        ~[wc:commonscripts]
+        <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+        <link href="/images/css/print.css" rel="stylesheet" media="print">
+    </head>
+
+    <body>
+        ~[wc:admin_header_frame_css]
+        <a href="/admin/home.html" target="_top">Start Page</a> &gt; <a
+            href="/admin/students/home.html?selectstudent=nosearch" target="_top">Student Selection</a> &gt; Injury
+        Evaluation
+        ~[wc:admin_navigation_frame_css]
+        ~[wc:title_student_begin_css]Injury Evaluation~[wc:title_student_end_css]
+        <div id="cdol-health-log-div" data-require-path="cdol_health_log/cdol_health_log"
+            data-module-name="cdolHealthLogMod" data-ng-controller="cdolHealthLogCtrl" data-ng-cur-student-id="~(rn)"
+            data-ng-cur-school-id="~(curschoolid)" data-ng-cur-year-id="~(curyearid)" data-ng-cur-date="~[date]"
+            data-ng-cur-time="~[time]" data-ng-cur-context="Eval" data-ng-cloak>
+            <log-list></log-list>
+        </div>
+        ~[wc:admin_footer_frame_css]
+    </body>
+
+</html>

@@ -1,0 +1,27 @@
+<div class="container-fluid box-round">
+    <div id="daily-log-grid" data-pss-grid-widget data-data="healthLogList" data-filtered-data="filteredhealthLogList"
+        data-client-side-pagination="false" data-filter-constraint="no-filters">
+        <table class="grid">
+            <thead>
+                <tr>
+                    <th data-pss-sort-fields="log_date, log_time" data-primary-sort="descending">Date/Time</th>
+                    <th data-pss-sort-fields="complaint|text">Complaint</th>
+                    <th data-pss-sort-fields="treatment|text">Treatment</th>
+                    <th data-pss-sort-fields="destination|number">Destination</th>
+                    <th data-pss-sort-fields="time_left|number">Time Left</th>
+                    <th data-pss-sort-fields="notes|number">Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-ng-repeat="healthLog in healthLogList" data-id="{{healthLog.id}}">
+                    <td>{{healthLog.log_date | date : 'MM/dd/yyyy'}} {{healthLog.log_time}}</td>
+                    <td>{{healthLog.complaint}}</td>
+                    <td>{{healthLog.treatment}}</td>
+                    <td>{{healthLog.destination}}</td>
+                    <td>{{healthLog.time_left}}</td>
+                    <td>{{healthLog.notes}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
