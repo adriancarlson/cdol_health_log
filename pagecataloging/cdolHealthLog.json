@@ -11,12 +11,12 @@
 			"children": [
 				{
 					"htmlID": "cdol-health-log",
-					"title": "Health Log Entry",
+					"title": "Daily Health Log",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 0,
-					"pageURL": "/admin/students/cdol_health_log_list.html?frn=~(studentfrn)"
+					"pageURL": "/admin/students/cdol_health_log_daily.html?frn=~(studentfrn)"
 				}
 			]
 		}

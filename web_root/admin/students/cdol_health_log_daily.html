@@ -5,10 +5,8 @@
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Health Log</title>
+        <title>Daily Health Log</title>
         ~[wc:commonscripts]
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
-            integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
         <link href="/images/css/screen.css" rel="stylesheet" media="screen">
         <link href="/images/css/print.css" rel="stylesheet" media="print">
     </head>
@@ -16,58 +14,16 @@
     <body>
         ~[wc:admin_header_frame_css]
         <a href="/admin/home.html" target="_top">Start Page</a> &gt; <a
-            href="/admin/students/home.html?selectstudent=nosearch" target="_top">Student Selection</a> &gt; Health Log
+            href="/admin/students/home.html?selectstudent=nosearch" target="_top">Student Selection</a> &gt; Daily
+        Health Log
         ~[wc:admin_navigation_frame_css]
+        ~[wc:title_student_begin_css]Daily Health Log~[wc:title_student_end_css]
+        <div id="cdol-health-log-div" data-require-path="cdol_health_log/cdol_health_log"
+            data-module-name="cdolHealthLogMod" data-ng-controller="cdolHealthLogCtrl" data-ng-cur-student-id="~(rn)"
+            data-ng-cur-school-id="~(curschoolid)" data-ng-cur-year-id="~(curyearid)" data-ng-cur-date="~[date]"
+            data-ng-cur-time="~[time]" data-ng-cur-context="Daily" data-ng-cloak>
+            <div class="container-fluid box-round">
 
-        ~[wc:title_student_begin_css]Health Log~[wc:title_student_end_css]
-
-        <div id="cdol-staff-list-app-div" data-require-path="cdol_health_log/cdol_health_log"
-            data-module-name="cdolStaffListMod" data-ng-controller="cdolStaffListCtrl"
-            data-ng-cur-school-id="~(curschoolid)" data-ng-cur-student-id="~(rn)" data-ng-cur-year-id="~(curyearid)"
-            data-ng-cur-date="~[date]" data-ng-cur-time="~[time]" data-ng-cloak>
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-auto me-auto"><label for="year-selector">Year: </label>
-                        <select id="year-selector" name="" data-ng-model="calendarYear" data-ng-change="reloadData()">
-                            ~[tlist_sql;
-                            SELECT
-                            DISTINCT u_cdol_health_log.yearid, terms.name
-                            FROM
-                            u_cdol_health_log
-                            INNER JOIN terms
-                            ON u_cdol_health_log.yearid = terms.yearid
-                            AND terms.isyearrec =1
-                            ORDER BY u_cdol_health_log.yearid DESC]
-                            <option value="~(yearid)" data-ng-selected="~(yearid) === curYearId">
-                                ~(year_name)
-                            </option>
-                            [/tlist_sql]
-                        </select>
-                    </div>
-                    <div class="col-auto me-2"><a class="button" href="cdol_health_log.html">Submit
-                            a
-                            Staff Change</a><button data-ng-click="reloadData()">Reload List</button></div>
-                </div>
-            </div>
-            <div class="tabs">
-                <ul class="shown_tabs">
-                    <li data-ng-click="loadData('health')" data-context="health"><a href="#tabOneContent">Daily Log
-                            <span class="badge text-bg-success ms-1">{{
-                                staffChangeCounts.total_new_remaining }}</span></a></li>
-                    <li data-ng-click="loadData('athletic')" data-context="athletic"><a href="#tabTwoContent">Athletic
-                            <span class="badge text-bg-primary ms-1">{{
-                                staffChangeCounts.total_transfer_remaining }}</span></a></li>
-                    <li data-ng-click="loadData('concussion')" data-context="concussion"><a
-                            href="#tabThreeContent">Concussion <span class="badge text-bg-info ms-1">{{
-                                staffChangeCounts.total_job_change_remaining }}</span></a></li>
-                    <li data-ng-click="loadData('eval')" data-context="eval"><a href="#tabFourContent">Injury Eval <span
-                                class="badge text-bg-warning ms-1">{{
-                                staffChangeCounts.total_name_change_remaining }}</span></a></li>
-                </ul>
-                <health-list id="tabOneContent"></health-list>
-                <athletic-list id="tabTwoContent"></athletic-list>
-                <concussion-list id="tabThreeContent"></concussion-list>
-                <eval-list id="tabFourContent"></eval-list>
             </div>
         </div>
         ~[wc:admin_footer_frame_css]

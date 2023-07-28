@@ -1,7 +1,7 @@
 define(['angular', 'components/shared/index', '/scripts/cdol/services/pqService.js'], function (angular) {
-	var cdolHealthLogListApp = angular.module('cdolHealthLogListMod', ['powerSchoolModule', 'pqModule'])
+	var cdolHealthLogApp = angular.module('cdolHealthLogMod', ['powerSchoolModule', 'pqModule'])
 
-	cdolHealthLogListApp.controller('cdolHealthLogListCtrl', function ($scope, $attrs, pqService) {
+	cdolHealthLogApp.controller('cdolHealthLogCtrl', function ($scope, $attrs, pqService) {
 		$scope.staffChangeCounts = []
 		$scope.healthLogList = {}
 		$scope.curSchoolId = $attrs.ngCurSchoolId
@@ -9,21 +9,21 @@ define(['angular', 'components/shared/index', '/scripts/cdol/services/pqService.
 		$scope.curStudentID = $attrs.ngCurStudentId
 		$scope.curDate = $attrs.ngCurDate
 		$scope.curTime = $attrs.ngCurTime
-		$scope.selectedTab = document.querySelector('[aria-selected="true"]').getAttribute('data-context')
+		$scope.curContext = $attrs.ngCurContext
 
-		$scope.loadData = async logType => {
+		$scope.loadData = async logData => {
 			loadingDialog()
 			//only make API call to get the data if
-			if (!$scope.healthLogList.hasOwnProperty(logType)) {
+			if (!$scope.healthLogList.hasOwnProperty(logData)) {
 				//setting up arguments for PQ call
-				const pqData = { curSchoolID: $scope.curSchoolId, calendarYear: $scope.calendarYear, curStudentID: $scope.curStudentID }
+				const pqData = { curSchoolID: $scope.curSchoolId, yearID: $scope.curYearId, curStudentID: $scope.curStudentID, logType: $scope.curContext }
 
 				// getting staff counts
 				const countRes = await pqService.getPQResults('net.cdolinc.health.healthLog.counts', pqData)
 				$scope.healthLogCounts = countRes[0]
 
 				// adding new new change type key/value pair for PQ call to staff list
-				pqData.logType = logType
+				pqData.logData = logData
 
 				//setting up function to add key and value staff list to staffList object
 				const updateHealthLogList = (key, value) => ($scope.healthLogList[key] = value)
