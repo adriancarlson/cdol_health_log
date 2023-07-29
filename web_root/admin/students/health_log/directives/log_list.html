@@ -4,22 +4,56 @@
         <table class="grid">
             <thead>
                 <tr>
-                    <th data-pss-sort-fields="log_date, log_time" data-primary-sort="descending">Date/Time</th>
-                    <th data-pss-sort-fields="complaint|text">Complaint</th>
-                    <th data-pss-sort-fields="treatment|text">Treatment</th>
-                    <th data-pss-sort-fields="destination|number">Destination</th>
-                    <th data-pss-sort-fields="time_left|number">Time Left</th>
-                    <th data-pss-sort-fields="notes|number">Notes</th>
+                    <th data-pss-sort-fields="log_date, log_time" data-primary-sort="descending">Log Date/Time</th>
+                    <th data-ng-if="curContext =='Concussion' || curContext =='Eval'"
+                        data-pss-sort-fields="injury_date">Date of Injury</th>
+                    <th data-ng-if="curContext =='Daily'" data-pss-sort-fields="complaint|text">Complaint</th>
+                    <th data-ng-if="curContext =='Athletic'" data-pss-sort-fields="sport|text">Sport</th>
+                    <th data-ng-if="curContext =='Athletic' || curContext =='Eval'"
+                        data-pss-sort-fields="injury_site|text">Injury Site</th>
+                    <th data-ng-if="curContext =='Eval'" data-pss-sort-fields="injury_type|text">Injury Type</th>
+                    <th data-ng-if="curContext =='Daily' || curContext =='Athletic'"
+                        data-pss-sort-fields="treatment|text">Treatment</th>
+                    <th data-ng-if="curContext =='Daily'" data-pss-sort-fields="destination|number">Destination</th>
+                    <th data-ng-if="curContext =='Daily'" data-pss-sort-fields="time_left|number">Time Left</th>
+                    <th data-ng-if="curContext =='Concussion'" data-pss-sort-fields="total_systems_score|number">Total
+                        Symptoms</th>
+                    <th data-ng-if="curContext =='Concussion'" data-pss-sort-fields="systems_score|number">System Score
+                    </th>
+                    <th data-ng-if="curContext =='Daily'" data-pss-sort-fields="user_dcid|text">Treatment Provider</th>
+                    <th>Notes</th>
                 </tr>
             </thead>
             <tbody>
                 <tr data-ng-repeat="healthLog in healthLogList" data-id="{{healthLog.id}}">
                     <td>{{healthLog.log_date | date : 'MM/dd/yyyy'}} {{healthLog.log_time}}</td>
-                    <td>{{healthLog.complaint}}</td>
-                    <td>{{healthLog.treatment}}</td>
-                    <td>{{healthLog.destination}}</td>
-                    <td>{{healthLog.time_left}}</td>
-                    <td>{{healthLog.notes}}</td>
+                    <td data-ng-if="curContext =='Concussion' || curContext =='Eval'">{{healthLog.injury_date | date :
+                        'MM/dd/yyyy'}}</td>
+                    <td data-ng-if="curContext =='Daily'">{{healthLog.complaint}}</td>
+                    <td data-ng-if="curContext =='Athletic'">{{healthLog.sport}}</td>
+                    <td data-ng-if="curContext =='Athletic' || curContext =='Eval'">{{healthLog.injury_site}}</td>
+                    <td data-ng-if="curContext =='Eval'">{{healthLog.injury_type}}</td>
+                    <td data-ng-if="curContext =='Daily' || curContext =='Athletic'">{{healthLog.treatment}}</td>
+                    <td data-ng-if="curContext =='Daily'">{{healthLog.destination}}</td>
+                    <td data-ng-if="curContext =='Daily'">{{healthLog.time_left}}</td>
+                    <td data-ng-if="curContext =='Concussion'">{{healthLog.total_systems_score}}/21 Total Symptoms</td>
+                    <td data-ng-if="curContext =='Concussion'">{{healthLog.systems_score}}/126 Symptoms Score</td>
+                    <td data-ng-if="curContext =='Daily'">{{healthLog.user_dcic}}</td>
+                    <td>
+                        <span data-ng-if="curContext =='Daily'|| curContext =='Athletic'">{{healthLog.notes}}</span>
+                        <span data-ng-if="curContext =='Concussion'">
+                            Memory: {{healthLog.notes_memory}} <br>
+                            BESS: {{healthLog.notes_bess}} <br>
+                            VOMS: {{healthLog.notes_voms}} <br>
+                            Other Notes: {{healthLog.notes}} <br>
+                        </span>
+                        <span data-ng-if="curContext =='Eval'">
+                            S: {{healthLog.notes_s}} <br>
+                            O: {{healthLog.notes_o}} <br>
+                            A: {{healthLog.notes_a}} <br>
+                            P: {{healthLog.notes_p}} <br>
+                        </span>
+                    </td>
                 </tr>
             </tbody>
         </table>
