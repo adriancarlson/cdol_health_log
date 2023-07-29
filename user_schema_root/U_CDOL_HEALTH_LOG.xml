@@ -17,6 +17,13 @@
         <field name="total_systems_score" type="Integer" />
         <field name="systems_score" type="Integer" />
         <field name="notes" type="String" length="4000" />
+        <field name="notes_memory" type="String" length="4000" />
+        <field name="notes_bess" type="String" length="4000" />
+        <field name="notes_voms" type="String" length="4000" />
+        <field name="notes_s" type="String" length="4000" />
+        <field name="notes_o" type="String" length="4000" />
+        <field name="notes_a" type="String" length="4000" />
+        <field name="notes_p" type="String" length="4000" />
         <field name="schoolid" type="Integer" />
         <field name="yearid" type="Integer" />
     </extendedTable>

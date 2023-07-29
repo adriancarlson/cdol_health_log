@@ -16,7 +16,8 @@
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 0,
-					"pageURL": "/admin/students/health_log/health_log_daily.html?frn=~(studentfrn)"
+					"checkParams": true,
+					"pageURL": "/admin/students/health_log/health_log.html?frn=~(studentfrn)&logType=Daily"
 				},
 				{
 					"htmlID": "cdol-athletic-injury",
@@ -25,7 +26,8 @@
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 100,
-					"pageURL": "/admin/students/health_log/health_log_athletic.html?frn=~(studentfrn)"
+					"checkParams": true,
+					"pageURL": "/admin/students/health_log/health_log.html?frn=~(studentfrn)&logType=Athletic"
 				},
 				{
 					"htmlID": "cdol-concussion-eval",
@@ -34,7 +36,8 @@
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 200,
-					"pageURL": "/admin/students/health_log/health_log_concussion.html?frn=~(studentfrn)"
+					"checkParams": true,
+					"pageURL": "/admin/students/health_log/health_log.html?frn=~(studentfrn)&logType=Concussion"
 				},
 				{
 					"htmlID": "cdol-injury-eval",
@@ -43,7 +46,8 @@
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 300,
-					"pageURL": "/admin/students/health_log/health_log_eval.html?frn=~(studentfrn)"
+					"checkParams": true,
+					"pageURL": "/admin/students/health_log/health_log.html?frn=~(studentfrn)&logType=Eval"
 				}
 			]
 		}
