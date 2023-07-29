@@ -13,6 +13,7 @@
         <field name="time_left" type="Integer" />
         <field name="users_dcid" type="Integer" />
         <field name="injury_site" type="String" length="250" />
+        <field name="injury_type" type="String" length="250" />
         <field name="injury_date" type="Date" />
         <field name="total_systems_score" type="Integer" />
         <field name="systems_score" type="Integer" />
