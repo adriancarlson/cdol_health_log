@@ -39,7 +39,7 @@
                     <td data-ng-if="curContext =='Daily'">{{healthLog.time_left}}</td>
                     <td data-ng-if="curContext =='Concussion'">{{healthLog.total_systems_score}}/21 Total Symptoms</td>
                     <td data-ng-if="curContext =='Concussion'">{{healthLog.systems_score}}/126 Symptoms Score</td>
-                    <td data-ng-if="curContext =='Daily'">{{healthLog.user_dcic}}</td>
+                    <td>{{healthLog.first_name}} {{healthLog.last_name}}</td>
                     <td>
                         <span data-ng-if="curContext =='Daily'|| curContext =='Athletic'">{{healthLog.notes}}</span>
                         <span data-ng-if="curContext =='Concussion'">
