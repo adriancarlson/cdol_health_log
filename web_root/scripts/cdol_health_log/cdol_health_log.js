@@ -11,18 +11,7 @@ define(['angular', 'components/shared/index', '/scripts/cdol/services/pqService.
 		$scope.curTime = $attrs.ngCurTime
 		$scope.curContext = $attrs.ngCurContext
 
-		$scope.loadData = async logData => {
-			loadingDialog()
-			const pqData = { curSchoolID: $scope.curSchoolId, yearID: $scope.curYearId, curStudentID: $scope.curStudentID, logType: logData }
-			const res = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
-			$scope.healthLogList = res
-			$scope.fullContext()
-			$scope.$digest()
-			closeLoading()
-			console.log($scope.healthLogList)
-		}
-
-		$scope.fullContext = () => {
+		$scope.setfullContext = () => {
 			$scope.fullContext = ''
 			switch ($scope.curContext) {
 				case 'Daily':
@@ -40,6 +29,17 @@ define(['angular', 'components/shared/index', '/scripts/cdol/services/pqService.
 				default:
 					$scope.fullContext = 'Log'
 			}
+		}
+
+		$scope.loadData = async logData => {
+			loadingDialog()
+			const pqData = { curSchoolID: $scope.curSchoolId, yearID: $scope.curYearId, curStudentID: $scope.curStudentID, logType: logData }
+			const res = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
+			$scope.healthLogList = res
+			$scope.setfullContext()
+			$scope.$digest()
+			closeLoading()
+			console.log($scope.healthLogList)
 		}
 
 		// fire the function to load the data
