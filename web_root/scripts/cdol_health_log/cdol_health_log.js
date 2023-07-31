@@ -1,7 +1,7 @@
-define(['angular', 'components/shared/index', '/scripts/cdol/services/pqService.js'], function (angular) {
-	var cdolHealthLogApp = angular.module('cdolHealthLogMod', ['powerSchoolModule', 'pqModule'])
+define(['angular', 'components/shared/index', '/scripts/cdol/services/pqService.js', '/scripts/cdol/services/formatService.js', '/scripts/cdol/services/psApiService.js'], function (angular) {
+	var cdolHealthLogApp = angular.module('cdolHealthLogMod', ['powerSchoolModule', 'pqModule', 'formatService', 'psApiModule'])
 
-	cdolHealthLogApp.controller('cdolHealthLogCtrl', function ($scope, $attrs, pqService) {
+	cdolHealthLogApp.controller('cdolHealthLogCtrl', function ($scope, $attrs, pqService, formatService, psApiService) {
 		$scope.staffChangeCounts = []
 		$scope.healthLogList = {}
 		$scope.curSchoolId = $attrs.ngCurSchoolId
@@ -13,32 +13,33 @@ define(['angular', 'components/shared/index', '/scripts/cdol/services/pqService.
 
 		$scope.loadData = async logData => {
 			loadingDialog()
-			//only make API call to get the data if
-			// 			if (!$scope.healthLogList) {
-			//setting up arguments for PQ call
 			const pqData = { curSchoolID: $scope.curSchoolId, yearID: $scope.curYearId, curStudentID: $scope.curStudentID, logType: logData }
-
-			// // getting staff counts
-			// const countRes = await pqService.getPQResults('net.cdolinc.health.healthLog.counts', pqData)
-			// $scope.healthLogCounts = countRes[0]
-
-			// adding new new change type key/value pair for PQ call to staff list
-			// pqData.logData = logData
-
-			//setting up function to add key and value staff list to staffList object
-			// const updateHealthLogList = (key, value) => ($scope.healthLogList[key] = value)
-
-			// getting staff List for current change type
 			const res = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
-
 			$scope.healthLogList = res
-			//updating staffList obj
-			// updateHealthLogList(logData, res)
-
+			$scope.fullContext()
 			$scope.$digest()
-			// 			}
 			closeLoading()
 			console.log($scope.healthLogList)
+		}
+
+		$scope.fullContext = () => {
+			$scope.fullContext = ''
+			switch ($scope.curContext) {
+				case 'Daily':
+					$scope.fullContext = 'Daily Health Log'
+					break
+				case 'Athletic':
+					$scope.fullContext = 'Athletic Injury'
+					break
+				case 'Concussion':
+					$scope.fullContext = 'Concussion Eval'
+					break
+				case 'Eval':
+					$scope.fullContext = 'Injury Eval'
+					break
+				default:
+					$scope.fullContext = 'Log'
+			}
 		}
 
 		// fire the function to load the data
@@ -49,6 +50,20 @@ define(['angular', 'components/shared/index', '/scripts/cdol/services/pqService.
 			$scope.healthLogCounts = []
 			$scope.healthLogList = {}
 			$scope.loadData($scope.curContext)
+		}
+
+		$scope.delConfirm = logId => {
+			psConfirm({
+				title: `Delete ${$scope.fullContext}`,
+				message: `Are you sure you want to delete this ${$scope.fullContext}?`,
+				oktext: 'Delete',
+				canceltext: 'Cancel',
+				ok: async () => {
+					console.log(logId)
+					await psApiService.psApiCall('u_cdol_health_log', 'DELETE', {}, logId)
+					await $scope.reloadData()
+				}
+			})
 		}
 	})
 	cdolHealthLogApp.directive('logList', () => ({ templateUrl: '/admin/students/health_log/directives/log_list.html' }))

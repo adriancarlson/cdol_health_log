@@ -22,6 +22,7 @@
                     </th>
                     <th data-ng-if="curContext =='Daily'" data-pss-sort-fields="user_dcid|text">Treatment Provider</th>
                     <th>Notes</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,6 +54,11 @@
                             A: {{healthLog.notes_a}} <br>
                             P: {{healthLog.notes_p}} <br>
                         </span>
+                    </td>
+                    <td class="actions">
+                        <button type="button" id="modBtn">&#9998;</button>
+                        <button type="button" id="delBtn" data-ng-click="delConfirm({{healthLog.id}})"><em
+                                class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>
                     </td>
                 </tr>
             </tbody>
