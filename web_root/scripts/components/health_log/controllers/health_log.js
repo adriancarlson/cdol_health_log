@@ -6,7 +6,8 @@ define(function (require) {
 		'$scope',
 		'$rootScope',
 		'$attrs',
-		function ($scope, $rootScope, $attrs) {
+		'pqService',
+		function ($scope, $rootScope, $attrs, pqService) {
 			$scope.healthLogCounts = []
 			$scope.healthLogList = []
 			$rootScope.appData = {
@@ -27,11 +28,15 @@ define(function (require) {
 				document.title = $rootScope.appData.fullContext = contextMap[$rootScope.appData.curContext] || 'Log'
 			}
 
-			$scope.loadLogData = studentFrn => {
+			$scope.loadLogData = async logData => {
 				loadingDialog()
-				console.log('studentfrn:', studentFrn)
+				const pqData = { curSchoolID: $scope.curSchoolId, yearID: $scope.curYearId, curStudentID: $scope.curStudentID, logType: logData }
+				const res = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
+				$scope.healthLogList = res
 				$scope.setfullContext()
+				$scope.$digest()
 				closeLoading()
+				console.log($scope.healthLogList)
 			}
 		}
 	])
