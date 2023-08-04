@@ -6,10 +6,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>
-            ~[if#Daily.~(gpv.logType)=Daily]Daily Health Log[/if#Daily]
-            ~[if#Athletic.~(gpv.logType)=Athletic]Athletic Injury[/if#Athletic]
-            ~[if#Concussion.~(gpv.logType)=Concussion]Concussion Eval[/if#Concussion]
-            ~[if#Eval.~(gpv.logType)=Eval]Injury Eval[/if#Eval]
+            Health Log
         </title>
         ~[wc:commonscripts]
         <link href="/images/css/screen.css" rel="stylesheet" media="screen">
@@ -17,15 +14,20 @@
     </head>
 
     <body data-require-path="components/health_log/index" data-module-name="healthLogMod"
-        data-ng-controller="healthLogCtrl" data-ng-init="loadData('~(studentfrn)');" data-ng-cloak>
-        ~[wc:admin_header_frame_css]~[wc:admin_navigation_frame_css]
-        ~[wc:title_student_begin_css]~[if#Daily.~(gpv.logType)=Daily]Daily Health Log[/if#Daily]
-        ~[if#Athletic.~(gpv.logType)=Athletic]Athletic Injury[/if#Athletic]
-        ~[if#Concussion.~(gpv.logType)=Concussion]Concussion Eval[/if#Concussion]
-        ~[if#Eval.~(gpv.logType)=Eval]Injury Eval[/if#Eval]~[wc:title_student_end_css]
+        data-ng-controller="healthLogCtrl" data-ng-cur-student-id="~(rn)" data-ng-cur-school-id="~(curschoolid)"
+        data-ng-cur-year-id="~(curyearid)" data-ng-cur-date="~[date]" data-ng-cur-time="~[time]"
+        data-ng-cur-context="~(gpv.logType)" data-ng-init="loadLogData('~(gpv.logType)')" data-ng-cloak>
+        ~[wc:admin_header_frame_css]
+        ~[wc:admin_navigation_frame_css]
+        ~[wc:title_student_begin_css]
+        {{appData.fullContext}}
+        ~[wc:title_student_end_css]
 
         <!-- start of content and bounding box -->
         <div class="box-round">
+            <p>app data: {{appData}}</p>
+            <p>healthLogList data: {{healthLogList}}</p>
+
         </div>
         <br>
         <!-- end of content of bounding box -->

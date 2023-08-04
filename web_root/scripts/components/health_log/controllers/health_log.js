@@ -3,43 +3,36 @@ define(function (require) {
 	var module = require('components/health_log/module')
 
 	module.controller('healthLogCtrl', [
-		'$http',
 		'$scope',
 		'$rootScope',
-		function ($http, $scope, $rootScope) {
-			$scope.listData = []
+		'$attrs',
+		function ($scope, $rootScope, $attrs) {
+			$scope.healthLogCounts = []
+			$scope.healthLogList = []
 			$rootScope.appData = {
-				institutions: [],
-				requestStatus: {
-					N: 'New',
-					U: 'Under Development',
-					C: 'Complete (Not Submitted)',
-					S: 'Submitted'
-				},
-				outcomes: {
-					C: 'Considering',
-					W: 'Waitlist',
-					A: 'Accepted',
-					D: 'Denied',
-					O: 'Other'
-				}
+				curSchoolId: $attrs.ngCurSchoolId,
+				curYearId: $attrs.ngCurYearId,
+				curStudentID: $attrs.ngCurStudentId,
+				curDate: $attrs.ngCurDate,
+				curTime: $attrs.ngCurTime,
+				curContext: $attrs.ngCurContext
 			}
-			var init = function () {
-				// loadData will be called by the view to leverage PSHTML
-				$scope.loadInstitutions()
+			$scope.setfullContext = () => {
+				const contextMap = {
+					Daily: 'Daily Health Log',
+					Athletic: 'Athletic Injury',
+					Concussion: 'Concussion Eval',
+					Eval: 'Injury Eval'
+				}
+				document.title = $rootScope.appData.fullContext = contextMap[$rootScope.appData.curContext] || 'Log'
 			}
 
-			$scope.loadData = function (studentFrn) {
+			$scope.loadLogData = studentFrn => {
 				loadingDialog()
-				console.log('running Load Data')
+				console.log('studentfrn:', studentFrn)
+				$scope.setfullContext()
 				closeLoading()
 			}
-
-			$scope.loadInstitutions = function () {
-				console.log('running Load Institutions')
-			}
-
-			init()
 		}
 	])
 })
