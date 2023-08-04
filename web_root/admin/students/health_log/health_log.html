@@ -16,25 +16,20 @@
         <link href="/images/css/print.css" rel="stylesheet" media="print">
     </head>
 
-    <body id="cdol-health-log-div" data-require-path="cdol_health_log/cdol_health_log"
-        data-module-name="cdolHealthLogMod" data-ng-controller="cdolHealthLogCtrl" data-ng-cur-student-id="~(rn)"
-        data-ng-cur-school-id="~(curschoolid)" data-ng-cur-year-id="~(curyearid)" data-ng-cur-date="~[date]"
-        data-ng-cur-time="~[time]" data-ng-cur-context="~(gpv.logType)" data-ng-init="loadData('~(gpv.logType)')"
-        data-ng-cloak>
-        ~[wc:admin_header_frame_css]
-        ~[wc:admin_navigation_frame_css]
-        ~[wc:title_student_begin_css]
-        {{fullContext}}
-        ~[wc:title_student_end_css]
-        <div>
-            <div class="button-row">
-                <button id="add-btn" type="button" pss-dialog-drawer drawer-title="{{fullContext}}"
-                    template-url="views/log_dialog.html">
-                    Add {{fullContext}}</button>
-            </div>
-            <log-list></log-list>
+    <body data-require-path="components/health_log/index" data-module-name="healthLogMod"
+        data-ng-controller="healthLogCtrl" data-ng-init="loadData('~(studentfrn)');" data-ng-cloak>
+        ~[wc:admin_header_frame_css]~[wc:admin_navigation_frame_css]
+        ~[wc:title_student_begin_css]~[if#Daily.~(gpv.logType)=Daily]Daily Health Log[/if#Daily]
+        ~[if#Athletic.~(gpv.logType)=Athletic]Athletic Injury[/if#Athletic]
+        ~[if#Concussion.~(gpv.logType)=Concussion]Concussion Eval[/if#Concussion]
+        ~[if#Eval.~(gpv.logType)=Eval]Injury Eval[/if#Eval]~[wc:title_student_end_css]
+
+        <!-- start of content and bounding box -->
+        <div class="box-round">
         </div>
+        <br>
+        <!-- end of content of bounding box -->
         ~[wc:admin_footer_frame_css]
     </body>
 
-</html>
+</html><!-- end right frame -->
