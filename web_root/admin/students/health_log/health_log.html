@@ -22,16 +22,15 @@
         ~[wc:title_student_begin_css]
         {{appData.fullContext}}
         ~[wc:title_student_end_css]
-
-        <!-- start of content and bounding box -->
-        <div class="box-round">
-            <p>app data: {{appData}}</p>
-            <p>healthLogList data: {{healthLogList}}</p>
-
+        <div>
+            <div class="button-row">
+                <button id="add-btn" type="button" pss-dialog-drawer drawer-title="{{appData.fullContext}}"
+                    template-url="views/log_dialog.html">
+                    Add {{appData.fullContext}}</button>
+            </div>
+            <log-list></log-list>
         </div>
-        <br>
-        <!-- end of content of bounding box -->
         ~[wc:admin_footer_frame_css]
     </body>
 
-</html><!-- end right frame -->
+</html>
