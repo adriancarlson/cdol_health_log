@@ -1,0 +1,128 @@
+<!--NoLink-->
+<form name="healthLogForm" data-ng-controller="healthLogEditCtrl">
+    <!-- <div id="feedbackDiv" pss-feedback-widget warning="getWarningMessages()" error="getErrorMessages()"></div> -->
+    <div class="fluid-form">
+        <div>
+            <div>
+                <label>Log Date</label>
+                <input type="text" data-ng-model="logRecord.log_date" class="psDateWidget">
+            </div>
+            <div>
+                <label>Log Time</label>
+                <input type="text" data-ng-model="logRecord.log_time" class="timeEntry" size="8">
+            </div>
+        </div>
+        <div data-ng-if="logRecord.log_type =='Concussion' || logRecord.log_type =='Eval'">
+            <div>
+                <label>Injury Date</label>
+                <input type="text" data-ng-model="logRecord.injury_date" class="psDateWidget">
+            </div>
+        </div>
+        <div data-ng-if="logRecord.log_type =='Daily'">
+            <div>
+                <label>Complaint</label>
+                <input type="text" data-ng-model="logRecord.complaint">
+            </div>
+        </div>
+        <div data-ng-if="logRecord.log_type =='Athletic'">
+            <div>
+                <label>Sport</label>
+                <input type="text" data-ng-model="logRecord.sport">
+            </div>
+        </div>
+        <div data-ng-if="logRecord.log_type =='Athletic' || logRecord.log_type =='Eval'">
+            <div>
+                <label>Injury Site</label>
+                <input type="text" data-ng-model="logRecord.injury_site">
+            </div>
+        </div>
+        <div data-ng-if="logRecord.log_type =='Daily' || logRecord.log_type =='Athletic'">
+            <div>
+                <label>Injury Type</label>
+                <input type="text" data-ng-model="logRecord.injury_type">
+            </div>
+        </div>
+        <div data-ng-if="logRecord.log_type =='Daily' || logRecord.log_type =='Athletic'">
+            <div>
+                <label>Treatment</label>
+                <input type="text" data-ng-model="logRecord.treatment">
+            </div>
+        </div>
+        <div data-ng-if="logRecord.log_type =='Daily'">
+            <div>
+                <label>Destination</label>
+                <input type="text" data-ng-model="logRecord.destination">
+            </div>
+            <div>
+                <label>Time Left</label>
+                <input type="text" data-ng-model="logRecord.time_left" class="timeEntry">
+            </div>
+        </div>
+        <div data-ng-if="logRecord.log_type =='Concussion'">
+            <div>
+                <label>Total Symptoms</label>
+                <input type="text" data-ng-model="logRecord.total_systems_score" size="2">/21 Total Symptoms
+            </div>
+            <div>
+                <label>Symptoms Score</label>
+                <input type="text" data-ng-model="logRecord.systems_score" size="3">/126 Symptoms Score
+            </div>
+        </div>
+        <div>
+            <div>
+                <label>Treatment Provider</label>
+                <select id="users_dcid" data-ng-model="logRecord.users_dcid">
+                    ~[tlist_sql;SELECT DISTINCT
+                    users.dcid,
+                    users.first_name,
+                    users.last_name
+                    FROM SCHOOLSTAFF
+                    inner join users
+                    on users.dcid = schoolstaff.users_dcid
+                    WHERE schoolstaff.status = 1
+                    Order BY users.last_name , users.first_name]
+                    <option value="~(dcid)">~(first) ~(last)</option>
+                    [/tlist_sql]
+                </select>
+            </div>
+        </div>
+        <div>
+            <div>
+                <label for="log-notes">Notes</label>
+                <span data-ng-if="logRecord.log_type =='Concussion'" for="log-notes-memory"
+                    style="vertical-align:top"><br><strong>Memory</strong>: </span><textarea
+                    data-ng-if="logRecord.log_type =='Concussion'" id="log-notes-memory" spellcheck="true"
+                    wrap="absolute" rows="5" cols="60" data-ng-model="logRecord.notes_memory"></textarea>
+                <span data-ng-if="logRecord.log_type =='Concussion'" for="log-notes-bess"
+                    style="vertical-align:top"><br><strong>BESS</strong>: </span><textarea
+                    data-ng-if="logRecord.log_type =='Concussion'" id="log-notes-bess" spellcheck="true" wrap="absolute"
+                    rows="5" cols="60" data-ng-model="logRecord.notes_bess"></textarea>
+                <span data-ng-if="logRecord.log_type =='Concussion'" for="log-notes-voms"
+                    style="vertical-align:top"><br><strong>VOMS</strong>: </span><textarea
+                    data-ng-if="logRecord.log_type =='Concussion'" id="log-notes-voms" spellcheck="true" wrap="absolute"
+                    rows="5" cols="60" data-ng-model="logRecord.notes_voms"></textarea>
+                <span data-ng-if="logRecord.log_type =='Eval'" for="log-notes-s"
+                    style="vertical-align:top"><br><strong>S</strong>: </span><textarea
+                    data-ng-if="logRecord.log_type =='Eval'" id="log-notes-s" spellcheck="true" wrap="absolute" rows="5"
+                    cols="60" data-ng-model="logRecord.notes_s"></textarea>
+                <span data-ng-if="logRecord.log_type =='Eval'" for="log-notes-o"
+                    style="vertical-align:top"><br><strong>O</strong>: </span><textarea
+                    data-ng-if="logRecord.log_type =='Eval'" id="log-notes-o" spellcheck="true" wrap="absolute" rows="5"
+                    cols="60" data-ng-model="logRecord.notes_o"></textarea>
+                <span data-ng-if="logRecord.log_type =='Eval'" for="log-notes-a"
+                    style="vertical-align:top"><br><strong>A</strong>: </span><textarea
+                    data-ng-if="logRecord.log_type =='Eval'" id="log-notes-a" spellcheck="true" wrap="absolute" rows="5"
+                    cols="60" data-ng-model="logRecord.notes_a"></textarea>
+                <span data-ng-if="logRecord.log_type =='Eval'" for="log-notes-p"
+                    style="vertical-align:top"><br><strong>P</strong>: </span><textarea
+                    data-ng-if="logRecord.log_type =='Eval'" id="log-notes-p" spellcheck="true" wrap="absolute" rows="5"
+                    cols="60" data-ng-model="logRecord.notes_p"></textarea>
+                <span data-ng-if="logRecord.log_type =='Concussion'" for="log-notes"
+                    style="vertical-align:top"><br><strong>Other Notes</strong>: </span><textarea
+                    data-ng-if="logRecord.log_type !='Eval'" id="log-notes" spellcheck="true" wrap="absolute" rows="5"
+                    cols="60" data-ng-model="logRecord.notes"></textarea>
+            </div>
+        </div>
+    </div>
+</form>
+</form>

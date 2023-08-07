@@ -24,8 +24,11 @@
         ~[wc:title_student_end_css]
         <div>
             <div class="button-row">
-                <button id="add-btn" type="button" pss-dialog-drawer drawer-title="{{appData.fullContext}}"
-                    template-url="views/log_dialog.html">
+                <button id="add-btn" type="button" pss-dialog-drawer drawer-title="Add {{appData.fullContext}}"
+                    data-data="{
+                    studentsdcid: '~(rn)',
+                    id: null
+                }" template-url="views/log_drawer.html">
                     Add {{appData.fullContext}}</button>
             </div>
             <log-list></log-list>

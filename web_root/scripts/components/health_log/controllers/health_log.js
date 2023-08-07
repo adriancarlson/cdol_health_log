@@ -38,6 +38,26 @@ define(function (require) {
 				closeLoading()
 				console.log($scope.healthLogList)
 			}
+
+			$scope.reloadData = () => {
+				$scope.healthLogCounts = []
+				$scope.healthLogList = []
+				$scope.loadData($scope.appData.curContext)
+			}
+
+			$scope.delConfirm = logId => {
+				psConfirm({
+					title: `Delete ${$scope.fullContext}`,
+					message: `Are you sure you want to delete this ${$scope.fullContext}?`,
+					oktext: 'Delete',
+					canceltext: 'Cancel',
+					ok: async () => {
+						console.log(logId)
+						await psApiService.psApiCall('u_cdol_health_log', 'DELETE', {}, logId)
+						await $scope.reloadData()
+					}
+				})
+			}
 		}
 	])
 })

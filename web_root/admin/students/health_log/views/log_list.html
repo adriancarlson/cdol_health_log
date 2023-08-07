@@ -30,6 +30,11 @@
                 </tr>
             </thead>
             <tbody>
+                <tr data-ng-show="!healthLogList.length">
+                    <td colspan="100%">
+                        <span class="feedback-alert">No {{appData.curContext}}'s</span>
+                    </td>
+                </tr>
                 <tr data-ng-repeat="healthLog in healthLogList" data-id="{{healthLog.id}}">
                     <td>{{healthLog.log_date | date : 'MM/dd/yyyy'}} {{healthLog.log_time}}</td>
                     <td data-ng-if="appData.curContext =='Concussion' || appData.curContext =='Eval'">
@@ -66,9 +71,9 @@
                         </span>
                     </td>
                     <td class="actions">
-                        <button type="button" id="mod-btn" pss-dialog-drawer edit-button-icon="true"
-                            drawer-title="Edit {{appData.fullContext}}" template-url="views/log_dialog.html"
-                            data-data="{ data: healthLog }"></button>
+                        <button type="button" id="mod-btn-{{healthLog.id}}" pss-dialog-drawer edit-button-icon="true"
+                            drawer-title="Edit {{appData.fullContext}}" template-url="views/log_drawer.html"
+                            data-data="healthLog"></button>
                         <button type="button" id="delBtn" data-ng-click="delConfirm(healthLog.id)"><em
                                 class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>
                     </td>
