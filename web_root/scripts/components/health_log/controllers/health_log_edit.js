@@ -5,21 +5,17 @@ define(function (require) {
 	module.controller('healthLogEditCtrl', [
 		'$scope',
 		'$rootScope',
-		function ($scope, $rootScope) {
+		'psApiService',
+		function ($scope, $rootScope, psApiService) {
 			$scope.logRecord = {}
-			// UPDATE context to represent your blank JSON payload
-			// let context = {
-			// 	id: null,
-			// 	studentsdcid: null,
-			// 	institutionid: null,
-			// 	request_date: null,
-			// 	request_status: null,
-			// 	scholarship: null,
-			// 	scholarship_amount: null,
-			// 	completion_date: null,
-			// 	outcome: null,
-			// 	notes: null
-			// }
+			const commonPayload = {
+				schoolid: $scope.appData.curSchoolId,
+				yearid: $scope.appData.curYearId,
+				studentsdcid: data.studentsdcid
+			}
+			const formatKeys = {
+				dateKeys: ['_date']
+			}
 
 			let init = function () {
 				// $scope.currentContext = context
@@ -66,10 +62,25 @@ define(function (require) {
 				closeDrawer()
 			}
 
-			let saveDrawer = function (closeDrawer, data) {
-				// loadingDialog()
-				// console.log(buildPayload())
-				// closeLoading()
+			let saveDrawer = async function (closeDrawer, data) {
+				loadingDialog()
+				$scope.logRecord = Object.assign(logRecord, commonPayload)
+				//add createFormatKeys to each object in submitPayload
+				$scope.logRecord = Object.assign(logRecord, formatKeys)
+
+				//submitting staff changes through api
+				await psApiService.psApiCall('u_cdol_health_log', 'POST', $scope.logRecord)
+				console.log(res)
+				if (returned.status == 200 || returned.status == 201) {
+					closeLoading()
+					data.data = $scope.logRecord
+					$scope.$emit('saved.item.row', data.data)
+					closeDrawer(true)
+				} else {
+					//FAIL
+					closeDrawer(false)
+				}
+
 				// saveData(RESOURCE_URL, buildPayload()).then(
 				// 	function (returned) {
 				// 		closeLoading()

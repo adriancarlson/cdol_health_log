@@ -7,7 +7,8 @@ define(function (require) {
 		'$rootScope',
 		'$attrs',
 		'pqService',
-		function ($scope, $rootScope, $attrs, pqService) {
+		'psApiService',
+		function ($scope, $rootScope, $attrs, pqService, psApiService) {
 			$scope.healthLogCounts = []
 			$scope.healthLogList = []
 			$rootScope.appData = {

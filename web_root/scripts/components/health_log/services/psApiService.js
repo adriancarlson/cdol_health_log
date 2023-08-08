@@ -1,7 +1,7 @@
 'use strict'
 define(function (require) {
 	var module = require('components/health_log/module')
-	module.factory('psApiModule', [
+	module.factory('psApiService', [
 		'$http',
 		'$q',
 		'formatService',
