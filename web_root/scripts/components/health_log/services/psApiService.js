@@ -12,7 +12,7 @@ define(function (require) {
 					tableName = tableName.toLowerCase()
 					let path = `/ws/schema/table/${tableName}`
 					let url = `${path}${recId ? `/${recId}` : ''}`
-					headers = {
+					let headers = {
 						Accept: 'application/json',
 						'Content-Type': 'application/json'
 					}

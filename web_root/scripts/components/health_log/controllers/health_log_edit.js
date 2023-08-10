@@ -9,9 +9,9 @@ define(function (require) {
 		function ($scope, $rootScope, psApiService) {
 			$scope.logRecord = {}
 			const commonPayload = {
-				schoolid: $scope.appData.curSchoolId,
-				yearid: $scope.appData.curYearId,
-				studentsdcid: data.studentsdcid
+				schoolid: $rootScope.appData.curSchoolId,
+				yearid: $rootScope.appData.curYearId,
+				studentsdcid: $rootScope.appData.curStudentID
 			}
 			const formatKeys = {
 				dateKeys: ['_date']
@@ -26,36 +26,14 @@ define(function (require) {
 
 			let openDrawer = function (openCallBack, data) {
 				if (data.data.id == null) {
-					console.log('curContext', $rootScope.appData.curContext)
 					$scope.logRecord.log_type = $rootScope.appData.curContext
-					console.log(data)
-					// clearModel(data)
 				} else {
 					$scope.logRecord = data.data
-					// loadModel(data)
 					console.log('Edit Item button Clicked')
 					console.log(data)
 				}
 				openCallBack()
 			}
-
-			// let clearModel = function (data) {
-			// 	Object.keys(context).forEach(function (key) {
-			// 		// preserve studentsdcid for new record
-			// 		if (key == 'studentsdcid') {
-			// 			context[key] = data.data[key]
-			// 			// clear all other keys
-			// 		} else {
-			// 			context[key] = null
-			// 		}
-			// 	})
-			// }
-
-			// let loadModel = function (data) {
-			// 	Object.keys(context).forEach(function (key) {
-			// 		context[key] = data.data[key]
-			// 	})
-			// }
 
 			let cancelDrawer = function (closeDrawer) {
 				$scope.logRecord = {}
@@ -64,47 +42,16 @@ define(function (require) {
 
 			let saveDrawer = async function (closeDrawer, data) {
 				loadingDialog()
-				$scope.logRecord = Object.assign(logRecord, commonPayload)
+				$scope.logRecord = Object.assign($scope.logRecord, commonPayload)
 				//add createFormatKeys to each object in submitPayload
-				$scope.logRecord = Object.assign(logRecord, formatKeys)
+				$scope.logRecord = Object.assign($scope.logRecord, formatKeys)
 
 				//submitting staff changes through api
 				await psApiService.psApiCall('u_cdol_health_log', 'POST', $scope.logRecord)
-				console.log(res)
-				if (returned.status == 200 || returned.status == 201) {
-					closeLoading()
-					data.data = $scope.logRecord
-					$scope.$emit('saved.item.row', data.data)
-					closeDrawer(true)
-				} else {
-					//FAIL
-					closeDrawer(false)
-				}
+				$rootScope.reloadData()
+				closeLoading()
+				closeDrawer(true)
 
-				// saveData(RESOURCE_URL, buildPayload()).then(
-				// 	function (returned) {
-				// 		closeLoading()
-				// 		if (returned.status == 200 || returned.status == 201) {
-				// 			data.data = context
-				// 			$scope.$emit('saved.item.row', data.data)
-				// 			closeDrawer(true)
-				// 		} else {
-				// 			//FAIL
-				// 			closeDrawer(false)
-				// 		}
-				// 	},
-				// 	function (error) {
-				// 		closeLoading()
-				// 		if (error.status === 409 && error.data && psUtils.hasValue(error.data.message)) {
-				// 			warningMessages = [error.data.message]
-				// 		} else if (error.status === 403) {
-				// 			errorMessages = ['You do not have permission']
-				// 		} else {
-				// 			errorMessages = ['An error occurred contact your system administrator']
-				// 		}
-				// 		closeDrawer(false)
-				// }
-				// )
 			}
 
 			let saveData = function (resourceURL, payload) {

@@ -9,7 +9,8 @@
             </div>
             <div>
                 <label>Log Time</label>
-                <input type="text" data-ng-model="logRecord.log_time" class="timeEntry" size="8">
+                <input type="text" data-ng-model="logRecord.log_time" size="8">
+                <!-- class="timeEntry" -->
             </div>
         </div>
         <div data-ng-if="logRecord.log_type =='Concussion' || logRecord.log_type =='Eval'">
@@ -55,7 +56,7 @@
             </div>
             <div>
                 <label>Time Left</label>
-                <input type="text" data-ng-model="logRecord.time_left" class="timeEntry">
+                <input type="text" data-ng-model="logRecord.time_left">
             </div>
         </div>
         <div data-ng-if="logRecord.log_type =='Concussion'">
@@ -80,6 +81,7 @@
                     inner join users
                     on users.dcid = schoolstaff.users_dcid
                     WHERE schoolstaff.status = 1
+                    AND schoolstaff.schoolid = ~(curschoolid)
                     Order BY users.last_name , users.first_name]
                     <option value="~(dcid)">~(first) ~(last)</option>
                     [/tlist_sql]

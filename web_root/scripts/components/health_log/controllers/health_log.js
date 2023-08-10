@@ -29,7 +29,7 @@ define(function (require) {
 				document.title = $rootScope.appData.fullContext = contextMap[$rootScope.appData.curContext] || 'Log'
 			}
 
-			$scope.loadLogData = async logData => {
+			$rootScope.loadLogData = async logData => {
 				loadingDialog()
 				const pqData = { curSchoolID: $scope.curSchoolId, yearID: $scope.curYearId, curStudentID: $scope.curStudentID, logType: logData }
 				const res = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
@@ -40,10 +40,11 @@ define(function (require) {
 				console.log($scope.healthLogList)
 			}
 
-			$scope.reloadData = () => {
+			$rootScope.reloadData = () => {
 				$scope.healthLogCounts = []
 				$scope.healthLogList = []
-				$scope.loadData($scope.appData.curContext)
+				$rootScope.loadLogData($scope.appData.curContext)
+				$scope.$digest()
 			}
 
 			$scope.delConfirm = logId => {
@@ -55,7 +56,7 @@ define(function (require) {
 					ok: async () => {
 						console.log(logId)
 						await psApiService.psApiCall('u_cdol_health_log', 'DELETE', {}, logId)
-						await $scope.reloadData()
+						await $rootScope.reloadData()
 					}
 				})
 			}
