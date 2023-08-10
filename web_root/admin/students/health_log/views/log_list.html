@@ -35,7 +35,8 @@
                     </td>
                 </tr>
                 <tr data-ng-repeat="healthLog in healthLogList" data-id="{{healthLog.id}}">
-                    <td class="center">{{healthLog.log_date | date : 'MM/dd/yyyy'}} {{healthLog.log_time}}</td>
+                    <td class="center">{{healthLog.log_date | date : 'MM/dd/yyyy'}} {{healthLog.log_time |
+                        convSecondsToTime12 }}</td>
                     <td class="center" data-ng-if="appData.curContext =='Concussion' || appData.curContext =='Eval'">
                         {{healthLog.injury_date | date :
                         'MM/dd/yyyy'}}</td>

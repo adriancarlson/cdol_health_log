@@ -62,4 +62,21 @@ define(function (require) {
 			}
 		}
 	])
+	module.filter('convSecondsToTime12', function () {
+		return function (psec) {
+			let hours = Math.floor(psec / 3600)
+			let minutes = Math.floor((psec - hours * 3600) / 60)
+			let meridiem = 'AM'
+			if (hours * 60 * 60 >= 43200) {
+				meridiem = 'PM'
+				if (hours !== 12) {
+					hours -= 12
+				}
+			}
+			hours = hours < 10 ? '0' + hours : hours
+			minutes = minutes < 10 ? '0' + minutes : minutes
+			let strTime = hours + ':' + minutes + ' ' + meridiem
+			return strTime
+		}
+	})
 })

@@ -101,8 +101,8 @@ define(function (require) {
 					hours = hours < 10 ? '0' + hours : hours
 					minutes = minutes < 10 ? '0' + minutes : minutes
 					let strTime = hours + ':' + minutes + ' ' + meridiem
-					//have to convert to string for API call
-					return strTime.toString()
+
+					return strTime
 				},
 
 				// Convert Time (12 hr AM/PM) to Seconds (integer)
@@ -111,7 +111,8 @@ define(function (require) {
 					let hrs = ptime.substr(0, 2)
 					let min = ptime.substr(3, 2)
 					let intSecs = hrs * 3600 + min * 60 + (ptime.substr(6, 2) === 'PM' && hrs != '12' ? 43200 : 0)
-					return intSecs
+					//have to convert to string for API call
+					return intSecs.toString()
 				},
 
 				//case formats
