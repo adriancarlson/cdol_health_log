@@ -28,7 +28,7 @@ define(function (require) {
 					Eval: 'Injury Eval'
 				}
 				document.title = $rootScope.appData.fullContext = contextMap[$rootScope.appData.curContext] || 'Log'
-				document.title = `${document.title} - ${rootScope.appData.curStudentName}`
+				document.title = `${document.title} - ${$rootScope.appData.curStudentName}`
 			}
 
 			$rootScope.loadLogData = async logData => {

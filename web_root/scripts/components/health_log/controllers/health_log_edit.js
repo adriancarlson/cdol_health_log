@@ -14,7 +14,8 @@ define(function (require) {
 				studentsdcid: $rootScope.appData.curStudentID
 			}
 			const formatKeys = {
-				dateKeys: ['_date']
+				dateKeys: ['_date'],
+				deleteKeys: ['_title', '_name']
 			}
 
 			let init = () => {
@@ -29,6 +30,7 @@ define(function (require) {
 					$scope.logRecord.log_type = $rootScope.appData.curContext
 				} else {
 					$scope.logRecord = data.data
+					// formatService.objIterator(resData, apiPayload.dateKeys, 'formatDateFromApi')
 					console.log('Edit Item button Clicked')
 					console.log(data)
 				}
@@ -40,61 +42,26 @@ define(function (require) {
 				closeDrawer()
 			}
 
-			let saveDrawer = async closeDrawer => {
+			let saveDrawer = async (closeDrawer, data) => {
 				loadingDialog()
+
 				$scope.logRecord = Object.assign($scope.logRecord, commonPayload)
 				//add createFormatKeys to each object in submitPayload
 				$scope.logRecord = Object.assign($scope.logRecord, formatKeys)
 
 				//submitting staff changes through api
-				await psApiService.psApiCall('u_cdol_health_log', 'POST', $scope.logRecord)
+				if ($scope.logRecord.id) {
+					let recordId = $scope.logRecord.id
+					delete $scope.logRecord['id']
+					delete $scope.logRecord['studentsdcid']
+					await psApiService.psApiCall('u_cdol_health_log', 'PUT', $scope.logRecord, recordId)
+				} else {
+					await psApiService.psApiCall('u_cdol_health_log', 'POST', $scope.logRecord)
+				}
 				$rootScope.reloadData()
 				closeLoading()
 				closeDrawer(true)
 			}
-
-			// let saveData = function (resourceURL, payload) {
-			// 	let URL
-			// 	if (payload.id > 0) {
-			// 		URL = resourceURL + '/' + payload.id
-			// 		return $http.put(URL, payload, JSON_HEADER)
-			// 	} else {
-			// 		URL = resourceURL
-			// 		return $http.post(URL, payload, JSON_HEADER)
-			// 	}
-			// }
-
-			// let buildPayload = function () {
-			// 	// fix null values - change to empty string
-			// 	Object.keys(context).forEach(function (key) {
-			// 		if (context[key] == null) context[key] = ''
-			// 	})
-
-			// 	// base payload common for both add and update
-			// 	let payload = {
-			// 		tables: {
-			// 			[RESOURCE_TABLE]: {
-			// 				institutionid: context.institutionid,
-			// 				request_date: parseDateString(context.request_date),
-			// 				request_status: context.request_status,
-			// 				scholarship: context.scholarship,
-			// 				scholarship_amount: context.scholarship_amount,
-			// 				completion_date: parseDateString(context.completion_date),
-			// 				outcome: context.outcome,
-			// 				notes: context.notes
-			// 			}
-			// 		}
-			// 	}
-			// 	if (context.id > 0) {
-			// 		// existing record - add necessary payload data
-			// 		payload.id = context.id
-			// 		payload.name = RESOURCE_TABLE
-			// 	} else {
-			// 		// new record needs studentsdcid for foreign key 1-many requirement
-			// 		payload.tables[RESOURCE_TABLE].studentsdcid = context.studentsdcid
-			// 	}
-			// 	return payload
-			// }
 
 			init()
 		}

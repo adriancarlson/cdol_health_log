@@ -4,16 +4,16 @@ define(function (require) {
 	module.factory('formatService', [
 		function () {
 			//dateformats
-			let dateSvc = this
+			var dateSvc = this
 			dateSvc.dateFormat = 'mm/dd/yyyy'
 			dateSvc.monthIndex = 0
 			dateSvc.dayIndex = 1
 			dateSvc.yearIndex = 2
 			dateSvc.delimiter = '/'
 			return {
-				setDateFormat: dateString => {
+				setDateFormat: function (dateString) {
 					dateString = dateString.toLowerCase()
-					let dateParts = dateString.split(/[.,\/ -]/)
+					var dateParts = dateString.split(/[.,\/ -]/)
 					if (dateParts.length != 3) return
 					if (!dateParts.includes('mm') || !dateParts.includes('dd') || !dateParts.includes('yyyy')) return
 					dateSvc.dateFormat = dateString
@@ -28,43 +28,43 @@ define(function (require) {
 
 				//dt - date string (PS date format ~[dateformat])
 				//return date string (yyyy-mm-dd)
-				formatDateForApi: dt => {
+				formatDateForApi: function (dt) {
 					if (!dt) return ''
-					let dateParts = dt.split(dateSvc.delimiter)
+					var dateParts = dt.split(dateSvc.delimiter)
 					if (dateParts.length != 3) return ''
-					let m = dateParts[dateSvc.monthIndex]
-					let d = dateParts[dateSvc.dayIndex]
-					let y = dateParts[dateSvc.yearIndex]
+					var m = dateParts[dateSvc.monthIndex]
+					var d = dateParts[dateSvc.dayIndex]
+					var y = dateParts[dateSvc.yearIndex]
 					return y + '-' + m + '-' + d
 				},
 
 				//dt - date string (yyyy-dd-mm)
 				//return date string (PS date format ~[dateformat])
-				formatDateFromApi: dt => {
+				formatDateFromApi: function (dt) {
 					if (!dt) return ''
-					let dateParts = dt.split('-')
+					var dateParts = dt.split('-')
 					if (dateParts.length != 3) return ''
-					let y = dateParts[0]
-					let m = dateParts[1]
-					let d = dateParts[2]
+					var y = dateParts[0]
+					var m = dateParts[1]
+					var d = dateParts[2]
 					return dateSvc.getPsDateString(m, d, y)
 				},
 
 				//dt - javascript date object
 				//return date string format PS date format ~[dateformat]
-				dateToString: dt => {
-					let d = dt.getDate()
-					let m = dt.getMonth() + 1 //January is 0!
-					let y = dt.getFullYear()
+				dateToString: function (dt) {
+					var d = dt.getDate()
+					var m = dt.getMonth() + 1 //January is 0!
+					var y = dt.getFullYear()
 					if (d < 10) d = '0' + d
 					if (m < 10) m = '0' + m
 					if (isNaN(m)) return ''
 					return dateSvc.getPsDateString(m, d, y)
 				},
 
-				getPsDateString: (m, d, y) => {
+				getPsDateString: function (m, d, y) {
 					returnVal = ''
-					for (let i = 0; i < 3; i++) {
+					for (var i = 0; i < 3; i++) {
 						if (dateSvc.monthIndex == i) returnVal += m
 						else if (dateSvc.dayIndex == i) returnVal += d
 						else returnVal += y
@@ -75,12 +75,12 @@ define(function (require) {
 
 				//accept a string date (PS date format ~[dateformat])
 				//return string representation of date plus increment days
-				addDays: (dateString, increment) => {
-					let dateParts = dateString.split(dateSvc.delimiter)
-					let m = dateParts[dateSvc.monthIndex]
-					let d = dateParts[dateSvc.dayIndex]
-					let y = dateParts[dateSvc.yearIndex]
-					let dateVal = new Date()
+				addDays: function (dateString, increment) {
+					var dateParts = dateString.split(dateSvc.delimiter)
+					var m = dateParts[dateSvc.monthIndex]
+					var d = dateParts[dateSvc.dayIndex]
+					var y = dateParts[dateSvc.yearIndex]
+					var dateVal = new Date()
 					dateVal.setMonth(0)
 					dateVal.setDate(d)
 					dateVal.setYear(y)
@@ -89,14 +89,14 @@ define(function (require) {
 					return this.dateToString(dateVal)
 				},
 				//case formats
-				camelize: str => {
+				camelize: function (str) {
 					return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
 						if (+match === 0) return ''
 						return index === 0 ? match.toLowerCase() : match.toUpperCase()
 					})
 				},
 
-				decamelize: str => {
+				decamelize: function (str) {
 					return str
 						.replace(/([A-Z])/g, ' $1')
 						.trim()
@@ -105,9 +105,9 @@ define(function (require) {
 						})
 				},
 
-				sentenceCase: str => {
-					let n = str.split('.')
-					let vfinal = ''
+				sentenceCase: function (str) {
+					var n = str.split('.')
+					var vfinal = ''
 					for (i = 0; i < n.length; i++) {
 						var spaceput = ''
 						var spaceCount = n[i].replace(/^(\s*).*$/, '$1').length
@@ -120,24 +120,24 @@ define(function (require) {
 					return vfinal
 				},
 
-				titleCase: str => {
+				titleCase: function (str) {
 					const buildString = str || ''
 					return buildString
 						.toLowerCase()
 						.split(' ')
-						.map(word => {
+						.map(function (word) {
 							return word.charAt(0).toUpperCase() + word.slice(1)
 						})
 						.join(' ')
 						.trim()
 				},
 				//checkmark formats
-				formatChecksForApi: val => {
+				formatChecksForApi: function (val) {
 					val = val.toString()
 					return val
 				},
 
-				formatChecksFromApi: val => {
+				formatChecksFromApi: function (val) {
 					if (val == 'true') {
 						val = true
 					} else {
@@ -146,7 +146,7 @@ define(function (require) {
 					return val
 				},
 				// object iterator
-				objIterator: (obj, iterKeys, iterType) => {
+				objIterator: function (obj, iterKeys, iterType) {
 					const objKeys = Object.keys(obj)
 					objKeys.forEach(keyName => {
 						// looping through first object
