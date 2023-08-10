@@ -1,4 +1,4 @@
-<div class="container-fluid box-round">
+<div class="container-fluid">
     <div id="daily-log-grid" data-pss-grid-widget data-data="healthLogList" data-filtered-data="filteredhealthLogList"
         data-client-side-pagination="false" data-filter-constraint="no-filters">
         <table class="grid">
@@ -35,8 +35,8 @@
                     </td>
                 </tr>
                 <tr data-ng-repeat="healthLog in healthLogList" data-id="{{healthLog.id}}">
-                    <td>{{healthLog.log_date | date : 'MM/dd/yyyy'}} {{healthLog.log_time}}</td>
-                    <td data-ng-if="appData.curContext =='Concussion' || appData.curContext =='Eval'">
+                    <td class="center">{{healthLog.log_date | date : 'MM/dd/yyyy'}} {{healthLog.log_time}}</td>
+                    <td class="center" data-ng-if="appData.curContext =='Concussion' || appData.curContext =='Eval'">
                         {{healthLog.injury_date | date :
                         'MM/dd/yyyy'}}</td>
                     <td data-ng-if="appData.curContext =='Daily'">{{healthLog.complaint}}</td>
@@ -47,12 +47,14 @@
                     <td data-ng-if="appData.curContext =='Daily' || appData.curContext =='Athletic'">
                         {{healthLog.treatment}}</td>
                     <td data-ng-if="appData.curContext =='Daily'">{{healthLog.destination}}</td>
-                    <td data-ng-if="appData.curContext =='Daily'">{{healthLog.time_left}}</td>
-                    <td data-ng-if="appData.curContext =='Concussion'">{{healthLog.total_systems_score}}/21 Total
+                    <td class="center" data-ng-if="appData.curContext =='Daily'">{{healthLog.time_left}}</td>
+                    <td class="center" data-ng-if="appData.curContext =='Concussion'">
+                        {{healthLog.total_systems_score}}/21 Total
                         Symptoms</td>
-                    <td data-ng-if="appData.curContext =='Concussion'">{{healthLog.systems_score}}/126 Symptoms Score
+                    <td class="center" data-ng-if="appData.curContext =='Concussion'">{{healthLog.systems_score}}/126
+                        Symptoms Score
                     </td>
-                    <td>{{healthLog.first_name}} {{healthLog.last_name}}</td>
+                    <td class="center">{{healthLog.first_name}} {{healthLog.last_name}}</td>
                     <td>
                         <span
                             data-ng-if="appData.curContext =='Daily'|| appData.curContext =='Athletic'">{{healthLog.notes}}</span>
@@ -69,7 +71,7 @@
                             P: {{healthLog.notes_p}} <br>
                         </span>
                     </td>
-                    <td class="actions">
+                    <td class="actions center">
                         <button type="button" id="mod-btn-{{healthLog.id}}" pss-dialog-drawer edit-button-icon="true"
                             drawer-title="Edit {{appData.fullContext}}" template-url="views/log_drawer.html"
                             data-data="healthLog"></button>

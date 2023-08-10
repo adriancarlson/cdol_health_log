@@ -6,7 +6,8 @@ define(function (require) {
 		'$scope',
 		'$rootScope',
 		'psApiService',
-		function ($scope, $rootScope, psApiService) {
+		'formatService',
+		function ($scope, $rootScope, psApiService, formatService) {
 			$scope.logRecord = {}
 			const commonPayload = {
 				schoolid: $rootScope.appData.curSchoolId,
@@ -28,11 +29,11 @@ define(function (require) {
 			let openDrawer = (openCallBack, data) => {
 				if (data.data.id == null) {
 					$scope.logRecord.log_type = $rootScope.appData.curContext
+					$scope.logRecord.log_date = $rootScope.appData.curDate
+					$scope.logRecord.injury_date = ['Concussion', 'Eval'].includes($scope.logRecord.log_type) ? $rootScope.appData.curDate : $scope.logRecord.injury_date
 				} else {
+					formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
 					$scope.logRecord = data.data
-					// formatService.objIterator(resData, apiPayload.dateKeys, 'formatDateFromApi')
-					console.log('Edit Item button Clicked')
-					console.log(data)
 				}
 				openCallBack()
 			}

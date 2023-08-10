@@ -4,7 +4,7 @@ define(function (require) {
 	module.factory('formatService', [
 		function () {
 			//dateformats
-			var dateSvc = this
+			let dateSvc = this
 			dateSvc.dateFormat = 'mm/dd/yyyy'
 			dateSvc.monthIndex = 0
 			dateSvc.dayIndex = 1
@@ -13,7 +13,7 @@ define(function (require) {
 			return {
 				setDateFormat: function (dateString) {
 					dateString = dateString.toLowerCase()
-					var dateParts = dateString.split(/[.,\/ -]/)
+					let dateParts = dateString.split(/[.,\/ -]/)
 					if (dateParts.length != 3) return
 					if (!dateParts.includes('mm') || !dateParts.includes('dd') || !dateParts.includes('yyyy')) return
 					dateSvc.dateFormat = dateString
@@ -30,11 +30,11 @@ define(function (require) {
 				//return date string (yyyy-mm-dd)
 				formatDateForApi: function (dt) {
 					if (!dt) return ''
-					var dateParts = dt.split(dateSvc.delimiter)
+					let dateParts = dt.split(dateSvc.delimiter)
 					if (dateParts.length != 3) return ''
-					var m = dateParts[dateSvc.monthIndex]
-					var d = dateParts[dateSvc.dayIndex]
-					var y = dateParts[dateSvc.yearIndex]
+					let m = dateParts[dateSvc.monthIndex]
+					let d = dateParts[dateSvc.dayIndex]
+					let y = dateParts[dateSvc.yearIndex]
 					return y + '-' + m + '-' + d
 				},
 
@@ -42,29 +42,29 @@ define(function (require) {
 				//return date string (PS date format ~[dateformat])
 				formatDateFromApi: function (dt) {
 					if (!dt) return ''
-					var dateParts = dt.split('-')
+					let dateParts = dt.split('-')
 					if (dateParts.length != 3) return ''
-					var y = dateParts[0]
-					var m = dateParts[1]
-					var d = dateParts[2]
-					return dateSvc.getPsDateString(m, d, y)
+					let y = dateParts[0]
+					let m = dateParts[1]
+					let d = dateParts[2]
+					return this.getPsDateString(m, d, y)
 				},
 
 				//dt - javascript date object
 				//return date string format PS date format ~[dateformat]
 				dateToString: function (dt) {
-					var d = dt.getDate()
-					var m = dt.getMonth() + 1 //January is 0!
-					var y = dt.getFullYear()
+					let d = dt.getDate()
+					let m = dt.getMonth() + 1 //January is 0!
+					let y = dt.getFullYear()
 					if (d < 10) d = '0' + d
 					if (m < 10) m = '0' + m
 					if (isNaN(m)) return ''
-					return dateSvc.getPsDateString(m, d, y)
+					return this.getPsDateString(m, d, y)
 				},
 
 				getPsDateString: function (m, d, y) {
-					returnVal = ''
-					for (var i = 0; i < 3; i++) {
+					let returnVal = ''
+					for (let i = 0; i < 3; i++) {
 						if (dateSvc.monthIndex == i) returnVal += m
 						else if (dateSvc.dayIndex == i) returnVal += d
 						else returnVal += y
@@ -76,11 +76,11 @@ define(function (require) {
 				//accept a string date (PS date format ~[dateformat])
 				//return string representation of date plus increment days
 				addDays: function (dateString, increment) {
-					var dateParts = dateString.split(dateSvc.delimiter)
-					var m = dateParts[dateSvc.monthIndex]
-					var d = dateParts[dateSvc.dayIndex]
-					var y = dateParts[dateSvc.yearIndex]
-					var dateVal = new Date()
+					let dateParts = dateString.split(dateSvc.delimiter)
+					let m = dateParts[dateSvc.monthIndex]
+					let d = dateParts[dateSvc.dayIndex]
+					let y = dateParts[dateSvc.yearIndex]
+					let dateVal = new Date()
 					dateVal.setMonth(0)
 					dateVal.setDate(d)
 					dateVal.setYear(y)
@@ -106,13 +106,13 @@ define(function (require) {
 				},
 
 				sentenceCase: function (str) {
-					var n = str.split('.')
-					var vfinal = ''
+					let n = str.split('.')
+					let vfinal = ''
 					for (i = 0; i < n.length; i++) {
-						var spaceput = ''
-						var spaceCount = n[i].replace(/^(\s*).*$/, '$1').length
+						let spaceput = ''
+						let spaceCount = n[i].replace(/^(\s*).*$/, '$1').length
 						n[i] = n[i].replace(/^\s+/, '')
-						var newstring = n[i].charAt(n[i]).toUpperCase() + n[i].slice(1)
+						let newstring = n[i].charAt(n[i]).toUpperCase() + n[i].slice(1)
 						for (j = 0; j < spaceCount; j++) spaceput = spaceput + ' '
 						vfinal = vfinal + spaceput + newstring + '.'
 					}
