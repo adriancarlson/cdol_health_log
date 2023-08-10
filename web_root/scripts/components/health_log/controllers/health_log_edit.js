@@ -16,6 +16,7 @@ define(function (require) {
 			}
 			const formatKeys = {
 				dateKeys: ['_date'],
+				timeKeys: ['_time'],
 				deleteKeys: ['_title', '_name']
 			}
 
@@ -33,6 +34,7 @@ define(function (require) {
 					$scope.logRecord.injury_date = ['Concussion', 'Eval'].includes($scope.logRecord.log_type) ? $rootScope.appData.curDate : $scope.logRecord.injury_date
 				} else {
 					formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
+					formatService.objIterator(data.data, formatKeys.timeKeys, 'convSecondsToTime12')
 					$scope.logRecord = data.data
 				}
 				openCallBack()

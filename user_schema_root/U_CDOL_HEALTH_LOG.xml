@@ -10,7 +10,7 @@
         <field name="complaint" type="String" length="250" />
         <field name="treatment" type="String" length="250" />
         <field name="destination" type="String" length="250" />
-        <field name="time_left" type="Integer" />
+        <field name="left_time" type="Integer" />
         <field name="users_dcid" type="Integer" />
         <field name="injury_site" type="String" length="250" />
         <field name="injury_type" type="String" length="250" />

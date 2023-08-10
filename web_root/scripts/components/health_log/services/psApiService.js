@@ -32,6 +32,10 @@ define(function (require) {
 								apiPayload = formatService.objIterator(apiPayload, apiPayload.dateKeys, 'formatDateForApi')
 							}
 							delete apiPayload.dateKeys
+							if (apiPayload.timeKeys) {
+								apiPayload = formatService.objIterator(apiPayload, apiPayload.timeKeys, 'convTime12ToSeconds')
+							}
+							delete apiPayload.timeKeys
 							if (apiPayload.checkBoxKeys) {
 								apiPayload = formatService.objIterator(apiPayload, apiPayload.checkBoxKeys, 'formatChecksForApi')
 							}

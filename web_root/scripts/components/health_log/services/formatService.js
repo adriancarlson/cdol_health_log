@@ -88,6 +88,32 @@ define(function (require) {
 					dateVal.setDate(dateVal.getDate() + increment)
 					return this.dateToString(dateVal)
 				},
+				// Convert Seconds (integer) to Time (12 hr AM/PM) -- no seconds
+				//Time formats Adapted from Peter Nethercott's Log Entry Management Plugin
+				convSecondsToTime12: function (psec) {
+					let hours = Math.floor(psec / 3600)
+					let minutes = Math.floor((psec - hours * 3600) / 60)
+					let meridiem = 'AM'
+					if (hours * 60 * 60 >= 43200) {
+						meridiem = 'PM'
+						if (hours != '12') hours -= 12
+					}
+					hours = hours < 10 ? '0' + hours : hours
+					minutes = minutes < 10 ? '0' + minutes : minutes
+					let strTime = hours + ':' + minutes + ' ' + meridiem
+					//have to convert to string for API call
+					return strTime.toString()
+				},
+
+				// Convert Time (12 hr AM/PM) to Seconds (integer)
+				// Adapted from Peter Nethercott's Log Entry Management Plugin
+				convTime12ToSeconds: function (ptime) {
+					let hrs = ptime.substr(0, 2)
+					let min = ptime.substr(3, 2)
+					let intSecs = hrs * 3600 + min * 60 + (ptime.substr(6, 2) === 'PM' && hrs != '12' ? 43200 : 0)
+					return intSecs
+				},
+
 				//case formats
 				camelize: function (str) {
 					return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
