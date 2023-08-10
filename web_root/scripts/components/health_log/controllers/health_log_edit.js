@@ -17,14 +17,14 @@ define(function (require) {
 				dateKeys: ['_date']
 			}
 
-			let init = function () {
+			let init = () => {
 				// $scope.currentContext = context
 				$scope.$emit('open.drawer.event', openDrawer)
 				$scope.$emit('cancel.drawer.event', cancelDrawer)
 				$scope.$emit('save.drawer.event', saveDrawer)
 			}
 
-			let openDrawer = function (openCallBack, data) {
+			let openDrawer = (openCallBack, data) => {
 				if (data.data.id == null) {
 					$scope.logRecord.log_type = $rootScope.appData.curContext
 				} else {
@@ -35,12 +35,12 @@ define(function (require) {
 				openCallBack()
 			}
 
-			let cancelDrawer = function (closeDrawer) {
+			let cancelDrawer = closeDrawer => {
 				$scope.logRecord = {}
 				closeDrawer()
 			}
 
-			let saveDrawer = async function (closeDrawer, data) {
+			let saveDrawer = async closeDrawer => {
 				loadingDialog()
 				$scope.logRecord = Object.assign($scope.logRecord, commonPayload)
 				//add createFormatKeys to each object in submitPayload
@@ -51,51 +51,50 @@ define(function (require) {
 				$rootScope.reloadData()
 				closeLoading()
 				closeDrawer(true)
-
 			}
 
-			let saveData = function (resourceURL, payload) {
-				let URL
-				if (payload.id > 0) {
-					URL = resourceURL + '/' + payload.id
-					return $http.put(URL, payload, JSON_HEADER)
-				} else {
-					URL = resourceURL
-					return $http.post(URL, payload, JSON_HEADER)
-				}
-			}
+			// let saveData = function (resourceURL, payload) {
+			// 	let URL
+			// 	if (payload.id > 0) {
+			// 		URL = resourceURL + '/' + payload.id
+			// 		return $http.put(URL, payload, JSON_HEADER)
+			// 	} else {
+			// 		URL = resourceURL
+			// 		return $http.post(URL, payload, JSON_HEADER)
+			// 	}
+			// }
 
-			let buildPayload = function () {
-				// fix null values - change to empty string
-				Object.keys(context).forEach(function (key) {
-					if (context[key] == null) context[key] = ''
-				})
+			// let buildPayload = function () {
+			// 	// fix null values - change to empty string
+			// 	Object.keys(context).forEach(function (key) {
+			// 		if (context[key] == null) context[key] = ''
+			// 	})
 
-				// base payload common for both add and update
-				let payload = {
-					tables: {
-						[RESOURCE_TABLE]: {
-							institutionid: context.institutionid,
-							request_date: parseDateString(context.request_date),
-							request_status: context.request_status,
-							scholarship: context.scholarship,
-							scholarship_amount: context.scholarship_amount,
-							completion_date: parseDateString(context.completion_date),
-							outcome: context.outcome,
-							notes: context.notes
-						}
-					}
-				}
-				if (context.id > 0) {
-					// existing record - add necessary payload data
-					payload.id = context.id
-					payload.name = RESOURCE_TABLE
-				} else {
-					// new record needs studentsdcid for foreign key 1-many requirement
-					payload.tables[RESOURCE_TABLE].studentsdcid = context.studentsdcid
-				}
-				return payload
-			}
+			// 	// base payload common for both add and update
+			// 	let payload = {
+			// 		tables: {
+			// 			[RESOURCE_TABLE]: {
+			// 				institutionid: context.institutionid,
+			// 				request_date: parseDateString(context.request_date),
+			// 				request_status: context.request_status,
+			// 				scholarship: context.scholarship,
+			// 				scholarship_amount: context.scholarship_amount,
+			// 				completion_date: parseDateString(context.completion_date),
+			// 				outcome: context.outcome,
+			// 				notes: context.notes
+			// 			}
+			// 		}
+			// 	}
+			// 	if (context.id > 0) {
+			// 		// existing record - add necessary payload data
+			// 		payload.id = context.id
+			// 		payload.name = RESOURCE_TABLE
+			// 	} else {
+			// 		// new record needs studentsdcid for foreign key 1-many requirement
+			// 		payload.tables[RESOURCE_TABLE].studentsdcid = context.studentsdcid
+			// 	}
+			// 	return payload
+			// }
 
 			init()
 		}

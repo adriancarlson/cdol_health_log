@@ -15,6 +15,7 @@ define(function (require) {
 				curSchoolId: $attrs.ngCurSchoolId,
 				curYearId: $attrs.ngCurYearId,
 				curStudentID: $attrs.ngCurStudentId,
+				curStudentName: $attrs.ngCurStudentName,
 				curDate: $attrs.ngCurDate,
 				curTime: $attrs.ngCurTime,
 				curContext: $attrs.ngCurContext
@@ -27,6 +28,7 @@ define(function (require) {
 					Eval: 'Injury Eval'
 				}
 				document.title = $rootScope.appData.fullContext = contextMap[$rootScope.appData.curContext] || 'Log'
+				document.title = `${document.title} - ${rootScope.appData.curStudentName}`
 			}
 
 			$rootScope.loadLogData = async logData => {
@@ -37,7 +39,6 @@ define(function (require) {
 				$scope.setfullContext()
 				$scope.$digest()
 				closeLoading()
-				console.log($scope.healthLogList)
 			}
 
 			$rootScope.reloadData = () => {
