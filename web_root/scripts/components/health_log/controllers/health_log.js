@@ -49,12 +49,11 @@ define(function (require) {
 
 			$scope.delConfirm = logId => {
 				psConfirm({
-					title: `Delete ${$scope.fullContext}`,
-					message: `Are you sure you want to delete this ${$scope.fullContext}?`,
+					title: `Delete ${$rootScope.appData.fullContext}`,
+					message: `    Are you sure you want to delete this ${$rootScope.appData.fullContext}?    `,
 					oktext: 'Delete',
 					canceltext: 'Cancel',
 					ok: async () => {
-						console.log(logId)
 						await psApiService.psApiCall('u_cdol_health_log', 'DELETE', {}, logId)
 						await $rootScope.reloadData()
 					}

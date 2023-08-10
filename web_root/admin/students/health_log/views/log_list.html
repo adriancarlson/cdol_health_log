@@ -31,8 +31,7 @@
             </thead>
             <tbody>
                 <tr data-ng-show="!healthLogList.length">
-                    <td colspan="100%">
-                        <span class="feedback-alert">No {{appData.curContext}}'s</span>
+                    <td colspan="100%">No {{appData.fullContext}}'s</span>
                     </td>
                 </tr>
                 <tr data-ng-repeat="healthLog in healthLogList" data-id="{{healthLog.id}}">
