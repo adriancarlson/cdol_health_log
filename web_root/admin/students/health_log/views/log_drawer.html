@@ -27,7 +27,9 @@
         <div data-ng-if="logRecord.log_type =='Athletic'">
             <div>
                 <label>Sport</label>
-                <input type="text" data-ng-model="logRecord.sport">
+                <select
+                    data-ng-model="logRecord.sport">~[x:codesetoptions;codetype=Sports;includeblank;value=~([u_cdol_health_log]sport)]</select>
+                <!--<input type="text" data-ng-model="logRecord.sport">-->
             </div>
         </div>
         <div data-ng-if="logRecord.log_type =='Athletic' || logRecord.log_type =='Eval'">
@@ -60,12 +62,14 @@
         </div>
         <div data-ng-if="logRecord.log_type =='Concussion'">
             <div>
-                <label>Total Symptoms</label>
-                <input type="text" data-ng-model="logRecord.total_systems_score" size="2">/21 Total Symptoms
+                <label>Total Symptoms:</label>
+                <input type="text" inputmode="numeric" data-ng-model="logRecord.total_systems_score" min="0" max="21"
+                    style="width: 4ch; text-align: right;"> /21 Total Symptoms
             </div>
             <div>
-                <label>Symptoms Score</label>
-                <input type="text" data-ng-model="logRecord.systems_score" size="3">/126 Symptoms Score
+                <label>Symptoms Score:</label>
+                <input type="text" inputmode="numeric" data-ng-model="logRecord.systems_score" min="0" max="126"
+                    style="width: 5ch; text-align: right;"> /126 Symptoms Score
             </div>
         </div>
         <div>
