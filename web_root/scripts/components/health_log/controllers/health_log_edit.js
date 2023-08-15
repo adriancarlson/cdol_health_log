@@ -29,10 +29,10 @@ define(function (require) {
 
 			let openDrawer = (openCallBack, data) => {
 				if (data.data.id == null) {
-					$scope.curUser = $rootScope.appData.curUserDcid
 					$scope.logRecord.log_type = $rootScope.appData.curContext
 					$scope.logRecord.log_date = $rootScope.appData.curDate
 					$scope.logRecord.log_time = $rootScope.appData.curTime
+					$scope.logRecord.users_dcid = $rootScope.appData.curUserDcid
 					$scope.logRecord.injury_date = ['Concussion', 'Eval'].includes($scope.logRecord.log_type) ? $rootScope.appData.curDate : $scope.logRecord.injury_date
 				} else {
 					formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')

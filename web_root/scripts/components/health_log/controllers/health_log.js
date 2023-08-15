@@ -65,6 +65,9 @@ define(function (require) {
 	])
 	module.filter('convSecondsToTime12', function () {
 		return function (psec) {
+			if (psec === null || isNaN(psec)) {
+				return '' // Return empty string for null or NaN inputs
+			}
 			let hours = Math.floor(psec / 3600)
 			let minutes = Math.floor((psec - hours * 3600) / 60)
 			let meridiem = 'AM'
