@@ -41,7 +41,11 @@ define(function (require) {
 			}
 
 			let cancelDrawer = closeDrawer => {
+				loadingDialog()
 				$scope.logRecord = {}
+				$rootScope.reloadData()
+				closeLoading()
+				closeDrawer(true)
 				closeDrawer()
 			}
 

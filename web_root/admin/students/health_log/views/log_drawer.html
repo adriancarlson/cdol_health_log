@@ -48,7 +48,7 @@
                 <input type="text" data-ng-model="logRecord.treatment">
             </div>
         </div>
-        <div data-ng-if="logRecord.log_type =='Daily'">
+        <div data-ng-show="logRecord.log_type =='Daily'">
             <div>
                 <label>Destination</label>
                 <input type="text" data-ng-model="logRecord.destination">
