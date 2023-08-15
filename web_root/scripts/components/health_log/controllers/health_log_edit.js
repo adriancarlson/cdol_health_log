@@ -61,6 +61,7 @@ define(function (require) {
 				} else {
 					await psApiService.psApiCall('u_cdol_health_log', 'POST', $scope.logRecord)
 				}
+				$scope.logRecord = {}
 				$rootScope.reloadData()
 				closeLoading()
 				closeDrawer(true)

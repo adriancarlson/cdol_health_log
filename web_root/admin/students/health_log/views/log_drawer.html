@@ -8,7 +8,7 @@
             </div>
             <div>
                 <label>Log Time</label>
-                <input type="text" data-ng-model="logRecord.log_time" size="8">
+                <input type="text" data-ng-model="logRecord.log_time" class="timeEntry" size="8">
                 <!-- class="timeEntry" -->
             </div>
         </div>
@@ -55,7 +55,7 @@
             </div>
             <div>
                 <label>Time Left</label>
-                <input type="text" data-ng-model="logRecord.left_time">
+                <input type="text" class="timeEntry" data-ng-model="logRecord.left_time">
             </div>
         </div>
         <div data-ng-if="logRecord.log_type =='Concussion'">
