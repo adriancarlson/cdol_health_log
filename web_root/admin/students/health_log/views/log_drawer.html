@@ -58,7 +58,13 @@
         <div data-ng-show="logRecord.log_type =='Daily'">
             <div>
                 <label>Destination</label>
-                <input type="text" data-ng-model="logRecord.destination">
+                <select data-ng-options="val as val for (key,val) in $root.appData.destinationList"
+                    data-ng-model="logRecord.destination" data-ng-change="handleDestinationChange()">
+                    <option value="">Select a Destination</option>
+                </select>
+                <input data-ng-show="displayDestinationOther || logRecord.destination== 'Other'" type="text"
+                    data-ng-model="logRecord.destination_other">
+                <!-- <input type="text" data-ng-model="logRecord.destination"> -->
             </div>
             <div>
                 <label>Time Left</label>

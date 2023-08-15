@@ -49,6 +49,18 @@ define(function (require) {
 						// The complaint value exists in the complaintList
 						console.log('Complaint value exists:', $scope.logRecord.complaint)
 					}
+
+					const destinationValues = Object.values($rootScope.appData.destinationList)
+
+					if (destinationValues.indexOf($scope.logRecord.destination) === -1) {
+						// The destination value does not exist in the destinationList
+						$scope.displayDestinationOther = true
+						$scope.logRecord.destination_other = $scope.logRecord.destination
+						$scope.logRecord.destination = 'Other'
+					} else {
+						// The destination value exists in the destinationList
+						console.log('destination value exists:', $scope.logRecord.destination)
+					}
 				}
 				openCallBack()
 			}
@@ -74,6 +86,11 @@ define(function (require) {
 					delete $scope.logRecord['complaint_other']
 				}
 
+				if ($scope.logRecord.destination_other) {
+					$scope.logRecord.destination = $scope.logRecord.destination_other
+					delete $scope.logRecord['destination_other']
+				}
+
 				//submitting staff changes through api
 				if ($scope.logRecord.id) {
 					let recordId = $scope.logRecord.id
@@ -93,6 +110,10 @@ define(function (require) {
 			$scope.handleComplaintChange = function () {
 				delete $scope.logRecord['complaint_other']
 				$scope.displayComplaintOther = false
+			}
+			$scope.handleDestinationChange = function () {
+				delete $scope.logRecord['destination_other']
+				$scope.displayDestinationOther = false
 			}
 
 			init()
