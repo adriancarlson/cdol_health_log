@@ -19,7 +19,32 @@ define(function (require) {
 				curUserDcid: $attrs.ngCurUserDcid,
 				curDate: $attrs.ngCurDate,
 				curTime: $attrs.ngCurTime,
-				curContext: $attrs.ngCurContext
+				curContext: $attrs.ngCurContext,
+				complaintList: {
+					B: 'Bloody Nose',
+					C: 'Cramps',
+					D: 'Dizziness',
+					H: 'Headache',
+					I: 'Injury ',
+					N: 'Nausea',
+					S: 'Stomachache',
+					V: 'Vomiting',
+					O: 'Other'
+				},
+				treatmentList: {
+					B: 'Controlled Bleeding',
+					I: 'Ice Applied',
+					M: 'Med Administration',
+					W: 'Water/Snack',
+					O: 'Other'
+				},
+				destinationList: {
+					B: 'Back to Class',
+					C: 'Counselor',
+					H: 'Home',
+					F: 'Office',
+					O: 'Other'
+				}
 			}
 			$scope.setfullContext = () => {
 				const contextMap = {

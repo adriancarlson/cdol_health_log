@@ -21,7 +21,12 @@
         <div data-ng-if="logRecord.log_type =='Daily'">
             <div>
                 <label>Complaint</label>
-                <input type="text" data-ng-model="logRecord.complaint">
+                <select data-ng-options="val as val for (key,val) in $root.appData.complaintList"
+                    data-ng-model="logRecord.complaint" data-ng-change="handleComplaintChange()">
+                    <option value="">Select an Outcome</option>
+                </select>
+                <input data-ng-show="displayComplaintOther || logRecord.complaint== 'Other'" type="text"
+                    data-ng-model="logRecord.complaint_other">
             </div>
         </div>
         <div data-ng-if="logRecord.log_type =='Athletic'">
