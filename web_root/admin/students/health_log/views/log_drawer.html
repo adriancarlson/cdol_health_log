@@ -85,7 +85,7 @@
                     AND schoolstaff.schoolid = ~(curschoolid)
                     [/if.is.a.school]
                     Order BY users.last_name , users.first_name]
-                    <option value="~(dcid)" data-ng-selected="$rootScope.appData.curUserDcid == ~(dcid)">~(first)
+                    <option value="~(dcid)" data-ng-selected="curUser == ~(dcid)">~(first)
                         ~(last)</option>
                     [/tlist_sql]
                 </select>

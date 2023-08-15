@@ -29,6 +29,7 @@ define(function (require) {
 
 			let openDrawer = (openCallBack, data) => {
 				if (data.data.id == null) {
+					$scope.curUser = $rootScope.appData.curUserDcid
 					$scope.logRecord.log_type = $rootScope.appData.curContext
 					$scope.logRecord.log_date = $rootScope.appData.curDate
 					$scope.logRecord.injury_date = ['Concussion', 'Eval'].includes($scope.logRecord.log_type) ? $rootScope.appData.curDate : $scope.logRecord.injury_date
@@ -72,13 +73,6 @@ define(function (require) {
 			}
 
 			init()
-
-			$scope.updateScopeFromDropdown = resource => {
-				//if dropdown source is user data
-				if (resource === 'usersData') {
-					$scope.logRecord.users_dcid
-				}
-			}
 		}
 	])
 })
