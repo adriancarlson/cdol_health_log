@@ -72,7 +72,8 @@
             <div>
                 <label>Treatment Provider</label>
                 <select id="users_dcid" data-ng-model="logRecord.users_dcid">
-                    ~[tlist_sql;SELECT DISTINCT
+                    <option selected></option>
+                    ~[tlist_sql;SELECT
                     users.dcid,
                     users.first_name,
                     users.last_name
@@ -80,9 +81,12 @@
                     inner join users
                     on users.dcid = schoolstaff.users_dcid
                     WHERE schoolstaff.status = 1
+                    ~[if.is.a.school]
                     AND schoolstaff.schoolid = ~(curschoolid)
+                    [/if.is.a.school]
                     Order BY users.last_name , users.first_name]
-                    <option value="~(dcid)">~(first) ~(last)</option>
+                    <option value="~(dcid)" data-ng-selected="$rootScope.appData.curUserDcid == ~(dcid)">~(first)
+                        ~(last)</option>
                     [/tlist_sql]
                 </select>
             </div>

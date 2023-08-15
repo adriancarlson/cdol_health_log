@@ -16,6 +16,7 @@ define(function (require) {
 				curYearId: $attrs.ngCurYearId,
 				curStudentID: $attrs.ngCurStudentId,
 				curStudentName: $attrs.ngCurStudentName,
+				curUserDcid: $attrs.ngCurUserDcid,
 				curDate: $attrs.ngCurDate,
 				curTime: $attrs.ngCurTime,
 				curContext: $attrs.ngCurContext

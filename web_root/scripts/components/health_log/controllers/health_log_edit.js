@@ -72,6 +72,13 @@ define(function (require) {
 			}
 
 			init()
+
+			$scope.updateScopeFromDropdown = resource => {
+				//if dropdown source is user data
+				if (resource === 'usersData') {
+					$scope.logRecord.users_dcid
+				}
+			}
 		}
 	])
 })
