@@ -1,3 +1,10 @@
+<div class="button-row">
+    <button id="add-btn" type="button" pss-dialog-drawer drawer-title="Add {{appData.fullContext}}" data-data="{
+                    studentsdcid: '~(rn)',
+                    id: null
+                }" template-url="views/log_drawer.html">
+        Add {{appData.fullContext}}</button>
+</div>
 <div class="container-fluid">
     <div id="daily-log-grid" data-pss-grid-widget data-data="healthLogList" data-filtered-data="filteredhealthLogList"
         data-client-side-pagination="false" data-filter-constraint="no-filters">
