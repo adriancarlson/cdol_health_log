@@ -34,7 +34,7 @@
                     <td colspan="100%">No {{appData.fullContext}}'s</span>
                     </td>
                 </tr>
-                <tr data-ng-repeat="healthLog in healthLogList" data-id="{{healthLog.id}}">
+                <tr data-ng-repeat="healthLog in filteredhealthLogList" data-id="{{healthLog.id}}">
                     <td class="center">{{healthLog.log_date | date : 'MM/dd/yyyy'}} {{healthLog.log_time |
                         convSecondsToTime12 }}</td>
                     <td class="center" data-ng-if="appData.curContext =='Concussion' || appData.curContext =='Eval'">

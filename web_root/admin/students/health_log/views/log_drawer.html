@@ -23,7 +23,7 @@
                 <label>Complaint</label>
                 <select data-ng-options="val as val for (key,val) in $root.appData.complaintList"
                     data-ng-model="logRecord.complaint" data-ng-change="handleComplaintChange()">
-                    <option value="">Select an Outcome</option>
+                    <option value="">Select an Complaint</option>
                 </select>
                 <input data-ng-show="displayComplaintOther || logRecord.complaint== 'Other'" type="text"
                     data-ng-model="logRecord.complaint_other">
