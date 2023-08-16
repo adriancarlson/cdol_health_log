@@ -1,0 +1,9 @@
+<!-- Add Contacts Link to Selection -->
+<script>
+
+$j('select[name=defaultpage]').append('<option value="/admin/students/health_log/daily_health_log.html?frn=~(studentfrn)">Daily Health Log</option>');
+$j('select[name=defaultpage]').append('<option value="/admin/students/health_log/athletic_health_log.html?frn=~(studentfrn)">Athletic Injury</option>');
+$j('select[name=defaultpage]').append('<option value="/admin/students/health_log/concussion_health_log.html?frn=~(studentfrn)">Concussion Eval</option>');
+$j('select[name=defaultpage]').append('<option value="/admin/students/health_log/eval_health_log.html?frn=~(studentfrn)">Injury Evaluation</option>');
+
+</script>
