@@ -4,7 +4,8 @@
         <table class="grid">
             <thead>
                 <tr>
-                    <th data-pss-sort-fields="log_date, log_time" data-primary-sort="descending">Log Date/Time</th>
+                    <th style="width: 135px;" data-pss-sort-fields="log_date, log_time" data-primary-sort="descending">
+                        Log Date/Time</th>
                     <th data-ng-if="appData.curContext =='Concussion' || appData.curContext =='Eval'"
                         data-pss-sort-fields="injury_date">Date of Injury</th>
                     <th data-ng-if="appData.curContext =='Daily'" data-pss-sort-fields="complaint|text">Complaint</th>
@@ -26,7 +27,7 @@
                     </th>
                     <th data-pss-sort-fields="user_dcid|text">Treatment Provider</th>
                     <th>Notes</th>
-                    <th>Actions</th>
+                    <th style="width: 65px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
