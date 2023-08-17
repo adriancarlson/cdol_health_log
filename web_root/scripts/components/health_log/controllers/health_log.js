@@ -50,8 +50,8 @@ define(function (require) {
 				const contextMap = {
 					Daily: 'Daily Health Log',
 					Athletic: 'Athletic Injury',
-					Concussion: 'Concussion Eval',
-					Eval: 'Injury Eval'
+					Concussion: 'Concussion Evaluation',
+					Eval: 'Injury Evaluation'
 				}
 				document.title = $rootScope.appData.fullContext = contextMap[$rootScope.appData.curContext] || 'Log'
 				document.title = `${document.title} - ${$rootScope.appData.curStudentName}`
