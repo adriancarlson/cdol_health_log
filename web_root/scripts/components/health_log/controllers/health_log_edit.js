@@ -12,7 +12,7 @@ define(function (require) {
 			const commonPayload = {
 				schoolid: $rootScope.appData.curSchoolId,
 				yearid: $rootScope.appData.curYearId,
-				studentsdcid: $rootScope.appData.curStudentID
+				studentsdcid: $rootScope.appData.curStudentDCID
 			}
 			const formatKeys = {
 				dateKeys: ['_date'],

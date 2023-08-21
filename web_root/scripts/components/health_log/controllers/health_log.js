@@ -14,7 +14,7 @@ define(function (require) {
 			$rootScope.appData = {
 				curSchoolId: $attrs.ngCurSchoolId,
 				curYearId: $attrs.ngCurYearId,
-				curStudentID: $attrs.ngCurStudentId,
+				curStudentDCID: $attrs.ngCurStudentDcid,
 				curStudentName: $attrs.ngCurStudentName,
 				curUserDcid: $attrs.ngCurUserDcid,
 				curDate: $attrs.ngCurDate,
@@ -59,7 +59,7 @@ define(function (require) {
 
 			$rootScope.loadLogData = async logData => {
 				loadingDialog()
-				const pqData = { curSchoolID: $rootScope.appData.curSchoolId, yearID: $rootScope.appData.curYearId, curStudentID: $rootScope.appData.curStudentID, logType: logData }
+				const pqData = { curSchoolID: $rootScope.appData.curSchoolId, yearID: $rootScope.appData.curYearId, curStudentDCID: $rootScope.appData.curStudentDCID, logType: logData }
 				console.log(pqData)
 				const res = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
 				$scope.healthLogList = res
