@@ -1,5 +1,6 @@
 <!--NoLink-->
 <form name="healthLogForm" data-ng-controller="healthLogEditCtrl">
+    <div id="noTimer" pss-feedback-widget data-error="getErrorMessages()"></div>
     <div class="fluid-form">
         <div>
             <div>
@@ -19,13 +20,14 @@
         </div>
         <div data-ng-if="logRecord.log_type =='Daily'">
             <div>
-                <label>Complaint</label>
+                <label>Complaint <span class="req"><em>*</em></span> </label>
                 <select data-ng-options="val as val for (key,val) in $root.appData.complaintList"
-                    data-ng-model="logRecord.complaint" data-ng-change="handleComplaintChange()">
+                    data-ng-model="logRecord.complaint" data-ng-change="handleComplaintChange(); checkReqFields()">
                     <option value="">Select an Complaint</option>
                 </select>
                 <input data-ng-show="displayComplaintOther || logRecord.complaint== 'Other'" type="text"
-                    data-ng-model="logRecord.complaint_other">
+                    data-ng-model="logRecord.complaint_other"><span class="req"
+                    data-ng-if="!logRecord.complaint"><em>Required</em></span>
             </div>
         </div>
         <div data-ng-if="logRecord.log_type =='Athletic'">
@@ -49,8 +51,9 @@
         </div>
         <div data-ng-if="logRecord.log_type =='Daily' || logRecord.log_type =='Athletic'">
             <div>
-                <label>Treatment</label>
-                <input type="text" data-ng-model="logRecord.treatment">
+                <label>Treatment <span class="req"><em>*</em></span></label>
+                <input type="text" data-ng-model="logRecord.treatment" data-ng-change="checkReqFields()"> <span
+                    class="req" data-ng-if="!logRecord.treatment"><em> Required</em></span>
             </div>
         </div>
         <div data-ng-show="logRecord.log_type =='Daily'">
@@ -83,8 +86,8 @@
         </div>
         <div>
             <div>
-                <label>Treatment Provider</label>
-                <select id="users_dcid" data-ng-model="logRecord.users_dcid">
+                <label>Treatment Provider <span class="req"><em>*</em></span></label>
+                <select id="users_dcid" data-ng-model="logRecord.users_dcid" data-ng-change="checkReqFields()">
                     <option selected></option>
                     ~[tlist_sql;SELECT
                     users.dcid,
@@ -101,7 +104,7 @@
                     <option value="~(dcid)" data-ng-selected="curUser == ~(dcid)">~(first)
                         ~(last)</option>
                     [/tlist_sql]
-                </select>
+                </select><span class="req" data-ng-if="!logRecord.users_dcid"><em> Required</em></span>
             </div>
         </div>
         <div>

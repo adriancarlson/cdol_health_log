@@ -22,11 +22,13 @@ define(function (require) {
 				curContext: $attrs.ngCurContext,
 				complaintList: {
 					B: 'Bloody Nose',
+					CS: 'Cold Symptoms',
 					C: 'Cramps',
 					D: 'Dizziness',
 					H: 'Headache',
 					I: 'Injury ',
 					N: 'Nausea',
+					T: 'Sore Throat',
 					S: 'Stomachache',
 					V: 'Vomiting',
 					O: 'Other'

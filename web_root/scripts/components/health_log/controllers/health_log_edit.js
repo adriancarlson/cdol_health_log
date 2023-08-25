@@ -21,7 +21,6 @@ define(function (require) {
 			}
 
 			let init = () => {
-				// $scope.currentContext = context
 				$scope.$emit('open.drawer.event', openDrawer)
 				$scope.$emit('cancel.drawer.event', cancelDrawer)
 				$scope.$emit('save.drawer.event', saveDrawer)
@@ -29,6 +28,9 @@ define(function (require) {
 
 			let openDrawer = (openCallBack, data) => {
 				if (data.data.id == null) {
+					if ($rootScope.appData.curContext == 'Daily') {
+						$scope.$emit('drawer.disable.save.button')
+					}
 					$scope.logRecord.log_type = $rootScope.appData.curContext
 					$scope.logRecord.log_date = $rootScope.appData.curDate
 					$scope.logRecord.log_time = $rootScope.appData.curTime
@@ -106,6 +108,21 @@ define(function (require) {
 				closeDrawer(true)
 			}
 
+			$scope.checkReqFields = () => {
+				switch ($scope.logRecord.log_type) {
+					case 'Daily':
+						if (
+							$scope.logRecord.complaint &&
+							$scope.logRecord.treatment
+							//   && $scope.logRecord.users_dcid
+						) {
+							$scope.$emit('drawer.enable.save.button')
+						} else {
+							$scope.$emit('drawer.disable.save.button')
+						}
+						break
+				}
+			}
 			// Inside your controller
 			$scope.handleComplaintChange = function () {
 				delete $scope.logRecord['complaint_other']
