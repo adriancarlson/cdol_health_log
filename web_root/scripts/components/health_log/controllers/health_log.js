@@ -62,9 +62,8 @@ define(function (require) {
 			$rootScope.loadLogData = async logData => {
 				loadingDialog()
 				const pqData = { curSchoolID: $rootScope.appData.curSchoolId, yearID: $rootScope.appData.curYearId, curStudentDCID: $rootScope.appData.curStudentDCID, logType: logData }
-				console.log(pqData)
-				const res = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
-				$scope.healthLogList = res
+				$scope.healthLogList = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
+				$rootScope.appData.staffList = await pqService.getPQResults('net.cdolinc.health.healthLog.staff', { curSchoolID: $rootScope.appData.curSchoolId })
 				$scope.setfullContext()
 				$scope.$digest()
 				closeLoading()

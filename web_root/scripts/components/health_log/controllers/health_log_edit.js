@@ -47,9 +47,6 @@ define(function (require) {
 						$scope.displayComplaintOther = true
 						$scope.logRecord.complaint_other = $scope.logRecord.complaint
 						$scope.logRecord.complaint = 'Other'
-					} else {
-						// The complaint value exists in the complaintList
-						console.log('Complaint value exists:', $scope.logRecord.complaint)
 					}
 
 					const destinationValues = Object.values($rootScope.appData.destinationList)
@@ -59,9 +56,6 @@ define(function (require) {
 						$scope.displayDestinationOther = true
 						$scope.logRecord.destination_other = $scope.logRecord.destination
 						$scope.logRecord.destination = 'Other'
-					} else {
-						// The destination value exists in the destinationList
-						console.log('destination value exists:', $scope.logRecord.destination)
 					}
 				}
 				openCallBack()
@@ -111,11 +105,7 @@ define(function (require) {
 			$scope.checkReqFields = () => {
 				switch ($scope.logRecord.log_type) {
 					case 'Daily':
-						if (
-							$scope.logRecord.complaint &&
-							$scope.logRecord.treatment
-							//   && $scope.logRecord.users_dcid
-						) {
+						if ($scope.logRecord.complaint && $scope.logRecord.treatment && $scope.logRecord.users_dcid) {
 							$scope.$emit('drawer.enable.save.button')
 						} else {
 							$scope.$emit('drawer.disable.save.button')
