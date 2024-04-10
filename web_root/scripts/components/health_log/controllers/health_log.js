@@ -22,6 +22,7 @@ define(function (require) {
 				curContext: $attrs.ngCurContext,
 				complaintList: {
 					B: 'Bloody Nose',
+					BB: 'Brain Break',
 					CS: 'Cold Symptoms',
 					C: 'Cramps',
 					D: 'Dizziness',
