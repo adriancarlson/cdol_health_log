@@ -57,6 +57,15 @@ define(function (require) {
 						$scope.logRecord.destination_other = $scope.logRecord.destination
 						$scope.logRecord.destination = 'Other'
 					}
+
+					const conversationTypeValues = Object.values($rootScope.appData.conversationTypeList)
+
+					if (conversationTypeValues.indexOf($scope.logRecord.conversation_type) === -1) {
+						// The complaint value does not exist in the conversationType
+						$scope.displayconversationTypeOther = true
+						$scope.logRecord.conversation_type_other = $scope.logRecord.conversation_type
+						$scope.logRecord.conversation_type = 'Other'
+					}
 				}
 				openCallBack()
 			}
