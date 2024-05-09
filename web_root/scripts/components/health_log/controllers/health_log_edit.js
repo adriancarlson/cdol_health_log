@@ -76,21 +76,17 @@ define(function (require) {
 				$scope.logRecord = Object.assign($scope.logRecord, commonPayload)
 				//add createFormatKeys to each object in submitPayload
 				$scope.logRecord = Object.assign($scope.logRecord, formatKeys)
-
-				if ($scope.logRecord.complaint_other) {
-					$scope.logRecord.complaint = $scope.logRecord.complaint_other
-					delete $scope.logRecord['complaint_other']
+				//check for other values in dropdowns and takes the other value and puts it in the proper field in the logRecord also deletes the other field from the logRecord payload
+				for (const key in $scope.logRecord) {
+					if (key.endsWith('_other')) {
+						const originalKey = key.replace('_other', '')
+						if ($scope.logRecord[originalKey]) {
+							$scope.logRecord[originalKey] = $scope.logRecord[key]
+							delete $scope.logRecord[key]
+						}
+					}
 				}
 
-				if ($scope.logRecord.destination_other) {
-					$scope.logRecord.destination = $scope.logRecord.destination_other
-					delete $scope.logRecord['destination_other']
-				}
-
-				if ($scope.logRecord.conversation_type_other) {
-					$scope.logRecord.conversation_type = $scope.logRecord.conversation_type_other
-					delete $scope.logRecord['conversation_type_other']
-				}
 				//submitting staff changes through api
 				if ($scope.logRecord.id) {
 					let recordId = $scope.logRecord.id
@@ -105,58 +101,32 @@ define(function (require) {
 				closeLoading()
 				closeDrawer(true)
 			}
-
+			// checks required fields and enables save button if all required fields are filled out
 			$scope.checkReqFields = () => {
+				let enableSaveButton = false
 				switch ($scope.logRecord.log_type) {
 					case 'Daily':
-						if ($scope.logRecord.complaint && $scope.logRecord.treatment && $scope.logRecord.users_dcid) {
-							$scope.$emit('drawer.enable.save.button')
-						} else {
-							$scope.$emit('drawer.disable.save.button')
-						}
+						enableSaveButton = $scope.logRecord.complaint && $scope.logRecord.treatment && $scope.logRecord.users_dcid
 						break
 					case 'Athletic':
-						if ($scope.logRecord.treatment) {
-							$scope.$emit('drawer.enable.save.button')
-						} else {
-							$scope.$emit('drawer.disable.save.button')
-						}
+						enableSaveButton = $scope.logRecord.treatment
 						break
 					case 'Concussion':
-						if ($scope.logRecord.users_dcid) {
-							$scope.$emit('drawer.enable.save.button')
-						} else {
-							$scope.$emit('drawer.disable.save.button')
-						}
-						break
+						enableSaveButton = $scope.logRecord.users_dcid
 					case 'Injury':
-						if ($scope.logRecord.users_dcid) {
-							$scope.$emit('drawer.enable.save.button')
-						} else {
-							$scope.$emit('drawer.disable.save.button')
-						}
+						enableSaveButton = $scope.logRecord.users_dcid
 						break
 					case 'Conversation':
-						if ($scope.logRecord.conversation_type && $scope.logRecord.contact && $scope.logRecord.users_dcid) {
-							$scope.$emit('drawer.enable.save.button')
-						} else {
-							$scope.$emit('drawer.disable.save.button')
-						}
+						enableSaveButton = $scope.logRecord.conversation_type && $scope.logRecord.contact && $scope.logRecord.users_dcid
 						break
 				}
+
+				$scope.$emit(enableSaveButton ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
 			}
-			// Inside your controller
-			$scope.handleComplaintChange = function () {
-				delete $scope.logRecord['complaint_other']
-				$scope.displayComplaintOther = false
-			}
-			$scope.handleDestinationChange = function () {
-				delete $scope.logRecord['destination_other']
-				$scope.displayDestinationOther = false
-			}
-			$scope.handleConversationTypeChange = function () {
-				delete $scope.logRecord['conversation_type_other']
-				$scope.displayConversationTypeOther = false
+			//checks for other values in dropdowns and takes the other value and puts it in the proper field in the logRecord also deletes the other field from the logRecord payload
+			$scope.handleFieldChange = function (fieldName) {
+				delete $scope.logRecord[fieldName + '_other']
+				$scope['display' + fieldName.charAt(0).toUpperCase() + fieldName.slice(1) + 'Other'] = false
 			}
 
 			init()

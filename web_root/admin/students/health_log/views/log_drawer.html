@@ -22,7 +22,8 @@
             <div>
                 <label>Complaint <span class="req"><em>*</em></span> </label>
                 <select data-ng-options="val as val for (key,val) in $root.appData.complaintList"
-                    data-ng-model="logRecord.complaint" data-ng-change="handleComplaintChange(); checkReqFields()">
+                    data-ng-model="logRecord.complaint"
+                    data-ng-change="handleFieldChange('complaint'); checkReqFields()">
                     <option value="">Select an Complaint</option>
                 </select>
                 <input data-ng-show="displayComplaintOther || logRecord.complaint== 'Other'" type="text"
@@ -60,7 +61,7 @@
             <div>
                 <label>Destination</label>
                 <select data-ng-options="val as val for (key,val) in $root.appData.destinationList"
-                    data-ng-model="logRecord.destination" data-ng-change="handleDestinationChange()">
+                    data-ng-model="logRecord.destination" data-ng-change="handleFieldChange('destination')">
                     <option value="">Select a Destination</option>
                 </select>
                 <input data-ng-show="displayDestinationOther || logRecord.destination== 'Other'" type="text"
@@ -89,7 +90,7 @@
                 <label>Conversation Type <span class="req"><em>*</em></span> </label>
                 <select data-ng-options="val as val for (key,val) in $root.appData.conversationTypeList"
                     data-ng-model="logRecord.conversation_type"
-                    data-ng-change="handleConversationTypeChange(); checkReqFields()">
+                    data-ng-change="handleFieldChange('conversation_type'); checkReqFields()">
                     <option value="">Select a Conversation Type</option>
                 </select>
                 <input data-ng-show="displayConversationTypeOther || logRecord.conversation_type== 'Other'" type="text"
