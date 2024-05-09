@@ -28,7 +28,7 @@ define(function (require) {
 
 			let openDrawer = (openCallBack, data) => {
 				if (data.data.id == null) {
-					if ($rootScope.appData.curContext == 'Daily') {
+					if ($rootScope.appData.curContext !== 'Concussion' && $rootScope.appData.curContext !== 'Eval') {
 						$scope.$emit('drawer.disable.save.button')
 					}
 					$scope.logRecord.log_type = $rootScope.appData.curContext
@@ -110,6 +110,34 @@ define(function (require) {
 				switch ($scope.logRecord.log_type) {
 					case 'Daily':
 						if ($scope.logRecord.complaint && $scope.logRecord.treatment && $scope.logRecord.users_dcid) {
+							$scope.$emit('drawer.enable.save.button')
+						} else {
+							$scope.$emit('drawer.disable.save.button')
+						}
+						break
+					case 'Athletic':
+						if ($scope.logRecord.treatment) {
+							$scope.$emit('drawer.enable.save.button')
+						} else {
+							$scope.$emit('drawer.disable.save.button')
+						}
+						break
+					case 'Concussion':
+						if ($scope.logRecord.users_dcid) {
+							$scope.$emit('drawer.enable.save.button')
+						} else {
+							$scope.$emit('drawer.disable.save.button')
+						}
+						break
+					case 'Injury':
+						if ($scope.logRecord.users_dcid) {
+							$scope.$emit('drawer.enable.save.button')
+						} else {
+							$scope.$emit('drawer.disable.save.button')
+						}
+						break
+					case 'Conversation':
+						if ($scope.logRecord.conversation_type && $scope.logRecord.contact && $scope.logRecord.users_dcid) {
 							$scope.$emit('drawer.enable.save.button')
 						} else {
 							$scope.$emit('drawer.disable.save.button')
