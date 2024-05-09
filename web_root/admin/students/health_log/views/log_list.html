@@ -32,7 +32,15 @@
                     <th data-ng-if="appData.curContext =='Concussion'" data-pss-sort-fields="systems_score|number">
                         System Score
                     </th>
-                    <th data-pss-sort-fields="user_dcid|text">Treatment Provider</th>
+                    <th data-ng-if="appData.curContext =='Conversation'" data-pss-sort-fields="conversation_type|text">
+                        Conversation Type
+                    </th>
+                    <th data-ng-if="appData.curContext =='Conversation'" data-pss-sort-fields="contact|text">
+                        Conversation With
+                    </th>
+                    <th data-pss-sort-fields="user_dcid|text"><span
+                            data-ng-if="appData.curContext !='Conversation'">Treatment Provider</span><span
+                            data-ng-if="appData.curContext =='Conversation'">Staff Member</span></th>
                     <th>Notes</th>
                     <th style="width: 65px;">Actions</th>
                 </tr>
@@ -64,10 +72,13 @@
                     <td class="center" data-ng-if="appData.curContext =='Concussion'">{{healthLog.systems_score}}/126
                         Symptoms Score
                     </td>
+                    <td class="center" data-ng-if="appData.curContext =='Conversation'">{{healthLog.conversation_type}}
+                    </td>
+                    <td class="center" data-ng-if="appData.curContext =='Conversation'">{{healthLog.contact}}</td>
                     <td class="center">{{healthLog.first_name}} {{healthLog.last_name}}</td>
                     <td>
                         <span
-                            data-ng-if="appData.curContext =='Daily'|| appData.curContext =='Athletic'">{{healthLog.notes}}</span>
+                            data-ng-if="appData.curContext =='Daily'|| appData.curContext =='Athletic'|| appData.curContext =='Conversation'">{{healthLog.notes}}</span>
                         <span data-ng-if="appData.curContext =='Concussion'">
                             Memory: {{healthLog.notes_memory}} <br>
                             BESS: {{healthLog.notes_bess}} <br>

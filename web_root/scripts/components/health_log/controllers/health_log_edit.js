@@ -87,6 +87,10 @@ define(function (require) {
 					delete $scope.logRecord['destination_other']
 				}
 
+				if ($scope.logRecord.conversation_type_other) {
+					$scope.logRecord.conversation_type = $scope.logRecord.conversation_type_other
+					delete $scope.logRecord['conversation_type_other']
+				}
 				//submitting staff changes through api
 				if ($scope.logRecord.id) {
 					let recordId = $scope.logRecord.id
