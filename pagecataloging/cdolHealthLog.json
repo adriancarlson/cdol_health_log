@@ -48,6 +48,16 @@
 					"sortOrder": 300,
 					"checkParams": true,
 					"pageURL": "/admin/students/health_log/eval_health_log.html?frn=~(studentfrn)"
+				},
+				{
+					"htmlID": "cdol-conversation-log",
+					"title": "Conversation Log",
+					"version": "0",
+					"contextType": "student",
+					"districtLevelContext": 0,
+					"sortOrder": 400,
+					"checkParams": true,
+					"pageURL": "/admin/students/health_log/conversation_health_log.html?frn=~(studentfrn)"
 				}
 			]
 		}

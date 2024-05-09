@@ -47,6 +47,12 @@ define(function (require) {
 					H: 'Home',
 					F: 'Office',
 					O: 'Other'
+				},
+				contactList: {
+					E: 'Email',
+					P: 'Phone',
+					T: 'Text',
+					O: 'Other'
 				}
 			}
 			$scope.setfullContext = () => {
@@ -54,7 +60,8 @@ define(function (require) {
 					Daily: 'Daily Health Log',
 					Athletic: 'Athletic Injury',
 					Concussion: 'Concussion Evaluation',
-					Eval: 'Injury Evaluation'
+					Eval: 'Injury Evaluation',
+					Conversation: 'Conversation Log'
 				}
 				document.title = $rootScope.appData.fullContext = contextMap[$rootScope.appData.curContext] || 'Log'
 				document.title = `${document.title} - ${$rootScope.appData.curStudentName}`

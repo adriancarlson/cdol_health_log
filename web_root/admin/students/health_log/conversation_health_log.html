@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title></title>
+        ~[wc:commonscripts]
+        <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+        <link href="/images/css/cdol.css" rel="stylesheet" media="screen">
+        <link href="/images/css/print.css" rel="stylesheet" media="print">
+    </head>
+
+    <body data-require-path="components/health_log/index" data-module-name="healthLogMod"
+        data-ng-controller="healthLogCtrl" data-ng-cur-student-dcid="~(rn)" data-ng-cur-student-name="~(studentname)"
+        data-ng-cur-user-dcid="~[x:users_dcid]" data-ng-cur-school-id="~(curschoolid)"
+        data-ng-cur-year-id="~(curyearid)" data-ng-cur-date="~[date]" data-ng-cur-time="~[time]"
+        data-ng-cur-context="Conversation" data-ng-init="loadLogData('Conversation')" data-ng-cloak>
+        ~[wc:admin_header_frame_css]
+        ~[wc:admin_navigation_frame_css]
+        ~[wc:title_student_begin_css]
+        {{appData.fullContext}}
+        ~[wc:title_student_end_css]
+        <div>
+            <log-list></log-list>
+        </div>
+        ~[wc:admin_footer_frame_css]
+    </body>
+
+</html>

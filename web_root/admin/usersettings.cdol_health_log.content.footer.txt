@@ -3,4 +3,5 @@
     $j('select[name=defaultpage]').append('<option value="health_log/athletic_health_log.html">Athletic Injury</option>');
     $j('select[name=defaultpage]').append('<option value="health_log/concussion_health_log.html">Concussion Eval</option>');
     $j('select[name=defaultpage]').append('<option value="health_log/eval_health_log.html">Injury Evaluation</option>');
+    $j('select[name=defaultpage]').append('<option value="health_log/conversation_health_log.html">Conversation Log</option>');
 </script>
