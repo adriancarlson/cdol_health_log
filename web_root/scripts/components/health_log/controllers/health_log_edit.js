@@ -122,6 +122,10 @@ define(function (require) {
 				delete $scope.logRecord['destination_other']
 				$scope.displayDestinationOther = false
 			}
+			$scope.handleConversationTypeChange = function () {
+				delete $scope.logRecord['conversation_type_other']
+				$scope.displayConversationTypeOther = false
+			}
 
 			init()
 		}

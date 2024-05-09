@@ -48,7 +48,7 @@ define(function (require) {
 					F: 'Office',
 					O: 'Other'
 				},
-				contactList: {
+				conversationTypeList: {
 					E: 'Email',
 					P: 'Phone',
 					T: 'Text',

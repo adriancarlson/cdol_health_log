@@ -28,6 +28,6 @@
         <field name="schoolid" type="Integer" />
         <field name="yearid" type="Integer" />
         <field name="contact" type="String" length="4000" />
-        <field name="contact_type" type="String" length="4000" />
+        <field name="conversation_type" type="String" length="4000" />
     </extendedTable>
 </psExtension>
