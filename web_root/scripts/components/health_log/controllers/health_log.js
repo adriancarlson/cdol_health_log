@@ -51,7 +51,7 @@ define(function (require) {
 				conversationTypeList: {
 					E: 'Email',
 					P: 'Phone',
-					T: 'Text',
+					I: 'In Person',
 					O: 'Other'
 				}
 			}
