@@ -52,9 +52,14 @@
         </div>
         <div data-ng-if="logRecord.log_type =='Daily' || logRecord.log_type =='Athletic'">
             <div>
-                <label>Treatment <span class="req"><em>*</em></span></label>
-                <input type="text" data-ng-model="logRecord.treatment" data-ng-change="checkReqFields()"> <span
-                    class="req" data-ng-if="!logRecord.treatment"><em> Required</em></span>
+                <label>Treatment <em><span class="req">*</span></em></label>
+                <textarea id="log-treatment" spellcheck="true" wrap="absolute" rows="5" cols="75" maxlength="250"
+                    data-ng-model="logRecord.treatment" data-ng-change="checkReqFields()"></textarea>
+                <span class="req" data-ng-if="!logRecord.treatment"><em> Required</em></span>
+                <!-- Remaining Characters Text -->
+                <span data-ng-if="logRecord.treatment" class="remaining-characters">
+                    {{ 250 - logRecord.treatment.length }} characters remaining
+                </span>
             </div>
         </div>
         <div data-ng-show="logRecord.log_type =='Daily'">
