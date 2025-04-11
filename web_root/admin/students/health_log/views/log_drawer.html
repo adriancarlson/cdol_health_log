@@ -85,21 +85,6 @@
                     style="width: 4ch; text-align: right;"> /126 Symptoms Score
             </div>
         </div>
-        <div data-ng-if="logRecord.log_type =='Daily'">
-            <div>
-                <label>Complaint <span class="req"><em>*</em></span> </label>
-                <select data-ng-options="val as val for (key,val) in $root.appData.complaintList"
-                    data-ng-model="logRecord.complaint"
-                    data-ng-change="handleFieldChange('complaint'); checkReqFields()">
-                    <option value="">Select an Complaint</option>
-                </select>
-                <input data-ng-show="displayComplaintOther || logRecord.complaint== 'Other'" type="text"
-                    data-ng-model="logRecord.complaint_other"><span class="req"
-                    data-ng-if="!logRecord.complaint"><em>Required</em></span>
-            </div>
-        </div>
-
-
         <div data-ng-if="logRecord.log_type =='Conversation'">
             <div>
                 <label>Conversation Type <span class="req"><em>*</em></span> </label>
