@@ -8,6 +8,12 @@ define(function (require) {
 		'psApiService',
 		'formatService',
 		function ($scope, $rootScope, psApiService, formatService) {
+			$scope.toggleSection = function ($event) {
+				if ($event.charCode === 13 || $event.charCode === 32) {
+					$event.currentTarget.click()
+				}
+			}
+
 			$scope.logRecord = {}
 			const commonPayload = {
 				schoolid: $rootScope.appData.curSchoolId,
@@ -101,10 +107,20 @@ define(function (require) {
 					let recordId = $scope.logRecord.id
 					delete $scope.logRecord['id']
 					delete $scope.logRecord['studentsdcid']
+					if ($scope.logRecord.vitals) {
+						await psApiService.psApiCall('healthofficevisit', 'PUT', $scope.logRecord, recordId)
+					} else {
+						delete $scope.logRecord['vitals']
+					}
 					await psApiService.psApiCall('u_cdol_health_log', 'PUT', $scope.logRecord, recordId)
 				} else {
+					if ($scope.logRecord.vitals) {
+						await psApiService.psApiCall('healthofficevisit', 'POST', $scope.logRecord)
+					}
+					delete $scope.logRecord['vitals']
 					await psApiService.psApiCall('u_cdol_health_log', 'POST', $scope.logRecord)
 				}
+
 				$scope.logRecord = {}
 				$rootScope.reloadData()
 				closeLoading()

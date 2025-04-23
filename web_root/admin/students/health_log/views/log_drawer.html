@@ -125,6 +125,53 @@
                         Required</em></span>
             </div>
         </div>
+        <div data-ng-if="logRecord.log_type =='Daily'">
+            <h2 id="h2_vitalsigns" tabindex="0" data-ng-click="toggleSection($event)" class="toggle collapsed">
+                ~[text:psx.html.admin_students_health.form_officevisit.vital_signs]
+            </h2>
+            <div class="fluid-form hide">
+                <div class="middle-div">
+                    <div class="healthDrawer-3-col">
+                        <label id="th_bloodPressure"
+                            for="bloodPressureSystolic">~[text:psx.html.admin_students_health.form_officevisit.blood_pressure]</label>
+                        <input type="text" id="bloodPressureSystolic" style="width:45px;"
+                            data-ng-model="logRecord.vitals.bloodPressureSystolic" /> /
+                        <input type="text" id="bloodPressureDiastolic" style="width:45px;"
+                            aria-labelledby="th_bloodPressure"
+                            data-ng-model="logRecord.vitals.bloodPressureDiastolic" />
+                    </div>
+                    <div class="healthDrawer-3-col">
+                        <label id="th_temperature"
+                            for="temperature">~[text:psx.html.admin_students_health.form_officevisit.temperature]</label>
+                        <input id="temperature" type="text" style="max-width: 100px;"
+                            data-ng-model="logRecord.vitals.temperature" />
+                        °F
+                    </div>
+                    <div class="healthDrawer-3-col">
+                        <label id="th_bloodSugar"
+                            for="bloodSugar">~[text:psx.html.admin_students_health.form_officevisit.blood_sugar]</label>
+                        <input type="text" id="bloodSugar" data-ng-model="logRecord.vitals.bloodSugar" />
+                    </div>
+                    <div class="healthDrawer-3-col">
+                        <label id="th_respiratoryRate"
+                            for="respiratoryRate">~[text:psx.html.admin_students_health.form_officevisit.respiratory_rate]</label>
+                        <input id="respiratoryRate" type="text" data-ng-model="logRecord.vitals.respiratoryRate" />
+                    </div>
+                    <div class="healthDrawer-3-col">
+                        <label id="th_pulseRate"
+                            for="pulseRate">~[text:psx.html.admin_students_health.form_officevisit.pulse_rate]</label>
+                        <input id="pulseRate" type="text" data-ng-model="logRecord.vitals.pulseRate" />
+                    </div>
+                    <div class="healthDrawer-3-col">
+                        <label id="th_pulseOximetry"
+                            for="pulseOximetry">~[text:psx.html.admin_students_health.form_officevisit.pulse_oximetry]</label>
+                        <input id="pulseOximetry" type="text" data-ng-model="logRecord.vitals.pulseOximetry"
+                            data-pss-validation-field="HEALTHOFFICEVISIT.PulseOximetry" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div>
             <div>
                 <label for="log-notes">Notes:</label>
