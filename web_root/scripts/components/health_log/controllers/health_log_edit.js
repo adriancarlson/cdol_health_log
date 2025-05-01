@@ -8,7 +8,7 @@ define(function (require) {
 		'psApiService',
 		'formatService',
 		function ($scope, $rootScope, psApiService, formatService) {
-			$scope.toggleSection = function ($event) {
+			$scope.toggleSection = $event => {
 				if ($event.charCode === 13 || $event.charCode === 32) {
 					$event.currentTarget.click()
 				}
@@ -31,6 +31,16 @@ define(function (require) {
 				$scope.$emit('cancel.drawer.event', cancelDrawer)
 				$scope.$emit('save.drawer.event', saveDrawer)
 			}
+
+			$scope.$on('after.open.drawer.event', event => {
+				// Check for vital signs fields and toggle the section if necessary
+				if ($scope.logRecord.temperature || $scope.logRecord.respiratoryrate || $scope.logRecord.pulserate || $scope.logRecord.oxygensaturation || $scope.logRecord.bloodpressuresystolic || $scope.logRecord.bloodpressurediastolic || $scope.logRecord.bloodsugar) {
+					const vitalsignsHeader = document.getElementById('vitalsigns-h2')
+					if (vitalsignsHeader && vitalsignsHeader.classList.contains('collapsed')) {
+						vitalsignsHeader.click() // Simulate a click to open the section
+					}
+				}
+			})
 
 			let openDrawer = (openCallBack, data) => {
 				if (data.data.id == null) {
@@ -73,6 +83,7 @@ define(function (require) {
 						$scope.logRecord.conversation_type = 'Other'
 					}
 				}
+
 				openCallBack()
 			}
 
