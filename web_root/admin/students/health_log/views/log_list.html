@@ -81,23 +81,20 @@
                     <td class="center">{{healthLog.first_name}} {{healthLog.last_name}}</td>
                     <td data-ng-if="appData.curContext =='Daily'">
                         <span data-ng-if="healthLog.temperature">
-                            Temp: {{healthLog.temperature}} °F  <br>
+                            Temp: {{healthLog.temperature}} °F <br>
                         </span>
-                       
                         <span data-ng-if="healthLog.respiratoryrate">
                             Respiratory Rate: {{healthLog.respiratoryrate}}<br>
                         </span>
-                        
                         <span data-ng-if="healthLog.pulserate">
                             Pulse/Heart Rate: {{healthLog.pulserate}} <br>
                         </span>
-                        
                         <span data-ng-if="healthLog.oxygensaturation">
-                            Oxygen Saturation: {{healthLog.oxygensaturation}}%  <br>
+                            Oxygen Saturation: {{healthLog.oxygensaturation}}% <br>
                         </span>
-                       
                         <span data-ng-if="healthLog.bloodpressuresystolic || healthLog.bloodpressurediastolic">
-                            Blood Pressure: {{healthLog.bloodpressuresystolic}} / {{healthLog.bloodpressurediastolic}} <br>
+                            Blood Pressure: {{healthLog.bloodpressuresystolic}} / {{healthLog.bloodpressurediastolic}}
+                            <br>
                         </span>
                         <span data-ng-if="healthLog.bloodsugar">
                             Blood Sugar: {{healthLog.bloodsugar}}
