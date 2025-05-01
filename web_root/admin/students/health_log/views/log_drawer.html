@@ -52,14 +52,11 @@
         </div>
         <div data-ng-if="logRecord.log_type =='Daily' || logRecord.log_type =='Athletic'">
             <div>
-                <label>Treatment <em><span class="req">*</span></em></label>
+                <label>Treatment <em><span class="req">*</span></em><span class="req"
+                        style="font-weight: normal !important;" data-ng-if="!logRecord.treatment"><em>
+                            Required</em></span></label>
                 <textarea id="log-treatment" spellcheck="true" wrap="absolute" rows="5" cols="75" maxlength="250"
                     data-ng-model="logRecord.treatment" data-ng-change="checkReqFields()"></textarea>
-                <span class="req" data-ng-if="!logRecord.treatment"><em> Required</em></span>
-                <!-- Remaining Characters Text -->
-                <span data-ng-if="logRecord.treatment" class="remaining-characters">
-                    {{ 250 - logRecord.treatment.length }} characters remaining
-                </span>
             </div>
         </div>
         <div data-ng-show="logRecord.log_type =='Daily'">
@@ -71,7 +68,6 @@
                 </select>
                 <input data-ng-show="displayDestinationOther || logRecord.destination== 'Other'" type="text"
                     data-ng-model="logRecord.destination_other">
-                <!-- <input type="text" data-ng-model="logRecord.destination"> -->
             </div>
             <div>
                 <label>Time Left</label>
@@ -132,46 +128,42 @@
             <div id="vitalsigns-div" class="fluid-form hide">
                 <div class="middle-div">
                     <div class="healthDrawer-3-col">
-                        <label id="th_bloodPressure"
-                            for="bloodPressureSystolic">~[text:psx.html.admin_students_health.form_officevisit.blood_pressure]</label>
-                        <input type="text" id="bloodPressureSystolic" style="width:45px;"
-                            data-ng-model="logRecord.vitals.bloodPressureSystolic" /> /
-                        <input type="text" id="bloodPressureDiastolic" style="width:45px;"
-                            aria-labelledby="th_bloodPressure"
-                            data-ng-model="logRecord.vitals.bloodPressureDiastolic" />
-                    </div>
-                    <div class="healthDrawer-3-col">
-                        <label id="th_temperature"
-                            for="temperature">~[text:psx.html.admin_students_health.form_officevisit.temperature]</label>
-                        <input id="temperature" type="text" style="max-width: 100px;"
-                            data-ng-model="logRecord.vitals.temperature" />
+                        <label id="th_temperature" for="temperature">Temperature</label>
+                        <input id="temperature" type="text" size="4" maxlength="5"
+                            data-ng-model="logRecord.temperature" />
                         °F
                     </div>
                     <div class="healthDrawer-3-col">
-                        <label id="th_bloodSugar"
-                            for="bloodSugar">~[text:psx.html.admin_students_health.form_officevisit.blood_sugar]</label>
-                        <input type="text" id="bloodSugar" data-ng-model="logRecord.vitals.bloodSugar" />
+                        <label id="th_respiratoryRate" for="respiratoryRate">Respiratory Rate</label>
+                        <input id="respiratoryRate" type="text" size="2" maxlength="4"
+                            data-ng-model="logRecord.respiratoryrate" />
                     </div>
                     <div class="healthDrawer-3-col">
-                        <label id="th_respiratoryRate"
-                            for="respiratoryRate">~[text:psx.html.admin_students_health.form_officevisit.respiratory_rate]</label>
-                        <input id="respiratoryRate" type="text" data-ng-model="logRecord.vitals.respiratoryRate" />
+                        <label id="th_pulseRate" for="pulseRate">Pulse/Heart Rate</label>
+                        <input id="pulseRate" type="text" size="3" maxlength="4" data-ng-model="logRecord.pulserate" />
                     </div>
                     <div class="healthDrawer-3-col">
-                        <label id="th_pulseRate"
-                            for="pulseRate">~[text:psx.html.admin_students_health.form_officevisit.pulse_rate]</label>
-                        <input id="pulseRate" type="text" data-ng-model="logRecord.vitals.pulseRate" />
+                        <label id="th_oxygenSaturation" for="oxygenSaturation">Oxygen Saturation</label>
+                        <input id="oxygenSaturation" type="text" size="3" maxlength="4"
+                            data-ng-model="logRecord.oxygensaturation" />
+                        %
                     </div>
                     <div class="healthDrawer-3-col">
-                        <label id="th_pulseOximetry"
-                            for="pulseOximetry">~[text:psx.html.admin_students_health.form_officevisit.pulse_oximetry]</label>
-                        <input id="pulseOximetry" type="text" data-ng-model="logRecord.vitals.pulseOximetry"
-                            data-pss-validation-field="HEALTHOFFICEVISIT.PulseOximetry" />
+                        <label id="th_bloodPressure" for="bloodPressureSystolic">Blood Pressure</label>
+                        <input type="text" size="3" maxlength="4" id="bloodPressureSystolic"
+                            data-ng-model="logRecord.bloodpressuresystolic"
+                            data-pss-validation-field="logRecord.bloodpressuresystolic" /> /
+                        <input type="text" size="3" maxlength="4" id="bloodPressureDiastolic"
+                            aria-labelledby="th_bloodPressure" data-ng-model="logRecord.bloodpressurediastolic" />
+                    </div>
+                    <div class="healthDrawer-3-col">
+                        <label id="th_bloodSugar" for="bloodSugar">Blood Sugar</label>
+                        <input type="text" size="3" maxlength="4" id="bloodSugar"
+                            data-ng-model="logRecord.bloodsugar" />
                     </div>
                 </div>
             </div>
         </div>
-
         <div>
             <div>
                 <label for="log-notes">Notes:</label>
