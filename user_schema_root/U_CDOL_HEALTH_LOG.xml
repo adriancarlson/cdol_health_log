@@ -29,5 +29,12 @@
         <field name="yearid" type="Integer" />
         <field name="contact" type="String" length="4000" />
         <field name="conversation_type" type="String" length="4000" />
+        <field name="temperature" type="Double" />
+        <field name="respiratoryrate" type="Integer" />
+        <field name="pulserate" type="Integer" />
+        <field name="oxygensaturation" type="Integer" />
+        <field name="bloodpressuresystolic" type="Integer" />
+        <field name="bloodpressurediastolic" type="Integer" />
+        <field name="bloodsugar" type="Integer" />
     </extendedTable>
 </psExtension>
