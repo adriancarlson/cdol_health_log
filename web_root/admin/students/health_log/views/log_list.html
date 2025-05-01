@@ -41,6 +41,9 @@
                     <th data-pss-sort-fields="user_dcid|text"><span
                             data-ng-if="appData.curContext !='Conversation'">Treatment Provider</span><span
                             data-ng-if="appData.curContext =='Conversation'">Staff Member</span></th>
+                    <th data-ng-if="appData.curContext =='Daily'">
+                        Vitals
+                    </th>
                     <th>Notes</th>
                     <th style="width: 65px;">Actions</th>
                 </tr>
@@ -76,6 +79,30 @@
                     </td>
                     <td class="center" data-ng-if="appData.curContext =='Conversation'">{{healthLog.contact}}</td>
                     <td class="center">{{healthLog.first_name}} {{healthLog.last_name}}</td>
+                    <td data-ng-if="appData.curContext =='Daily'">
+                        <span data-ng-if="healthLog.temperature">
+                            Temp: {{healthLog.temperature}} °F  <br>
+                        </span>
+                       
+                        <span data-ng-if="healthLog.respiratoryrate">
+                            Respiratory Rate: {{healthLog.respiratoryrate}}<br>
+                        </span>
+                        
+                        <span data-ng-if="healthLog.pulserate">
+                            Pulse/Heart Rate: {{healthLog.pulserate}} <br>
+                        </span>
+                        
+                        <span data-ng-if="healthLog.oxygensaturation">
+                            Oxygen Saturation: {{healthLog.oxygensaturation}}%  <br>
+                        </span>
+                       
+                        <span data-ng-if="healthLog.bloodpressuresystolic || healthLog.bloodpressurediastolic">
+                            Blood Pressure: {{healthLog.bloodpressuresystolic}} / {{healthLog.bloodpressurediastolic}} <br>
+                        </span>
+                        <span data-ng-if="healthLog.bloodsugar">
+                            Blood Sugar: {{healthLog.bloodsugar}}
+                        </span>
+                    </td>
                     <td>
                         <span
                             data-ng-if="appData.curContext =='Daily'|| appData.curContext =='Athletic'|| appData.curContext =='Conversation'">{{healthLog.notes}}</span>
