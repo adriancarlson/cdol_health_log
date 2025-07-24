@@ -20,12 +20,22 @@
 					"pageURL": "/admin/students/health_log/daily_health_log.html?frn=~(studentfrn)"
 				},
 				{
+					"htmlID": "cdol-conversation-log",
+					"title": "Conversation Log",
+					"version": "0",
+					"contextType": "student",
+					"districtLevelContext": 0,
+					"sortOrder": 200,
+					"checkParams": true,
+					"pageURL": "/admin/students/health_log/conversation_health_log.html?frn=~(studentfrn)"
+				},
+				{
 					"htmlID": "cdol-athletic-injury",
 					"title": "Athletic Injury",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
-					"sortOrder": 100,
+					"sortOrder": 300,
 					"checkParams": true,
 					"pageURL": "/admin/students/health_log/athletic_health_log.html?frn=~(studentfrn)"
 				},
@@ -35,7 +45,7 @@
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
-					"sortOrder": 200,
+					"sortOrder": 400,
 					"checkParams": true,
 					"pageURL": "/admin/students/health_log/concussion_health_log.html?frn=~(studentfrn)"
 				},
@@ -45,19 +55,9 @@
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
-					"sortOrder": 300,
+					"sortOrder": 500,
 					"checkParams": true,
 					"pageURL": "/admin/students/health_log/eval_health_log.html?frn=~(studentfrn)"
-				},
-				{
-					"htmlID": "cdol-conversation-log",
-					"title": "Conversation Log",
-					"version": "0",
-					"contextType": "student",
-					"districtLevelContext": 0,
-					"sortOrder": 400,
-					"checkParams": true,
-					"pageURL": "/admin/students/health_log/conversation_health_log.html?frn=~(studentfrn)"
 				}
 			]
 		}
