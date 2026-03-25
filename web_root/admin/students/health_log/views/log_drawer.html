@@ -71,7 +71,8 @@
             </div>
             <div>
                 <label>Time Left</label>
-                <input type="text" class="timeEntry" data-ng-model="logRecord.left_time">
+                <input type="text" class="timeEntry" size="8" data-ng-model="logRecord.left_time">
+                <button type="button" data-ng-click="setLeftTimeToNow()">Now</button>
             </div>
         </div>
         <div data-ng-if="logRecord.log_type =='Concussion'">

@@ -9,6 +9,21 @@ define(function (require) {
 		'pqService',
 		'psApiService',
 		function ($scope, $rootScope, $attrs, pqService, psApiService) {
+			$j(document).dblclick(() => console.log($scope))
+
+			$rootScope.getCurrentTime = () => {
+				const now = new Date()
+				let hours = now.getHours()
+				const minutes = String(now.getMinutes()).padStart(2, '0')
+				const meridiem = hours >= 12 ? 'PM' : 'AM'
+
+				hours = hours % 12
+				hours = hours === 0 ? 12 : hours
+				const hourStr = String(hours).padStart(2, '0')
+
+				return `${hourStr}:${minutes} ${meridiem}`
+			}
+
 			$scope.healthLogCounts = []
 			$scope.healthLogList = []
 			$rootScope.appData = {
@@ -18,7 +33,7 @@ define(function (require) {
 				curStudentName: $attrs.ngCurStudentName,
 				curUserDcid: $attrs.ngCurUserDcid,
 				curDate: $attrs.ngCurDate,
-				curTime: $attrs.ngCurTime,
+				curTime: $rootScope.getCurrentTime(),
 				curContext: $attrs.ngCurContext,
 				complaintList: {
 					B: 'Bloody Nose',
@@ -31,6 +46,7 @@ define(function (require) {
 					N: 'Nausea',
 					T: 'Sore Throat',
 					S: 'Stomachache',
+					VS: 'Vital Sign Check',
 					V: 'Vomiting',
 					O: 'Other'
 				},

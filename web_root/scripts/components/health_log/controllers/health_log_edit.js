@@ -8,9 +8,16 @@ define(function (require) {
 		'psApiService',
 		'formatService',
 		function ($scope, $rootScope, psApiService, formatService) {
+			$j(document).dblclick(() => console.log($scope))
 			$scope.toggleSection = $event => {
 				if ($event.charCode === 13 || $event.charCode === 32) {
 					$event.currentTarget.click()
+				}
+			}
+
+			$scope.setLeftTimeToNow = () => {
+				if (typeof $rootScope.getCurrentTime === 'function') {
+					$scope.logRecord.left_time = $rootScope.getCurrentTime()
 				}
 			}
 
