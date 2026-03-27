@@ -7,29 +7,40 @@
         <title>Medication Inventory</title>
         ~[wc:commonscripts]
         <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+        <link href="/images/css/cdol.css" rel="stylesheet" media="screen">
         <link href="/images/css/print.css" rel="stylesheet" media="print">
+        <style>
+            .med-top-of-table {
+                display: flex;
+                justify-content: space-between;
+                /* pushes left/right */
+                align-items: center;
+                /* vertical alignment */
+                margin: 0 10px 0 !important;
+            }
+
+            #medication-grid {
+                margin: 0 !important;
+            }
+        </style>
     </head>
 
     <body>
-        ~[wc:admin_header_css]
-        ~[wc:admin_navigation_css]
-        <h1>~(first_name) ~(last_name)'s Medication Inventory</h1>
-        <div data-require-path="./medication.js" data-module-name="medicationModule" data-bootstrap-local="true"
-            data-ng-context="inventory" data-ng-cloak>
-            <div class="box-round" ng-controller="medicationInventoryController as vm">
-                <p>{{vm.message}}</p>
-                <div class="button-row">
-                    <button id="add-btn" type="button" pss-dialog-drawer drawer-title="Add Medication" data-data="{
-                                        studentsdcid: '~(rn)',
-                                        id: null
-                                    }" template-url="edit.html">Add Medication</button>
-                </div>
-            </div>
-        </div>
-        <div class="container-fluid">
+        ~[wc:admin_header_frame_css]
+        ~[wc:admin_navigation_frame_css]
+        ~[wc:title_student_begin_css]~(first_name) ~(last_name)'s Medication Inventory~[wc:title_student_end_css]
+        <div data-require-path="./medication.js" data-module-name="medicationModule"
+            data-ng-controller="inventoryController" data-bootstrap-local="true" data-ng-context="inventory"
+            data-ng-cloak>
             <div id="medication-grid" data-pss-grid-widget data-data="medicationList"
                 data-filtered-data="filteredMedicationList" data-client-side-pagination="false"
                 data-filter-constraint="no-filters">
+                <div class="med-top-of-table">
+                    <span>
+                        <!--<strong>DOB:</strong>   ~(dob) <strong>Age:</strong>   ~(age)-->
+                    </span>
+                    <button id="add-btn" type="button">Add Medication</button>
+                </div>
                 <table class="grid">
                     <thead>
                         <tr>
@@ -64,7 +75,7 @@
                 </table>
             </div>
         </div>
-
+        ~[wc:admin_footer_frame_css]
     </body>
 
 </html>
