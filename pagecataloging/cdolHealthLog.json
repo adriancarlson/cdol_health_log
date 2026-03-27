@@ -60,6 +60,37 @@
 					"pageURL": "/admin/students/health_log/eval_health_log.html?frn=~(studentfrn)"
 				}
 			]
+		},
+		{
+			"htmlID": "cdol-medication-header",
+			"title": "Medication",
+			"version": "0",
+			"contextType": "student",
+			"districtLevelContext": 0,
+			"parentHTMLID": "navStudentHealthSection",
+			"sortOrder": 275,
+			"children": [
+				{
+					"htmlID": "cdol-medication-administration",
+					"title": "Administer Medication",
+					"version": "0",
+					"contextType": "student",
+					"districtLevelContext": 0,
+					"sortOrder": 0,
+					"checkParams": true,
+					"pageURL": "/admin/students/medication/administration.html?frn=~(studentfrn)"
+				},
+				{
+					"htmlID": "cdol-medication-inventory",
+					"title": "Medication Inventory",
+					"version": "0",
+					"contextType": "student",
+					"districtLevelContext": 0,
+					"sortOrder": 200,
+					"checkParams": true,
+					"pageURL": "/admin/students/medication/inventory.html?frn=~(studentfrn)"
+				}
+			]
 		}
 	]
 }

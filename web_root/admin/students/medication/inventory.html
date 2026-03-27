@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Medication Inventory</title>
+        ~[wc:commonscripts]
+        <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+        <link href="/images/css/print.css" rel="stylesheet" media="print">
+    </head>
+
+    <body>
+        ~[wc:admin_header_css]
+        ~[wc:admin_navigation_css]
+        <h1>~(first_name) ~(last_name)'s Medication Inventory</h1>
+        <div data-require-path="./medication.js" data-module-name="medicationModule" data-bootstrap-local="true"
+            data-ng-context="inventory" data-ng-cloak>
+            <div class="box-round" ng-controller="medicationInventoryController as vm">
+                <p>{{vm.message}}</p>
+                <div class="button-row">
+                    <button id="add-btn" type="button" pss-dialog-drawer drawer-title="Add Medication" data-data="{
+                                        studentsdcid: '~(rn)',
+                                        id: null
+                                    }" template-url="edit.html">Add Medication</button>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div id="medication-grid" data-pss-grid-widget data-data="medicationList"
+                data-filtered-data="filteredMedicationList" data-client-side-pagination="false"
+                data-filter-constraint="no-filters">
+                <table class="grid">
+                    <thead>
+                        <tr>
+                            <th data-pss-sort-fields="medication_name">Medication</th>
+                            <th data-pss-sort-fields="route">Route</th>
+                            <th data-pss-sort-fields="dosage">Dosage</th>
+                            <th data-pss-sort-fields="frequency">Frequency</th>
+                            <th>Inventory</th>
+                            <!-- <th style="width: 65px;">Actions</th> -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-ng-show="!medicationList.length">
+                            <td colspan="100%">~(first_name) ~(last_name) has no medications in inventory</span>
+                            </td>
+                        </tr>
+                        <tr data-ng-repeat="medication in filteredMedicationList" data-id="{{medication.id}}">
+                            <td class="center">{{medication.medication_name}}</td>
+                            <td class="center">{{medication.route}}</td>
+                            <td class="center">{{medication.dosage}}</td>
+                            <td class="center">{{medication.frequency}}</td>
+                            <td class="center"></td>
+                            <!-- <td class="actions center">
+                                <button type="button" id="mod-btn-{{healthLog.id}}" pss-dialog-drawer
+                                    edit-button-icon="true" drawer-title="Edit {{appData.fullContext}}"
+                                    template-url="views/log_drawer.html" data-data="healthLog"></button>
+                                <button type="button" id="delBtn" data-ng-click="delConfirm(healthLog.id)"><em
+                                        class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>
+                            </td> -->
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </body>
+
+</html>

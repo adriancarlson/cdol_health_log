@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<psExtension xmlns="http://www.powerschool.com"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.powerschool.com psextension.xsd">
+    <extensionname>u_student_medication</extensionname>
+    <extendedTable coreTable="students" dbTableName="u_student_medication" childName="u_student_medication" comment="Custom Medication Table">
+        <field name="medication_name" type="String" length="250" />
+        <field name="dose_amount" type="Double" />
+        <field name="dose_unit" type="String" length="250" />
+        <field name="inventory_unit" type="String" length="250" />
+        <field name="frequency" type="String" length="250" />
+        <field name="route" type="String" length="250" />
+        <field name="created_date" type="Date"/>
+        <field name="created_by_users_dcid" type="Integer" />
+        <field name="notes" type="String" length="4000" />
+    </extendedTable>
+    <extendedTable type="standalone" dbTableName="u_student_medication_inventory" childName="u_student_medication_inventory" comment="Custom Medication Table">
+        <field name="u_student_medication_id" type="Integer"/>
+        <field name="quantity_added" type="Double"/>
+        <field name="quantity_remaining" type="Double" />
+        <field name="date_added" type="Date"/>
+        <field name="users_dcid" type="Integer" />
+        <field name="notes" type="String" length="4000" />
+    </extendedTable>
+</psExtension>
