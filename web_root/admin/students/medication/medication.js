@@ -5,10 +5,35 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 	medicationModule.controller('medicationController', function ($scope, $rootScope, $attrs) {
 		const vm = this
 		$j(document).dblclick(() => console.log($scope))
+		
+		$rootScope.getCurrentTime = () => {
+			const now = new Date()
+			let hours = now.getHours()
+			const minutes = String(now.getMinutes()).padStart(2, '0')
+			const meridiem = hours >= 12 ? 'PM' : 'AM'
+
+			hours = hours % 12
+			hours = hours === 0 ? 12 : hours
+			const hourStr = String(hours).padStart(2, '0')
+
+			return `${hourStr}:${minutes} ${meridiem}`
+		}
 
 		vm.appData = {
-			context: $attrs.ngContext
+			context: $attrs.ngContext,
+			curSchoolId: $attrs.ngCurSchoolId,
+			curYearId: $attrs.ngCurYearId,
+			curStudentDCID: $attrs.ngCurStudentDcid,
+			curStudentName: $attrs.ngCurStudentName,
+			curUserDcid: $attrs.ngCurUserDcid,
+			curDate: $attrs.ngCurDate,
+			curTime: $rootScope.getCurrentTime(),
+			districtUser: $attrs.ngCurUserSecurityRoles && $attrs.ngCurUserSecurityRoles.split(',').includes('9'),
+			isTestServer: $attrs.ngServerName && $attrs.ngServerName.indexOf('.test.') !== -1,
+			unitList: { mg: 'Milligrams', ml: 'Milliliters', units: 'Units', pills: 'Pills', other: 'Other' },
+			routeList: { oral: 'Oral', nasal: 'Nasal', sublingual: 'Sublingual', subcutaneous: 'Subcutaneous', rectal: 'Rectal', other: 'Other' }
 		}
+
 		$rootScope.appData = vm.appData
 		vm.medicationList = []
 		vm.filteredMedicationList = []

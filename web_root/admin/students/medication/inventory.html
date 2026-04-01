@@ -30,8 +30,11 @@
         ~[wc:admin_navigation_frame_css]
         ~[wc:title_student_begin_css]~(first_name) ~(last_name)'s Medication Inventory~[wc:title_student_end_css]
         <div data-require-path="./medication.js" data-module-name="medicationModule"
-            data-ng-controller="medicationController as vm" data-bootstrap-local="true" data-ng-context="inventory"
-            data-ng-cloak>
+            ng-controller="medicationController as vm" data-bootstrap-local="true" ng-cur-student-dcid="~(rn)"
+            ng-cur-student-name="~(studentname)" ng-cur-user-dcid="~[x:users_dcid]" ng-cur-school-id="~(curschoolid)"
+            ng-cur-year-id="~(curyearid)" ng-cur-date="~[date]" ng-cur-time="~[time]"
+            ng-server-name="~[x:WEB_GetServerInfo;name=HostName]" ng-cur-user-security-roles="~[x:usersroles]"
+            ng-context="inventory" ng-cloak>
             <div id="medication-grid" data-pss-grid-widget data-data="vm.medicationList"
                 data-filtered-data="vm.filteredMedicationList" data-client-side-pagination="false"
                 data-filter-constraint="no-filters">
@@ -39,11 +42,11 @@
                     <span>
                         <!--<strong>DOB:</strong>   ~(dob) <strong>Age:</strong>   ~(age)-->
                     </span>
-                    <button id="add-btn" type="button" pss-dialog-drawer drawer-title="Add {{vm.appData.fullContext}}"
+                    <button id="add-btn" type="button" pss-dialog-drawer drawer-title="Add {{vm.appData.context}}"
                         data-data="{
                     studentsdcid: '~(rn)',
                     id: null
-                }" template-url="views/editInventory.html">Add {{vm.appData.fullContext}}</button>
+                }" template-url="editInventory.html">Add {{vm.appData.context}}</button>
                 </div>
                 <table class="grid">
                     <thead>
@@ -57,11 +60,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr data-ng-show="!vm.medicationList.length">
+                        <tr ng-show="!vm.medicationList.length">
                             <td colspan="100%">~(first_name) ~(last_name) has no medications in inventory</span>
                             </td>
                         </tr>
-                        <tr data-ng-repeat="medication in vm.filteredMedicationList" data-id="{{medication.id}}">
+                        <tr ng-repeat="medication in vm.filteredMedicationList" data-id="{{medication.id}}">
                             <td class="center">{{medication.medication_name}}</td>
                             <td class="center">{{medication.route}}</td>
                             <td class="center">{{medication.dosage}}</td>
@@ -71,12 +74,15 @@
                                 <button type="button" id="mod-btn-{{healthLog.id}}" pss-dialog-drawer
                                     edit-button-icon="true" drawer-title="Edit {{appData.fullContext}}"
                                     template-url="views/log_drawer.html" data-data="healthLog"></button>
-                                <button type="button" id="delBtn" data-ng-click="delConfirm(healthLog.id)"><em
+                                <button type="button" id="delBtn" ng-click="delConfirm(healthLog.id)"><em
                                         class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>
                             </td> -->
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="right" ng-if="$root.appData.districtUser && $root.appData.isTestServer">
+                <strong>appData:</strong> {{ $root.appData}}
             </div>
         </div>
         ~[wc:admin_footer_frame_css]
