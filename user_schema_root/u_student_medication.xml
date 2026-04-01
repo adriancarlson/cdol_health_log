@@ -12,6 +12,8 @@
         <field name="created_date" type="Date"/>
         <field name="created_by_users_dcid" type="Integer" />
         <field name="notes" type="String" length="4000" />
+        <field name="schoolid" type="Integer" />
+        <field name="yearid" type="Integer" />
     </extendedTable>
     <extendedTable type="standalone" dbTableName="u_student_medication_inventory" childName="u_student_medication_inventory" comment="Custom Medication Table">
         <field name="u_student_medication_id" type="Integer"/>

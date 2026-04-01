@@ -35,18 +35,18 @@
             ng-cur-year-id="~(curyearid)" ng-cur-date="~[date]" ng-cur-time="~[time]"
             ng-server-name="~[x:WEB_GetServerInfo;name=HostName]" ng-cur-user-security-roles="~[x:usersroles]"
             ng-context="inventory" ng-cloak>
-            <div id="medication-grid" data-pss-grid-widget data-data="vm.medicationList"
-                data-filtered-data="vm.filteredMedicationList" data-client-side-pagination="false"
+            <div id="medication-grid" data-pss-grid-widget data-data="vm[vm.listKey]"
+                data-filtered-data="vm[vm.filteredListKey]" data-client-side-pagination="false"
                 data-filter-constraint="no-filters">
                 <div class="med-top-of-table">
                     <span>
                         <!--<strong>DOB:</strong>   ~(dob) <strong>Age:</strong>   ~(age)-->
                     </span>
-                    <button id="add-btn" type="button" pss-dialog-drawer drawer-title="Add {{vm.appData.context}}"
+                    <button id="add-btn" type="button" pss-dialog-drawer drawer-title="Add {{vm.appData.contextTitle}}"
                         data-data="{
                     studentsdcid: '~(rn)',
                     id: null
-                }" template-url="editInventory.html">Add {{vm.appData.context}}</button>
+                }" template-url="editInventory.html">Add {{vm.appData.contextTitle}}</button>
                 </div>
                 <table class="grid">
                     <thead>
@@ -60,11 +60,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-show="!vm.medicationList.length">
+                        <tr ng-show="!vm[vm.listKey].length">
                             <td colspan="100%">~(first_name) ~(last_name) has no medications in inventory</span>
                             </td>
                         </tr>
-                        <tr ng-repeat="medication in vm.filteredMedicationList" data-id="{{medication.id}}">
+                        <tr ng-repeat="medication in vm[vm.filteredListKey]" data-id="{{medication.id}}">
                             <td class="center">{{medication.medication_name}}</td>
                             <td class="center">{{medication.route}}</td>
                             <td class="center">{{medication.dosage}}</td>

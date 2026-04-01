@@ -2,7 +2,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 	'use strict'
 	const medicationModule = angular.module('medicationModule', ['powerSchoolModule', 'healthLogMod'])
 
-	medicationModule.controller('medicationController', function ($scope, $rootScope, $attrs) {
+	medicationModule.controller('medicationController', function ($scope, $rootScope, $attrs, $http) {
 		const vm = this
 		$j(document).dblclick(() => console.log($scope))
 
@@ -21,6 +21,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		vm.appData = {
 			context: $attrs.ngContext,
+			contextTitle: $attrs.ngContext.charAt(0).toUpperCase() + $attrs.ngContext.slice(1),
 			curSchoolId: $attrs.ngCurSchoolId,
 			curYearId: $attrs.ngCurYearId,
 			curStudentDCID: $attrs.ngCurStudentDcid,
@@ -36,18 +37,32 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 
 		$rootScope.appData = vm.appData
-		vm.medicationList = []
-		vm.filteredMedicationList = []
 
 		$rootScope.loadData = () => {
 			loadingDialog()
+			const paramValues = {
+				studentsdcid: vm.appData.curStudentDCID,
+				schoolid: vm.appData.curSchoolId,
+				yearid: vm.appData.curYearId
+			}
+
 			vm[`${$rootScope.appData.context}List`] = []
-			vm.medicationList = []
-			vm.filteredMedicationList = []
+
+			$http({
+				url: `./data/${$rootScope.appData.context}.json`,
+				method: 'GET',
+				params: paramValues
+			}).then(res => {
+				const resData = Array.isArray(res?.data) ? res.data : []
+				// Load grid data once response is ready
+				const sanitizedData = psUtils.htmlEntitiesToCharCode(resData)
+				vm[`${$rootScope.appData.context}List`] = sanitizedData
+				closeLoading()
+			})
 		}
 
 		$rootScope.reloadData = () => {
-			$rootScope.seasonsList = []
+			vm[`${$rootScope.appData.context}List`] = []
 			$rootScope.loadData()
 		}
 	})
@@ -82,6 +97,8 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				vm[recordKey].created_date = $rootScope.appData.curDate
 				vm[recordKey].created_by_users_dcid = $rootScope.appData.curUserDcid
 				vm[recordKey].studentsdcid = $rootScope.appData.curStudentDCID
+				vm[recordKey].schoolid = $rootScope.appData.curSchoolId
+				vm[recordKey].yearid = $rootScope.appData.curYearId
 			} else {
 				// formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
 				// formatService.objIterator(data.data, formatKeys.timeKeys, 'convSecondsToTime12')
@@ -170,6 +187,6 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			closeLoading()
 			closeDrawer()
 		}
-		init()
+		$rootScope.loadData()
 	})
 })
