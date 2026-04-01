@@ -18,6 +18,16 @@
         </div>
         <div>
             <div>
+                <label>Frequency <span class="req"><em>*</em></span> </label>
+                <select ng-options="val as val for (key,val) in $root.appData.routeList"
+                    ng-model="vm.inventoryRecord.frequency"
+                    ng-change="handleFieldChange('frequency'); vm.checkReqFields()">
+                    <option value="">Select a Route</option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <div>
                 <label>Route <span class="req"><em>*</em></span> </label>
                 <select ng-options="val as val for (key,val) in $root.appData.routeList"
                     ng-model="vm.inventoryRecord.route" ng-change="handleFieldChange('route'); vm.checkReqFields()">

@@ -1,6 +1,6 @@
-define(['angular', 'components/shared/powerschoolModule'], angular => {
+define(['angular', 'components/shared/powerschoolModule', 'components/health_log/module', 'components/health_log/services/formatService', 'components/health_log/services/psApiService'], angular => {
 	'use strict'
-	const medicationModule = angular.module('medicationModule', ['powerSchoolModule'])
+	const medicationModule = angular.module('medicationModule', ['powerSchoolModule', 'healthLogMod'])
 
 	medicationModule.controller('medicationController', function ($scope, $rootScope, $attrs) {
 		const vm = this
@@ -31,7 +31,8 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 			districtUser: $attrs.ngCurUserSecurityRoles && $attrs.ngCurUserSecurityRoles.split(',').includes('9'),
 			isTestServer: $attrs.ngServerName && $attrs.ngServerName.indexOf('.test.') !== -1,
 			unitList: { mg: 'Milligrams (MG)', ml: 'Milliliters (ML)', units: 'Units', pills: 'Pills', other: 'Other' },
-			routeList: { oral: 'Oral', nasal: 'Nasal', sublingual: 'Sublingual', subcutaneous: 'Subcutaneous', rectal: 'Rectal', other: 'Other' }
+			routeList: { oral: 'Oral', nasal: 'Nasal', sublingual: 'Sublingual', subcutaneous: 'Subcutaneous', rectal: 'Rectal', other: 'Other' },
+			frequencyList: { daily: 'Daily', other: 'Other' }
 		}
 
 		$rootScope.appData = vm.appData
@@ -51,7 +52,7 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 		}
 	})
 
-	medicationModule.controller('editController', function ($scope, $rootScope, $attrs) {
+	medicationModule.controller('editController', function ($scope, $rootScope, $q, formatService, psApiService) {
 		const vm = this
 		const recordKey = `${$rootScope.appData.context}Record`
 		vm[recordKey] = {}
@@ -62,9 +63,14 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 			$scope.$emit('save.drawer.event', saveDrawer)
 		}
 
+		const formatKeys = {
+			dateKeys: ['_date'],
+			timeKeys: ['_time']
+		}
+
 		const cancelDrawer = closeDrawer => {
 			loadingDialog()
-			$scope.logRecord = {}
+			vm[recordKey] = {}
 			$rootScope.reloadData()
 			closeLoading()
 			closeDrawer(true)
@@ -73,10 +79,9 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 
 		const openDrawer = (openCallBack, data) => {
 			if (data.data.id == null) {
-				// $scope.logRecord.log_type = $rootScope.appData.curContext
-				// $scope.logRecord.log_date = $rootScope.appData.curDate
-				// $scope.logRecord.log_time = $rootScope.appData.curTime
-				// $scope.logRecord.users_dcid = $rootScope.appData.curUserDcid
+				vm[recordKey].created_date = $rootScope.appData.curDate
+				vm[recordKey].created_by_users_dcid = $rootScope.appData.curUserDcid
+				vm[recordKey].studentsdcid = $rootScope.appData.curStudentDCID
 			} else {
 				// formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
 				// formatService.objIterator(data.data, formatKeys.timeKeys, 'convSecondsToTime12')
@@ -90,16 +95,14 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 				// 	$scope.logRecord.complaint = 'Other'
 				// }
 			}
-
 			openCallBack()
 		}
 
-		let saveDrawer = async (closeDrawer, data) => {
+		const saveDrawer = (closeDrawer, data) => {
 			loadingDialog()
 
-			// $scope.logRecord = Object.assign($scope.logRecord, commonPayload)
 			// //add createFormatKeys to each object in submitPayload
-			// $scope.logRecord = Object.assign($scope.logRecord, formatKeys)
+			vm[recordKey] = Object.assign(vm[recordKey], formatKeys)
 			// //check for other values in dropdowns and takes the other value and puts it in the proper field in the logRecord also deletes the other field from the logRecord payload
 			// for (const key in $scope.logRecord) {
 			// 	if (key.endsWith('_other')) {
@@ -112,28 +115,32 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 			// }
 
 			// //submitting staff changes through api
-			// if ($scope.logRecord.id) {
-			// 	let recordId = $scope.logRecord.id
-			// 	delete $scope.logRecord['id']
-			// 	delete $scope.logRecord['studentsdcid']
-			// 	if ($scope.logRecord.vitals) {
-			// 		await psApiService.psApiCall('healthofficevisit', 'PUT', $scope.logRecord, recordId)
-			// 	} else {
-			// 		delete $scope.logRecord['vitals']
-			// 	}
-			// 	await psApiService.psApiCall('u_cdol_health_log', 'PUT', $scope.logRecord, recordId)
-			// } else {
-			// 	if ($scope.logRecord.vitals) {
-			// 		await psApiService.psApiCall('healthofficevisit', 'POST', $scope.logRecord)
-			// 	}
-			// 	delete $scope.logRecord['vitals']
-			// 	await psApiService.psApiCall('u_cdol_health_log', 'POST', $scope.logRecord)
-			// }
+			let savePromise
 
-			vm[recordKey] = {}
-			$rootScope.reloadData()
-			closeLoading()
-			closeDrawer(true)
+			if (vm[recordKey].id) {
+				let recordId = vm[recordKey].id
+				delete vm[recordKey]['id']
+				delete vm[recordKey]['studentsdcid']
+				// if (vm[recordKey].vitals) {
+				// 	savePromise = psApiService.psApiCall('healthofficevisit', 'PUT', vm[recordKey], recordId)
+				// } else {
+				// 	delete $scope.logRecord['vitals']
+				// }
+				savePromise = psApiService.psApiCall('u_student_medication', 'PUT', vm[recordKey], recordId)
+			} else {
+				// if (vm[recordKey].vitals) {
+				// 	savePromise = psApiService.psApiCall('healthofficevisit', 'POST', vm[recordKey])
+				// }
+				// delete vm[recordKey]['vitals']
+				savePromise = psApiService.psApiCall('u_student_medication', 'POST', vm[recordKey])
+			}
+
+			return $q.when(savePromise).then(() => {
+				vm[recordKey] = {}
+				$rootScope.reloadData()
+				closeLoading()
+				closeDrawer(true)
+			})
 		}
 		// checks required fields and enables save button if all required fields are filled out
 		vm.checkReqFields = () => {
