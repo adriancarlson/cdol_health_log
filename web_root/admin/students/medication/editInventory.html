@@ -1,0 +1,234 @@
+<div class="fluid-form" ng-controller="editController as vm" data-ng-cloak>
+    <div>
+        <div>
+            <label>Log Date</label>
+            <input type="text" data-ng-model="vm.inventoryPayload.log_date" class="psDateWidget">
+        </div>
+        <div>
+            <label>Log Time</label>
+            <input type="text" data-ng-model="vm.inventoryPayload.log_time" class="timeEntry" size="8">
+        </div>
+    </div>
+    <div data-ng-if="vm.inventoryPayload.log_type =='Concussion' || vm.inventoryPayload.log_type =='Eval'">
+        <div>
+            <label>Injury Date</label>
+            <input type="text" data-ng-model="vm.inventoryPayload.injury_date" class="psDateWidget">
+        </div>
+    </div>
+    <div data-ng-if="vm.inventoryPayload.log_type =='Daily'">
+        <div>
+            <label>Complaint <span class="req"><em>*</em></span> </label>
+            <select data-ng-options="val as val for (key,val) in $root.appData.complaintList"
+                data-ng-model="vm.inventoryPayload.complaint"
+                data-ng-change="handleFieldChange('complaint'); vm.checkReqFields()">
+                <option value="">Select an Complaint</option>
+            </select>
+            <input data-ng-show="displayComplaintOther || vm.inventoryPayload.complaint== 'Other'" type="text"
+                data-ng-model="vm.inventoryPayload.complaint_other"><span class="req"
+                data-ng-if="!vm.inventoryPayload.complaint"><em>Required</em></span>
+        </div>
+    </div>
+    <div data-ng-if="vm.inventoryPayload.log_type =='Athletic'">
+        <div>
+            <label>Sport</label>
+            <select
+                data-ng-model="vm.inventoryPayload.sport">~[x:codesetoptions;codetype=Sports;includeblank;value=~([u_cdol_health_log]sport)]</select>
+        </div>
+    </div>
+    <div data-ng-if="vm.inventoryPayload.log_type =='Athletic' || vm.inventoryPayload.log_type =='Eval'">
+        <div>
+            <label>Injury Site</label>
+            <input type="text" data-ng-model="vm.inventoryPayload.injury_site">
+        </div>
+    </div>
+    <div data-ng-if="vm.inventoryPayload.log_type =='Eval'">
+        <div>
+            <label>Injury Type</label>
+            <input type="text" data-ng-model="vm.inventoryPayload.injury_type">
+        </div>
+    </div>
+    <div data-ng-if="vm.inventoryPayload.log_type =='Daily' || vm.inventoryPayload.log_type =='Athletic'">
+        <div>
+            <label>Treatment <em><span class="req">*</span></em><span class="req"
+                    style="font-weight: normal !important;" data-ng-if="!vm.inventoryPayload.treatment"><em>
+                        Required</em></span></label>
+            <textarea id="log-treatment" spellcheck="true" wrap="absolute" rows="5" cols="75" maxlength="250"
+                data-ng-model="vm.inventoryPayload.treatment" data-ng-change="vm.checkReqFields()"></textarea>
+        </div>
+    </div>
+    <div data-ng-show="vm.inventoryPayload.log_type =='Daily'">
+        <div>
+            <label>Destination</label>
+            <select data-ng-options="val as val for (key,val) in $root.appData.destinationList"
+                data-ng-model="vm.inventoryPayload.destination" data-ng-change="handleFieldChange('destination')">
+                <option value="">Select a Destination</option>
+            </select>
+            <input data-ng-show="displayDestinationOther || vm.inventoryPayload.destination== 'Other'" type="text"
+                data-ng-model="vm.inventoryPayload.destination_other">
+        </div>
+        <div>
+            <label>Time Left</label>
+            <input type="text" class="timeEntry" size="8" data-ng-model="vm.inventoryPayload.left_time">
+            <button type="button" data-ng-click="setLeftTimeToNow()">Now</button>
+        </div>
+    </div>
+    <div data-ng-if="vm.inventoryPayload.log_type =='Concussion'">
+        <div>
+            <label>Total Symptoms:</label>
+            <input type="text" inputmode="numeric" data-ng-model="vm.inventoryPayload.total_systems_score" min="0"
+                max="21" style="width: 3ch; text-align: right;"> /21 Total Symptoms
+        </div>
+        <div>
+            <label>Symptoms Score:</label>
+            <input type="text" inputmode="numeric" data-ng-model="vm.inventoryPayload.systems_score" min="0" max="126"
+                style="width: 4ch; text-align: right;"> /126 Symptoms Score
+        </div>
+    </div>
+    <div data-ng-if="vm.inventoryPayload.log_type =='Conversation'">
+        <div>
+            <label>Conversation Type <span class="req"><em>*</em></span> </label>
+            <select data-ng-options="val as val for (key,val) in $root.appData.conversationTypeList"
+                data-ng-model="vm.inventoryPayload.conversation_type"
+                data-ng-change="handleFieldChange('conversation_type'); vm.checkReqFields()">
+                <option value="">Select a Conversation Type</option>
+            </select>
+            <input data-ng-show="displayConversationTypeOther || vm.inventoryPayload.conversation_type== 'Other'"
+                type="text" data-ng-model="vm.inventoryPayload.conversation_type_other"><span class="req"
+                data-ng-if="!vm.inventoryPayload.conversation_type"><em>Required</em></span>
+        </div>
+    </div>
+    <div data-ng-if="vm.inventoryPayload.log_type =='Conversation'">
+        <div>
+            <label>Name of Person Conversation was With<span class="req"><em>*</em></span></label>
+            <input type="text" data-ng-model="vm.inventoryPayload.contact" data-ng-model="vm.inventoryPayload.contact"
+                data-ng-change="vm.checkReqFields()"> <span class="req" data-ng-if="!vm.inventoryPayload.contact"><em>
+                    Required</em></span>
+        </div>
+    </div>
+    <div>
+        <div>
+            <label><span data-ng-if="vm.inventoryPayload.log_type !='Conversation'">Treatment Provider</span><span
+                    data-ng-if="vm.inventoryPayload.log_type =='Conversation'">Staff Member</span> <span
+                    class="req"><em>*</em></span></label>
+            <select id="users_dcid"
+                data-ng-options="staff.dcid as (staff.first_name + ' ' + staff.last_name) for staff in $root.appData.staffList"
+                data-ng-model="vm.inventoryPayload.users_dcid" data-ng-change="vm.checkReqFields()"
+                data-ng-init="vm.inventoryPayload.users_dcid = curUser">
+            </select><span class="req"
+                data-ng-if="vm.inventoryPayload.hasOwnProperty('users_dcid') && !vm.inventoryPayload.users_dcid"><em>
+                    Required</em></span>
+        </div>
+    </div>
+    <div data-ng-if="vm.inventoryPayload.log_type =='Daily'">
+        <h2 id="vitalsigns-h2" tabindex="0" data-ng-click="toggleSection($event)" class="toggle collapsed">
+            ~[text:psx.html.admin_students_health.form_officevisit.vital_signs]
+        </h2>
+        <div id="vitalsigns-div" class="fluid-form hide">
+            <div class="middle-div">
+                <div class="healthDrawer-3-col">
+                    <label id="th_temperature" for="temperature">Temperature</label>
+                    <input id="temperature" type="text" size="4" maxlength="5"
+                        data-ng-model="vm.inventoryPayload.temperature" />
+                    °F
+                </div>
+                <div class="healthDrawer-3-col">
+                    <label id="th_respiratoryRate" for="respiratoryRate">Respiratory Rate</label>
+                    <input id="respiratoryRate" type="text" size="2" maxlength="4"
+                        data-ng-model="vm.inventoryPayload.respiratoryrate" />
+                </div>
+                <div class="healthDrawer-3-col">
+                    <label id="th_pulseRate" for="pulseRate">Pulse/Heart Rate</label>
+                    <input id="pulseRate" type="text" size="3" maxlength="4"
+                        data-ng-model="vm.inventoryPayload.pulserate" />
+                </div>
+                <div class="healthDrawer-3-col">
+                    <label id="th_oxygenSaturation" for="oxygenSaturation">Oxygen Saturation</label>
+                    <input id="oxygenSaturation" type="text" size="3" maxlength="4"
+                        data-ng-model="vm.inventoryPayload.oxygensaturation" />
+                    %
+                </div>
+                <div class="healthDrawer-3-col">
+                    <label id="th_bloodPressure" for="bloodPressureSystolic">Blood Pressure</label>
+                    <input type="text" size="3" maxlength="4" id="bloodPressureSystolic"
+                        data-ng-model="vm.inventoryPayload.bloodpressuresystolic"
+                        data-pss-validation-field="vm.inventoryPayload.bloodpressuresystolic" /> /
+                    <input type="text" size="3" maxlength="4" id="bloodPressureDiastolic"
+                        aria-labelledby="th_bloodPressure" data-ng-model="vm.inventoryPayload.bloodpressurediastolic" />
+                </div>
+                <div class="healthDrawer-3-col">
+                    <label id="th_bloodSugar" for="bloodSugar">Blood Sugar</label>
+                    <input type="text" size="3" maxlength="4" id="bloodSugar"
+                        data-ng-model="vm.inventoryPayload.bloodsugar" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div>
+            <label for="log-notes">Notes:</label>
+            <table class="grid">
+                <tbody>
+                    <tr data-ng-if="vm.inventoryPayload.log_type =='Concussion'">
+                        <td style="vertical-align:top" for="log-notes-memory"><strong>Memory</strong>:</td>
+                        <td>
+                            <textarea id="log-notes-memory" spellcheck="true" wrap="absolute" rows="5" cols="60"
+                                data-ng-model="vm.inventoryPayload.notes_memory"></textarea>
+                        </td>
+                    </tr>
+                    <tr data-ng-if="vm.inventoryPayload.log_type =='Concussion'">
+                        <td style="vertical-align:top" for="log-notes-bess"><strong>BESS</strong>:</td>
+                        <td>
+                            <textarea id="log-notes-bess" spellcheck="true" wrap="absolute" rows="5" cols="60"
+                                data-ng-model="vm.inventoryPayload.notes_bess"></textarea>
+                        </td>
+                    </tr>
+                    <tr data-ng-if="vm.inventoryPayload.log_type =='Concussion'">
+                        <td style="vertical-align:top" for="log-notes-voms"><strong>VOMS</strong>:</td>
+                        <td>
+                            <textarea spellcheck="true" wrap="absolute" rows="5" cols="60"
+                                data-ng-model="vm.inventoryPayload.notes_voms"></textarea>
+                        </td>
+                    </tr>
+                    <tr data-ng-if="vm.inventoryPayload.log_type =='Eval'">
+                        <td style="vertical-align:top" for="log-notes-s"><strong>S</strong>:</td>
+                        <td>
+                            <textarea id="log-notes-s" spellcheck="true" wrap="absolute" rows="5" cols="60"
+                                data-ng-model="vm.inventoryPayload.notes_s"></textarea>
+                        </td>
+                    </tr>
+                    <tr data-ng-if="vm.inventoryPayload.log_type =='Eval'">
+                        <td style="vertical-align:top" for="log-notes-o"><strong>O</strong>:</td>
+                        <td>
+                            <textarea id="log-notes-o" spellcheck="true" wrap="absolute" rows="5" cols="60"
+                                data-ng-model="vm.inventoryPayload.notes_o"></textarea>
+                        </td>
+                    </tr>
+                    <tr data-ng-if="vm.inventoryPayload.log_type =='Eval'">
+                        <td style="vertical-align:top" for="log-notes-a"><strong>A</strong>:</td>
+                        <td>
+                            <textarea id="log-notes-a" spellcheck="true" wrap="absolute" rows="5" cols="60"
+                                data-ng-model="vm.inventoryPayload.notes_a"></textarea>
+                        </td>
+                    </tr>
+                    <tr data-ng-if="vm.inventoryPayload.log_type =='Eval'">
+                        <td style="vertical-align:top" for="log-notes-p"><strong>P</strong>:</td>
+                        <td>
+                            <textarea id="log-notes-p" spellcheck="true" wrap="absolute" rows="5" cols="60"
+                                data-ng-model="vm.inventoryPayload.notes_p"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td data-ng-if="vm.inventoryPayload.log_type =='Concussion'" for="log-notes"
+                            style="vertical-align:top">
+                            <strong>Other</strong>: </span>
+                        </td>
+                        <td data-ng-if="vm.inventoryPayload.log_type !='Eval'">
+                            <textarea id="log-notes" spellcheck="true" wrap="absolute" rows="5" cols="60"
+                                data-ng-model="vm.inventoryPayload.notes"></textarea>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
