@@ -1,40 +1,49 @@
-<div class="fluid-form" ng-controller="editController as vm" ng-cloak>
-    <div>
+<form>
+    <div class="fluid-form" ng-controller="editController as vm" ng-cloak>
         <div>
-            <label>Medication Name <span class="req"><em>*</em></span></label>
-            <input type="text" ng-model="vm.inventoryPayload.medication_name">
+            <div>
+                <label>Medication Name <span class="req"><em>*</em></span></label>
+                <input type="text" ng-model="vm.inventoryRecord.medication_name">
+            </div>
         </div>
         <div>
-            <label>Dosage</label>
-            <input type="text" ng-model="vm.inventoryPayload.dose_amount">
-            <select ng-options="val as val for (key,val) in $root.appData.unitList"
-                ng-model="vm.inventoryPayload.dose_unit"
-                ng-change="handleFieldChange('dose_unit'); vm.checkReqFields()">
-            </select>
+            <div>
+                <label>Dosage <span class="req"><em>*</em></span></label>
+                <input type="text" ng-model="vm.inventoryRecord.dose_amount" size="6">
+                <select ng-options="val as val for (key,val) in $root.appData.unitList"
+                    ng-model="vm.inventoryRecord.dose_unit"
+                    ng-change="handleFieldChange('dose_unit'); vm.checkReqFields()">
+                </select>
+            </div>
         </div>
-    </div>
-    <div>
         <div>
-            <label>Route <span class="req"><em>*</em></span> </label>
-            <select ng-options="val as val for (key,val) in $root.appData.routeList"
-                ng-model="vm.inventoryPayload.route" ng-change="handleFieldChange('route'); vm.checkReqFields()">
-                <option value="">Select a Route</option>
-            </select>
+            <div>
+                <label>Route <span class="req"><em>*</em></span> </label>
+                <select ng-options="val as val for (key,val) in $root.appData.routeList"
+                    ng-model="vm.inventoryRecord.route" ng-change="handleFieldChange('route'); vm.checkReqFields()">
+                    <option value="">Select a Route</option>
+                </select>
+            </div>
         </div>
-    </div>
-    <div>
-        <label>Date Added</label>
-        <input type="text" ng-model="vm.inventoryPayload.created_date" pss-date-widget data-auto-translate="true">
-    </div>
-    <!-- insert inventory  table here -->
-    <div>
         <div>
-            <label>Notes:</label>
-            <textarea spellcheck="true" wrap="absolute" rows="5" cols="60"
-                ng-model="vm.inventoryPayload.notes"></textarea>
+            <div>
+                <label>Date Added <span class="req"><em>*</em></span> </label>
+                <input type="text" ng-model="vm.inventoryRecord.created_date" pss-date-widget
+                    data-auto-translate="true">
+            </div>
+        </div>
+        <!-- insert inventory  table here -->
+        <div>
+            <div>
+                <label>Notes:</label>
+                <textarea spellcheck="true" wrap="absolute" rows="5" cols="60"
+                    ng-model="vm.inventoryRecord.notes"></textarea>
+            </div>
+        </div>
+        <div class="box-round" ng-if="$root.appData.districtUser && $root.appData.isTestServer">
+            <strong>vm.inventoryRecord:</strong>
+            <br>
+            <pre>{{vm.inventoryRecord | json}}</pre>
         </div>
     </div>
-    <div class="right" ng-if="$root.appData.districtUser && $root.appData.isTestServer">
-        <strong>vm.inventoryPayload:</strong> {{ vm.inventoryPayload }}
-    </div>
-</div>
+</form>

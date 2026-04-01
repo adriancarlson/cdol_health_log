@@ -81,8 +81,9 @@
                     </tbody>
                 </table>
             </div>
-            <div class="right" ng-if="$root.appData.districtUser && $root.appData.isTestServer">
-                <strong>appData:</strong> {{ $root.appData}}
+            <div class="box-round" ng-if=" $root.appData.districtUser && $root.appData.isTestServer">
+                <strong>appData:</strong>
+                <pre>{{$root.appData | json}}</pre>
             </div>
         </div>
         ~[wc:admin_footer_frame_css]

@@ -5,7 +5,7 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 	medicationModule.controller('medicationController', function ($scope, $rootScope, $attrs) {
 		const vm = this
 		$j(document).dblclick(() => console.log($scope))
-		
+
 		$rootScope.getCurrentTime = () => {
 			const now = new Date()
 			let hours = now.getHours()
@@ -30,7 +30,7 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 			curTime: $rootScope.getCurrentTime(),
 			districtUser: $attrs.ngCurUserSecurityRoles && $attrs.ngCurUserSecurityRoles.split(',').includes('9'),
 			isTestServer: $attrs.ngServerName && $attrs.ngServerName.indexOf('.test.') !== -1,
-			unitList: { mg: 'Milligrams', ml: 'Milliliters', units: 'Units', pills: 'Pills', other: 'Other' },
+			unitList: { mg: 'Milligrams (MG)', ml: 'Milliliters (ML)', units: 'Units', pills: 'Pills', other: 'Other' },
 			routeList: { oral: 'Oral', nasal: 'Nasal', sublingual: 'Sublingual', subcutaneous: 'Subcutaneous', rectal: 'Rectal', other: 'Other' }
 		}
 
@@ -53,8 +53,8 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 
 	medicationModule.controller('editController', function ($scope, $rootScope, $attrs) {
 		const vm = this
-		const payloadKey = `${$rootScope.appData.context}Payload`
-		vm[payloadKey] = {}
+		const recordKey = `${$rootScope.appData.context}Record`
+		vm[recordKey] = {}
 
 		const init = () => {
 			$scope.$emit('open.drawer.event', openDrawer)
@@ -64,7 +64,11 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 
 		const cancelDrawer = closeDrawer => {
 			loadingDialog()
-			$scope.resetForm(closeDrawer)
+			$scope.logRecord = {}
+			$rootScope.reloadData()
+			closeLoading()
+			closeDrawer(true)
+			closeDrawer()
 		}
 
 		const openDrawer = (openCallBack, data) => {
@@ -76,7 +80,7 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 			} else {
 				// formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
 				// formatService.objIterator(data.data, formatKeys.timeKeys, 'convSecondsToTime12')
-				vm[payloadKey] = data.data
+				vm[recordKey] = data.data
 				// const complaintValues = Object.values($rootScope.appData.complaintList)
 
 				// if (complaintValues.indexOf($scope.logRecord.complaint) === -1) {
@@ -126,7 +130,7 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 			// 	await psApiService.psApiCall('u_cdol_health_log', 'POST', $scope.logRecord)
 			// }
 
-			vm[payloadKey] = {}
+			vm[recordKey] = {}
 			$rootScope.reloadData()
 			closeLoading()
 			closeDrawer(true)
@@ -154,7 +158,7 @@ define(['angular', 'components/shared/powerschoolModule'], angular => {
 		}
 
 		vm.resetSeasonForm = closeDrawer => {
-			vm[payloadKey] = {}
+			vm[recordKey] = {}
 			$rootScope.reloadData()
 			closeLoading()
 			closeDrawer()
