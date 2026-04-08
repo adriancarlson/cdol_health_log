@@ -38,6 +38,7 @@ define(function (require) {
 				complaintList: {
 					B: 'Bloody Nose',
 					BB: 'Brain Break',
+					BP: 'Braces Pain',
 					CS: 'Cold Symptoms',
 					C: 'Cramps',
 					D: 'Dizziness',
