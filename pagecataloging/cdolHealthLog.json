@@ -11,7 +11,7 @@
 			"children": [
 				{
 					"htmlID": "cdol-health-log",
-					"title": "Daily Health Log",
+					"title": "Daily Health Log🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
@@ -21,7 +21,7 @@
 				},
 				{
 					"htmlID": "cdol-conversation-log",
-					"title": "Conversation Log",
+					"title": "Conversation Log🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
@@ -31,7 +31,7 @@
 				},
 				{
 					"htmlID": "cdol-athletic-injury",
-					"title": "Athletic Injury",
+					"title": "Athletic Injury🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
@@ -41,7 +41,7 @@
 				},
 				{
 					"htmlID": "cdol-concussion-eval",
-					"title": "Concussion Eval",
+					"title": "Concussion Eval🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
@@ -51,7 +51,7 @@
 				},
 				{
 					"htmlID": "cdol-injury-eval",
-					"title": "Injury Evaluation",
+					"title": "Injury Evaluation🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
@@ -72,7 +72,7 @@
 			"children": [
 				{
 					"htmlID": "cdol-medication-administration",
-					"title": "Administer Medication",
+					"title": "Administer Medication🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
@@ -82,7 +82,7 @@
 				},
 				{
 					"htmlID": "cdol-medication-inventory",
-					"title": "Medication Inventory",
+					"title": "Medication Inventory🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
