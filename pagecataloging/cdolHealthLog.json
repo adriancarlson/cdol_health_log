@@ -41,11 +41,7 @@
 				},
 				{
 					"htmlID": "cdol-concussion-eval",
-<<<<<<< Updated upstream
 					"title": "Concussion Eval🔹",
-=======
-					"title": "Concussion Evaluation🔹",
->>>>>>> Stashed changes
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
