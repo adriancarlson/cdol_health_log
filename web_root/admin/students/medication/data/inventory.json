@@ -1,45 +1,48 @@
 ~[tlist_sql;
-SELECT
-    COALESCE(
-        JSON_ARRAYAGG(
-            JSON_OBJECT(
-                'student_id' VALUE students.id,
-                'student_dcid' VALUE students.dcid,
-                'first_name' VALUE students.first_name,
-                'last_name' VALUE students.last_name,
-                'grade_level' VALUE students.grade_level,
-                'gender' VALUE students.gender,
-                'dob' VALUE TO_CHAR(students.dob, 'YYYY-MM-DD'),
-                'medication_id' VALUE u_student_medication.id,
-                'studentsdcid' VALUE u_student_medication.studentsdcid,
-                'created_by_users_dcid' VALUE u_student_medication.created_by_users_dcid,
-                'created_date' VALUE TO_CHAR(u_student_medication.created_date, 'YYYY-MM-DD HH24:MI:SS'),
-                'dose_amount' VALUE u_student_medication.dose_amount,
-                'dose_unit' VALUE u_student_medication.dose_unit,
-                'frequency' VALUE u_student_medication.frequency,
-                'inventory_unit' VALUE u_student_medication.inventory_unit,
-                'medication_name' VALUE u_student_medication.medication_name,
-                'notes' VALUE u_student_medication.notes,
-                'route' VALUE u_student_medication.route
-                NULL ON NULL
+    SELECT
+        COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'student_id' VALUE students.id,
+                    'student_dcid' VALUE students.dcid,
+                    'first_name' VALUE students.first_name,
+                    'last_name' VALUE students.last_name,
+                    'grade_level' VALUE students.grade_level,
+                    'gender' VALUE students.gender,
+                    'dob' VALUE TO_CHAR(students.dob, 'YYYY-MM-DD'),
+                    'studentsdcid' VALUE u_student_medication.studentsdcid,
+                    'schoolid' VALUE u_student_medication.schoolid,
+                    'yearid' VALUE u_student_medication.yearid,
+                    'medication_id' VALUE u_student_medication.id,
+                    'medication_name' VALUE u_student_medication.medication_name,
+                    'created_date' VALUE u_student_medication.created_date,
+                    'created_date_converted' VALUE TO_CHAR(u_student_medication.created_date, 'YYYY-MM-DD HH24:MI:SS'),
+                    'dose_amount' VALUE u_student_medication.dose_amount,
+                    'dose_unit' VALUE u_student_medication.dose_unit,
+                    'route' VALUE u_student_medication.route,
+                    'frequency' VALUE u_student_medication.frequency,
+                    'created_by_users_dcid' VALUE u_student_medication.created_by_users_dcid,
+                    'inventory_unit' VALUE u_student_medication.inventory_unit,
+                    'notes' VALUE u_student_medication.notes
+                    NULL ON NULL
+                    RETURNING CLOB
+                )
                 RETURNING CLOB
-            )
-            RETURNING CLOB
-        ),
-        TO_CLOB(CHR(91) || CHR(93))
-    ) AS json_result
-FROM
-    students
-    LEFT JOIN u_student_medication
-        ON students.dcid = u_student_medication.studentsdcid
-WHERE
-    u_student_medication.yearid = ~(gpv.yearID)
-    AND (
-        u_student_medication.schoolid = ~(gpv.curSchoolID)
-        OR ~(gpv.curSchoolID) = 0
-    )
-    AND (
-        students.dcid = ~(gpv.curStudentDCID)
-        OR ~(gpv.curStudentDCID) = 0
-    )
+            ),
+            TO_CLOB(CHR(91) || CHR(93))
+        ) AS json_result
+    FROM
+        u_student_medication 
+        LEFT JOIN students
+            ON u_student_medication.studentsdcid = students.dcid  
+    WHERE
+        u_student_medication.yearid = ~(gpv.yearID)
+        AND (
+            u_student_medication.schoolid = ~(gpv.curSchoolID)
+            OR ~(gpv.curSchoolID) = 0
+        )
+        AND (
+            students.dcid = ~(gpv.curStudentDCID)
+            OR ~(gpv.curStudentDCID) = 0
+        )
 ;]~(data)[/tlist_sql]
