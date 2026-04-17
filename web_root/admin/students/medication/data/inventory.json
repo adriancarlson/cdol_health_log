@@ -1,22 +1,21 @@
 ~[tlist_sql;
     SELECT
-        COALESCE(
-            JSON_ARRAYAGG(
-                JSON_OBJECT(
-                    'student_id' VALUE students.id,
+    COALESCE(
+        JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'student_id' VALUE students.id,
                     'student_dcid' VALUE students.dcid,
                     'first_name' VALUE students.first_name,
                     'last_name' VALUE students.last_name,
                     'grade_level' VALUE students.grade_level,
                     'gender' VALUE students.gender,
-                    'dob' VALUE TO_CHAR(students.dob, 'YYYY-MM-DD'),
+                    'dob' VALUE students.dob,
                     'studentsdcid' VALUE u_student_medication.studentsdcid,
                     'schoolid' VALUE u_student_medication.schoolid,
                     'yearid' VALUE u_student_medication.yearid,
                     'medication_id' VALUE u_student_medication.id,
                     'medication_name' VALUE u_student_medication.medication_name,
                     'created_date' VALUE u_student_medication.created_date,
-                    'created_date_converted' VALUE TO_CHAR(u_student_medication.created_date, 'YYYY-MM-DD HH24:MI:SS'),
                     'dose_amount' VALUE u_student_medication.dose_amount,
                     'dose_unit' VALUE u_student_medication.dose_unit,
                     'route' VALUE u_student_medication.route,
@@ -24,11 +23,12 @@
                     'created_by_users_dcid' VALUE u_student_medication.created_by_users_dcid,
                     'inventory_unit' VALUE u_student_medication.inventory_unit,
                     'notes' VALUE u_student_medication.notes
-                    NULL ON NULL
-                    RETURNING CLOB
-                )
+                NULL ON NULL
                 RETURNING CLOB
-            ),
+            )
+            ORDER BY students.last_name DESC
+            RETURNING CLOB
+        ) ,
             TO_CLOB(CHR(91) || CHR(93))
         ) AS json_result
     FROM
@@ -36,13 +36,10 @@
         LEFT JOIN students
             ON u_student_medication.studentsdcid = students.dcid  
     WHERE
-        u_student_medication.yearid = ~(gpv.yearID)
+        u_student_medication.yearid = ~(gpv.yearID;num)
+        AND ~(gpv.curSchoolID;num) IN (0, u_student_medication.schoolid)
         AND (
-            u_student_medication.schoolid = ~(gpv.curSchoolID)
-            OR ~(gpv.curSchoolID) = 0
-        )
-        AND (
-            students.dcid = ~(gpv.curStudentDCID)
-            OR ~(gpv.curStudentDCID) = 0
-        )
+                students.dcid = ~(gpv.curStudentDCID)
+                OR ~(gpv.curStudentDCID) = 0
+            )
 ;]~(data)[/tlist_sql]

@@ -41,9 +41,9 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		$rootScope.loadData = () => {
 			loadingDialog()
 			const paramValues = {
-				studentsdcid: vm.appData.curStudentDCID,
-				schoolid: vm.appData.curSchoolId,
-				yearid: vm.appData.curYearId
+				curStudentDCID: vm.appData.curStudentDCID,
+				curSchoolID: vm.appData.curSchoolId,
+				yearID: vm.appData.curYearId
 			}
 
 			vm[`${$rootScope.appData.context}List`] = []
@@ -65,6 +65,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			vm[`${$rootScope.appData.context}List`] = []
 			$rootScope.loadData()
 		}
+		$rootScope.loadData()
 	})
 
 	medicationModule.controller('editController', function ($scope, $rootScope, $q, formatService, psApiService) {
