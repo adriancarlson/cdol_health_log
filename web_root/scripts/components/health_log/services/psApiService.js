@@ -6,6 +6,27 @@ define(function (require) {
 		'$q',
 		'formatService',
 		function ($http, $q, formatService) {
+			const castPayloadValuesToString = value => {
+				if (value === null || value === undefined) return undefined
+				if (Array.isArray(value)) {
+					return value.map(castPayloadValuesToString).filter(item => item !== undefined)
+				}
+				if (Object.prototype.toString.call(value) === '[object Date]') {
+					return isNaN(value.getTime()) ? '' : value.toISOString()
+				}
+				if (typeof value === 'object') {
+					const normalizedValue = {}
+					Object.keys(value).forEach(key => {
+						const normalizedFieldValue = castPayloadValuesToString(value[key])
+						if (normalizedFieldValue !== undefined) {
+							normalizedValue[key] = normalizedFieldValue
+						}
+					})
+					return normalizedValue
+				}
+				return typeof value === 'string' ? value : value.toString()
+			}
+
 			return {
 				psApiCall: (tableName, method, payload, recId) => {
 					let deferredResponse = $q.defer()
@@ -52,6 +73,7 @@ define(function (require) {
 								apiPayload = formatService.objIterator(apiPayload, apiPayload.deleteKeys, 'deleteKeys')
 							}
 							delete apiPayload.deleteKeys
+							apiPayload = castPayloadValuesToString(apiPayload)
 							const data = { tables: {} }
 							data.tables[tableName] = apiPayload
 							httpObject['data'] = data

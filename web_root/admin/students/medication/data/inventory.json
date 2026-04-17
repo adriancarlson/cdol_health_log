@@ -3,19 +3,12 @@
     COALESCE(
         JSON_ARRAYAGG(
             JSON_OBJECT(
-                'student_id' VALUE students.id,
-                    'student_dcid' VALUE students.dcid,
-                    'first_name' VALUE students.first_name,
-                    'last_name' VALUE students.last_name,
-                    'grade_level' VALUE students.grade_level,
-                    'gender' VALUE students.gender,
-                    'dob' VALUE students.dob,
                     'studentsdcid' VALUE u_student_medication.studentsdcid,
                     'schoolid' VALUE u_student_medication.schoolid,
                     'yearid' VALUE u_student_medication.yearid,
                     'medication_id' VALUE u_student_medication.id,
                     'medication_name' VALUE u_student_medication.medication_name,
-                    'created_date' VALUE u_student_medication.created_date,
+                    'created_date' VALUE TO_CHAR(u_student_medication.created_date, 'YYYY-MM-DD'),
                     'dose_amount' VALUE u_student_medication.dose_amount,
                     'dose_unit' VALUE u_student_medication.dose_unit,
                     'route' VALUE u_student_medication.route,

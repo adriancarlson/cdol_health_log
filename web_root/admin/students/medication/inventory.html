@@ -51,12 +51,14 @@
                 <table class="grid">
                     <thead>
                         <tr>
+                            <th data-pss-sort-fields="created_date">Date Added</th>
                             <th data-pss-sort-fields="medication_name">Medication</th>
                             <th data-pss-sort-fields="route">Route</th>
                             <th data-pss-sort-fields="dosage">Dosage</th>
                             <th data-pss-sort-fields="frequency">Frequency</th>
                             <th>Inventory</th>
-                            <!-- <th style="width: 65px;">Actions</th> -->
+                            <th>Notes</th>
+                            <th style="width: 65px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -64,19 +66,21 @@
                             <td colspan="100%">~(first_name) ~(last_name) has no medications in inventory</span>
                             </td>
                         </tr>
-                        <tr ng-repeat="medication in vm.filteredInventoryList" data-id="{{medication.id}}">
+                        <tr ng-repeat="medication in vm.filteredInventoryList" data-id="{{medication.medication_id}}">
+                            <td class="center">{{medication.created_date | date}}</td>
                             <td class="center">{{medication.medication_name}}</td>
                             <td class="center">{{medication.route}}</td>
                             <td class="center">{{medication.dosage}}</td>
                             <td class="center">{{medication.frequency}}</td>
-                            <td class="center"></td>
-                            <!-- <td class="actions center"> 
-                            <button type="button" id="mod-btn-{{healthLog.id}}" pss-dialog-drawer
-                                edit-button-icon="true" drawer-title="Edit {{appData.fullContext}}"
-                                template-url="views/log_drawer.html" data-data="healthLog"></button>
-                            <button type="button" id="delBtn" ng-click="delConfirm(healthLog.id)"><em
-                                    class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>
-                            </td> -->
+                            <td class="center">{{medication.inventory}}</td>
+                            <td class="center">{{medication.notes}}</td>
+                            <td class="actions center">
+                                <button type="button" id="mod-btn-{{medication.medication_id}}" pss-dialog-drawer
+                                    edit-button-icon="true" drawer-title="Edit {{vm.appData.contextTitle}}"
+                                    template-url="editInventory.html" data-data="medication"></button>
+                                <button type="button" id="delBtn" ng-click="vm.delConfirm(medication.medication_id)"><em
+                                        class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

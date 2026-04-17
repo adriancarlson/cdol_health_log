@@ -2,7 +2,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 	'use strict'
 	const medicationModule = angular.module('medicationModule', ['powerSchoolModule', 'healthLogMod'])
 
-	medicationModule.controller('medicationController', function ($scope, $rootScope, $attrs, $http) {
+	medicationModule.controller('medicationController', function ($scope, $rootScope, $attrs, $http, $q, psApiService) {
 		const vm = this
 		$j(document).dblclick(() => console.log($scope))
 
@@ -65,6 +65,22 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			vm[`${$rootScope.appData.context}List`] = []
 			$rootScope.loadData()
 		}
+
+		vm.delConfirm = logId => {
+			console.log(logId)
+			psConfirm({
+				title: `Delete ${$rootScope.appData.contextTitle} Item`,
+				message: `    Are you sure you want to delete this ${$rootScope.appData.contextTitle} Item?    `,
+				oktext: 'Delete',
+				canceltext: 'Cancel',
+				ok: () => {
+					$q.when(psApiService.psApiCall('u_student_medication', 'DELETE', {}, logId)).then(() => {
+						$rootScope.reloadData()
+					})
+				}
+			})
+		}
+
 		$rootScope.loadData()
 	})
 
@@ -95,14 +111,16 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		const openDrawer = (openCallBack, data) => {
 			$scope.$emit('drawer.enable.save.button')
-			if (data.data.id == null) {
+			console.log(data.data)
+			if (data.data.medication_id == null) {
 				vm[recordKey].created_date = $rootScope.appData.curDate
 				vm[recordKey].created_by_users_dcid = $rootScope.appData.curUserDcid
 				vm[recordKey].studentsdcid = $rootScope.appData.curStudentDCID
 				vm[recordKey].schoolid = $rootScope.appData.curSchoolId
 				vm[recordKey].yearid = $rootScope.appData.curYearId
 			} else {
-				// formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
+				formatService.objIterator(data.data, formatKeys.dateKeys, 'stripTimeFromIsoDate')
+				formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
 				// formatService.objIterator(data.data, formatKeys.timeKeys, 'convSecondsToTime12')
 				vm[recordKey] = data.data
 				// const complaintValues = Object.values($rootScope.appData.complaintList)
@@ -121,8 +139,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		const saveDrawer = (closeDrawer, data) => {
 			loadingDialog()
 
-			// //add createFormatKeys to each object in submitPayload
-			vm[recordKey] = Object.assign(vm[recordKey], formatKeys)
+			const payload = Object.assign({}, vm[recordKey], formatKeys)
 			// //check for other values in dropdowns and takes the other value and puts it in the proper field in the logRecord also deletes the other field from the logRecord payload
 			// for (const key in $scope.logRecord) {
 			// 	if (key.endsWith('_other')) {
@@ -137,22 +154,22 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			// //submitting staff changes through api
 			let savePromise
 
-			if (vm[recordKey].id) {
-				let recordId = vm[recordKey].id
-				delete vm[recordKey]['id']
-				delete vm[recordKey]['studentsdcid']
+			if (payload.medication_id) {
+				let recordId = payload.medication_id
+				delete payload['medication_id']
+				delete payload['studentsdcid']
 				// if (vm[recordKey].vitals) {
 				// 	savePromise = psApiService.psApiCall('healthofficevisit', 'PUT', vm[recordKey], recordId)
 				// } else {
 				// 	delete $scope.logRecord['vitals']
 				// }
-				savePromise = psApiService.psApiCall('u_student_medication', 'PUT', vm[recordKey], recordId)
+				savePromise = psApiService.psApiCall('u_student_medication', 'PUT', payload, recordId)
 			} else {
 				// if (vm[recordKey].vitals) {
 				// 	savePromise = psApiService.psApiCall('healthofficevisit', 'POST', vm[recordKey])
 				// }
 				// delete vm[recordKey]['vitals']
-				savePromise = psApiService.psApiCall('u_student_medication', 'POST', vm[recordKey])
+				savePromise = psApiService.psApiCall('u_student_medication', 'POST', payload)
 			}
 
 			return $q.when(savePromise).then(() => {
