@@ -94,6 +94,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 
 		const openDrawer = (openCallBack, data) => {
+			$scope.$emit('drawer.enable.save.button')
 			if (data.data.id == null) {
 				vm[recordKey].created_date = $rootScope.appData.curDate
 				vm[recordKey].created_by_users_dcid = $rootScope.appData.curUserDcid
@@ -113,6 +114,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				// 	$scope.logRecord.complaint = 'Other'
 				// }
 			}
+			vm.checkReqFields()
 			openCallBack()
 		}
 
@@ -162,8 +164,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 		// checks required fields and enables save button if all required fields are filled out
 		vm.checkReqFields = () => {
-			let enableSaveButton = false
-			// enableSaveButton = vm[recordKey].medication_name && vm[recordKey].created_date && vm[recordKey].dose_amount && vm[recordKey].dose_unit && vm[recordKey].route && vm[recordKey].frequency
+			const enableSaveButton = vm[recordKey].medication_name && vm[recordKey].created_date && vm[recordKey].dose_amount && vm[recordKey].dose_unit && vm[recordKey].route && vm[recordKey].frequency
 			// switch ($scope.logRecord.log_type) {
 			// 	case 'Daily':
 			// 		enableSaveButton = $scope.logRecord.complaint && $scope.logRecord.treatment && $scope.logRecord.users_dcid

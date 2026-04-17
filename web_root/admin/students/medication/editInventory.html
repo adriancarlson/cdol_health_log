@@ -1,23 +1,22 @@
-<form>
+<form name="inventoryForm">
     <div class="fluid-form" ng-controller="editController as vm" ng-cloak>
         <div>
             <div>
                 <label>Medication Name <span class="req"><em>*</em></span></label>
-                <input type="text" ng-model="vm.inventoryRecord.medication_name">
+                <input type="text" ng-model="vm.inventoryRecord.medication_name" ng-change="vm.checkReqFields()">
             </div>
             <div>
                 <label>Date Added <span class="req"><em>*</em></span> </label>
                 <input type="text" ng-model="vm.inventoryRecord.created_date" pss-date-widget
-                    data-auto-translate="true">
+                    ng-change="vm.checkReqFields()" data-auto-translate="true">
             </div>
         </div>
         <div>
             <div>
                 <label>Dosage <span class="req"><em>*</em></span></label>
-                <input type="text" ng-model="vm.inventoryRecord.dose_amount" size="6">
+                <input type="text" ng-model="vm.inventoryRecord.dose_amount" size="6" ng-change="vm.checkReqFields()">
                 <select ng-options="key as val for (key,val) in $root.appData.unitList"
-                    ng-model="vm.inventoryRecord.dose_unit"
-                    ng-change="handleFieldChange('dose_unit'); vm.checkReqFields()">
+                    ng-model="vm.inventoryRecord.dose_unit" ng-change="vm.checkReqFields()">
                 </select>
             </div>
         </div>
@@ -25,15 +24,14 @@
             <div>
                 <label>Route <span class="req"><em>*</em></span> </label>
                 <select ng-options="val as val for (key,val) in $root.appData.routeList"
-                    ng-model="vm.inventoryRecord.route" ng-change="handleFieldChange('route'); vm.checkReqFields()">
+                    ng-model="vm.inventoryRecord.route" ng-change="vm.checkReqFields()">
                     <option value="">Select a Route</option>
                 </select>
             </div>
             <div>
                 <label>Frequency <span class="req"><em>*</em></span> </label>
                 <select ng-options="val as val for (key,val) in $root.appData.frequencyList"
-                    ng-model="vm.inventoryRecord.frequency"
-                    ng-change="handleFieldChange('frequency'); vm.checkReqFields()">
+                    ng-model="vm.inventoryRecord.frequency" ng-change="vm.checkReqFields()">
                     <option value="">Select a Frequency</option>
                 </select>
             </div>
