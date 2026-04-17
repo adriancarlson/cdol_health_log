@@ -35,8 +35,8 @@
             ng-cur-year-id="~(curyearid)" ng-cur-date="~[date]" ng-cur-time="~[time]"
             ng-server-name="~[x:WEB_GetServerInfo;name=HostName]" ng-cur-user-security-roles="~[x:usersroles]"
             ng-context="inventory" ng-cloak>
-            <div id="medication-grid" data-pss-grid-widget data-data="vm[vm.listKey]"
-                data-filtered-data="vm[vm.filteredListKey]" data-client-side-pagination="false"
+            <div id="medication-grid" data-pss-grid-widget data-data="vm.inventoryList"
+                data-filtered-data="vm.filteredInventoryList" data-client-side-pagination="false"
                 data-filter-constraint="no-filters">
                 <div class="med-top-of-table">
                     <span>
@@ -60,22 +60,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-show="!vm[vm.listKey].length">
+                        <tr ng-show="!vm.inventoryList.length">
                             <td colspan="100%">~(first_name) ~(last_name) has no medications in inventory</span>
                             </td>
                         </tr>
-                        <tr ng-repeat="medication in vm[vm.filteredListKey]" data-id="{{medication.id}}">
+                        <tr ng-repeat="medication in vm.filteredInventoryList" data-id="{{medication.id}}">
                             <td class="center">{{medication.medication_name}}</td>
                             <td class="center">{{medication.route}}</td>
                             <td class="center">{{medication.dosage}}</td>
                             <td class="center">{{medication.frequency}}</td>
                             <td class="center"></td>
-                            <!-- <td class="actions center">
-                                <button type="button" id="mod-btn-{{healthLog.id}}" pss-dialog-drawer
-                                    edit-button-icon="true" drawer-title="Edit {{appData.fullContext}}"
-                                    template-url="views/log_drawer.html" data-data="healthLog"></button>
-                                <button type="button" id="delBtn" ng-click="delConfirm(healthLog.id)"><em
-                                        class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>
+                            <!-- <td class="actions center"> 
+                            <button type="button" id="mod-btn-{{healthLog.id}}" pss-dialog-drawer
+                                edit-button-icon="true" drawer-title="Edit {{appData.fullContext}}"
+                                template-url="views/log_drawer.html" data-data="healthLog"></button>
+                            <button type="button" id="delBtn" ng-click="delConfirm(healthLog.id)"><em
+                                    class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>
                             </td> -->
                         </tr>
                     </tbody>
