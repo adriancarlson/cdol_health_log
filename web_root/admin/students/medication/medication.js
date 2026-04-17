@@ -72,7 +72,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		const recordKey = `${$rootScope.appData.context}Record`
 		vm[recordKey] = {}
 
-		const init = () => {
+		const initalizeDrawer = () => {
 			$scope.$emit('open.drawer.event', openDrawer)
 			$scope.$emit('cancel.drawer.event', cancelDrawer)
 			$scope.$emit('save.drawer.event', saveDrawer)
@@ -187,6 +187,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			closeLoading()
 			closeDrawer()
 		}
-		$rootScope.loadData()
+		initalizeDrawer()
+		// $rootScope.loadData()
 	})
 })
