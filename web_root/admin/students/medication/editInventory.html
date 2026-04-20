@@ -13,7 +13,7 @@
         </div>
         <div>
             <div>
-                <label>Dosage <span class="req"><em>*</em></span></label>
+                <label>Dosage<span class="req"><em>*</em></span></label>
                 <input type="text" ng-model="vm.inventoryRecord.dose_amount" size="6" ng-change="vm.checkReqFields()">
                 <select ng-options="key as val for (key,val) in $root.appData.unitList"
                     ng-model="vm.inventoryRecord.dose_unit" ng-change="vm.checkReqFields()">

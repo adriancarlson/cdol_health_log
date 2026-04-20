@@ -1,15 +1,15 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "buildplugin",
-            "type": "shell",
-            "command": "py ../../pluginpack.py --with-version",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "buildplugin",
+			"type": "shell",
+			"command": "py ../../pluginpack.py --with-version --mask \"\\.md$\"",
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
 }
