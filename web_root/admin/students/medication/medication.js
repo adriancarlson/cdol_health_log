@@ -103,6 +103,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		const vm = this
 		const recordKey = `${$rootScope.appData.context}Record`
 		vm[recordKey] = {}
+		vm.medicationRecord = vm[recordKey]
 
 		const initalizeDrawer = () => {
 			$scope.$emit('open.drawer.event', openDrawer)
@@ -118,6 +119,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		const cancelDrawer = closeDrawer => {
 			loadingDialog()
 			vm[recordKey] = {}
+			vm.medicationRecord = vm[recordKey]
 			$rootScope.reloadData()
 			closeLoading()
 			closeDrawer(true)
@@ -128,16 +130,23 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			$scope.$emit('drawer.enable.save.button')
 			console.log(data.data)
 			if (data.data.medication_id == null) {
-				vm[recordKey].created_date = $rootScope.appData.curDate
-				vm[recordKey].created_by_users_dcid = $rootScope.appData.curUserDcid
-				vm[recordKey].studentsdcid = $rootScope.appData.curStudentDCID
-				vm[recordKey].schoolid = $rootScope.appData.curSchoolId
-				vm[recordKey].yearid = $rootScope.appData.curYearId
+				const record = vm.medicationRecord || vm[recordKey] || {}
+				record.inventory = record.inventory || {}
+				record.created_date = $rootScope.appData.curDate
+				record.inventory.created_date = $rootScope.appData.curDate
+				record.created_by_users_dcid = $rootScope.appData.curUserDcid
+				record.studentsdcid = $rootScope.appData.curStudentDCID
+				record.schoolid = $rootScope.appData.curSchoolId
+				record.yearid = $rootScope.appData.curYearId
+				vm[recordKey] = record
+				vm.medicationRecord = record
 			} else {
 				formatService.objIterator(data.data, formatKeys.dateKeys, 'stripTimeFromIsoDate')
 				formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
 				// formatService.objIterator(data.data, formatKeys.timeKeys, 'convSecondsToTime12')
+				data.data.inventory = data.data.inventory || {}
 				vm[recordKey] = data.data
+				vm.medicationRecord = vm[recordKey]
 				// const complaintValues = Object.values($rootScope.appData.complaintList)
 
 				// if (complaintValues.indexOf($scope.logRecord.complaint) === -1) {
@@ -189,6 +198,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 			return $q.when(savePromise).then(() => {
 				vm[recordKey] = {}
+				vm.medicationRecord = vm[recordKey]
 				$rootScope.reloadData()
 				closeLoading()
 				closeDrawer(true)
@@ -218,6 +228,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		vm.resetSeasonForm = closeDrawer => {
 			vm[recordKey] = {}
+			vm.medicationRecord = vm[recordKey]
 			$rootScope.reloadData()
 			closeLoading()
 			closeDrawer()
