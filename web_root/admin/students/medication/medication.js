@@ -1,8 +1,8 @@
-define(['angular', 'components/shared/powerschoolModule', 'components/health_log/module', 'components/health_log/services/formatService', 'components/health_log/services/psApiService'], angular => {
+define(['angular', 'components/shared/powerschoolModule', 'components/health_log/module', 'components/health_log/services/formatService', 'components/health_log/services/pqService', 'components/health_log/services/psApiService'], angular => {
 	'use strict'
 	const medicationModule = angular.module('medicationModule', ['powerSchoolModule', 'healthLogMod'])
 
-	medicationModule.controller('medicationController', function ($scope, $rootScope, $attrs, $http, $q, psApiService) {
+	medicationModule.controller('medicationController', function ($scope, $rootScope, $attrs, $http, $q, pqService, psApiService) {
 		const vm = this
 		$j(document).dblclick(() => console.log($scope))
 
@@ -56,7 +56,11 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 			vm[`${$rootScope.appData.context}List`] = []
 
-			$http({
+			const staffPromise = $q.when(pqService.getPQResults('net.cdolinc.health.healthLog.staff', { curSchoolID: paramValues.curSchoolID })).then(staffList => {
+				$rootScope.appData.staffList = staffList
+			})
+
+			const dataPromise = $http({
 				url: `./data/${$rootScope.appData.context}.json`,
 				method: 'GET',
 				params: paramValues
@@ -65,6 +69,9 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				// Load grid data once response is ready
 				const sanitizedData = psUtils.htmlEntitiesToCharCode(resData)
 				vm[`${$rootScope.appData.context}List`] = sanitizedData
+			})
+
+			$q.all([staffPromise, dataPromise]).finally(() => {
 				closeLoading()
 			})
 		}
