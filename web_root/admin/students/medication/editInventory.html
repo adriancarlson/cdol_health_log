@@ -1,5 +1,26 @@
 <form name="inventoryForm">
     <div class="fluid-form" ng-controller="editController as vm" ng-cloak>
+        <style>
+            .dose-group {
+                display: inline-flex;
+                align-items: stretch;
+                max-width: 100%;
+            }
+
+            .dose-input {
+                width: 6ch;
+                min-width: 6ch;
+                max-width: 6ch;
+                border-radius: 4px 0 0 4px;
+            }
+
+            .dose-unit {
+                width: fit-content;
+                min-width: 0;
+                margin-left: -1px;
+                border-radius: 0 4px 4px 0;
+            }
+        </style>
         <div>
             <div>
                 <label>Medication Name <span class="req"><em>*</em></span></label>
@@ -13,13 +34,34 @@
         </div>
         <div>
             <div>
+                <label>Dosage <span class="req"><em>*</em></span></label>
+                <div class="dose-group">
+                    <input type="text" class="dose-input" ng-model="vm.inventoryRecord.dose_amount" size="6"
+                        maxlength="6" ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
+                    <select class="dose-unit" ng-options="key as val for (key,val) in $root.appData.unitList"
+                        ng-model="vm.inventoryRecord.dose_unit" ng-change="vm.checkReqFields()" aria-label="Dose unit">
+                        <option value="">Select dose unit</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label>Inventory Unit <span class="req"><em>*</em></span> </label>
+                <select ng-options="key as val for (key,val) in $root.appData.inventoryUnitList"
+                    ng-model="vm.inventoryRecord.inventory_unit" ng-change="vm.checkReqFields()"
+                    aria-label="Inventory unit">
+                    <option value="">Select inventory unit</option>
+                </select>
+            </div>
+        </div>
+        <!-- <div>
+            <div>
                 <label>Dosage<span class="req"><em>*</em></span></label>
                 <input type="text" ng-model="vm.inventoryRecord.dose_amount" size="6" ng-change="vm.checkReqFields()">
                 <select ng-options="key as val for (key,val) in $root.appData.unitList"
                     ng-model="vm.inventoryRecord.dose_unit" ng-change="vm.checkReqFields()">
                 </select>
             </div>
-        </div>
+        </div> -->
         <div>
             <div>
                 <label>Route <span class="req"><em>*</em></span> </label>

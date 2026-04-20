@@ -32,6 +32,14 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			districtUser: $attrs.ngCurUserSecurityRoles && $attrs.ngCurUserSecurityRoles.split(',').includes('9'),
 			isTestServer: $attrs.ngServerName && $attrs.ngServerName.indexOf('.test.') !== -1,
 			unitList: { mg: 'Milligrams (MG)', ml: 'Milliliters (ML)', units: 'Units', pills: 'Pills', other: 'Other' },
+			inventoryUnitList: {
+				pill: 'Pill',
+				tablet: 'Tablet',
+				capsule: 'Capsule',
+				ml: 'Milliliters (ML)',
+				units: 'Units',
+				other: 'Other'
+			},
 			routeList: { oral: 'Oral', nasal: 'Nasal', sublingual: 'Sublingual', subcutaneous: 'Subcutaneous', rectal: 'Rectal', other: 'Other' },
 			frequencyList: { daily: 'Daily', other: 'Other' }
 		}
@@ -181,7 +189,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 		// checks required fields and enables save button if all required fields are filled out
 		vm.checkReqFields = () => {
-			const enableSaveButton = vm[recordKey].medication_name && vm[recordKey].created_date && vm[recordKey].dose_amount && vm[recordKey].dose_unit && vm[recordKey].route && vm[recordKey].frequency
+			const enableSaveButton = vm[recordKey].medication_name && vm[recordKey].created_date && vm[recordKey].dose_amount && vm[recordKey].dose_unit && vm[recordKey].inventory_unit && vm[recordKey].route && vm[recordKey].frequency
 			// switch ($scope.logRecord.log_type) {
 			// 	case 'Daily':
 			// 		enableSaveButton = $scope.logRecord.complaint && $scope.logRecord.treatment && $scope.logRecord.users_dcid
