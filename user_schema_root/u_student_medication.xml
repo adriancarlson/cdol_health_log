@@ -19,7 +19,7 @@
         <field name="u_student_medication_id" type="Integer"/>
         <field name="quantity_added" type="Double"/>
         <field name="quantity_remaining" type="Double" />
-        <field name="date_added" type="Date"/>
+        <field name="added_date" type="Date"/>
         <field name="users_dcid" type="Integer" />
         <field name="notes" type="String" length="4000" />
     </extendedTable>

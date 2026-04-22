@@ -107,8 +107,8 @@
                                 ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
                             {{vm.medicationRecord.inventory_unit | pluralize}}</td>
                         <td id="inv-date-cell-0" class="center"><input id="inv-date-input-0" type="text"
-                                ng-init="vm.inventoryRecord[0].date_added = vm.inventoryRecord[0].date_added || $root.appData.curDate"
-                                ng-model="vm.inventoryRecord[0].date_added" pss-date-widget
+                                ng-init="vm.inventoryRecord[0].added_date = vm.inventoryRecord[0].added_date || $root.appData.curDate"
+                                ng-model="vm.inventoryRecord[0].added_date" pss-date-widget
                                 ng-change="vm.checkReqFields()" data-auto-translate="true"></td>
                         <td id="inv-users-cell-0" class="center">
                             <select id="users-dcid-0"
@@ -126,8 +126,8 @@
                                 ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
                             {{vm.medicationRecord.inventory_unit | pluralize}}</td>
                         <td id="inv-date-cell-{{$index + 1}}" class="center"><input id="inv-date-input-{{$index + 1}}"
-                                type="text" ng-init="inv.date_added = inv.date_added || $root.appData.curDate"
-                                ng-model="inv.date_added" pss-date-widget ng-change="vm.checkReqFields()"
+                                type="text" ng-init="inv.added_date = inv.added_date || $root.appData.curDate"
+                                ng-model="inv.added_date" pss-date-widget ng-change="vm.checkReqFields()"
                                 data-auto-translate="true"></td>
                         <td id="inv-users-cell-{{$index + 1}}" class="center">
                             <select id="users-dcid-{{$index + 1}}"
@@ -141,7 +141,7 @@
                         </td>
                     </tr>
                     <tr id="inv-add-row"
-                        ng-show="vm.inventoryRecord[0].quantity_added && vm.inventoryRecord[0].date_added && vm.inventoryRecord[0].users_dcid">
+                        ng-show="vm.inventoryRecord[0].quantity_added && vm.inventoryRecord[0].added_date && vm.inventoryRecord[0].users_dcid">
                         <td id="inv-add-cell" class="center" colspan="4">
                             <button id="inv-add-btn" type="button" ng-click="vm.addInventoryRecord()">Add Additional
                                 Inventory</button>

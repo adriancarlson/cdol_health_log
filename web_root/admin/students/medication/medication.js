@@ -105,7 +105,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm[recordKey] = {}
 		vm.medicationRecord = vm[recordKey]
 		const createInventoryRow = () => ({
-			date_added: $rootScope.appData.curDate,
+			added_date: $rootScope.appData.curDate,
 			users_dcid: $rootScope.appData.curUserDcid
 		})
 
@@ -118,7 +118,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		const ensureFirstInventoryRowDefaults = () => {
 			normalizeInventoryRows()
-			vm.inventoryRecord[0].date_added = vm.inventoryRecord[0].date_added || $rootScope.appData.curDate
+			vm.inventoryRecord[0].added_date = vm.inventoryRecord[0].added_date || $rootScope.appData.curDate
 			vm.inventoryRecord[0].users_dcid = vm.inventoryRecord[0].users_dcid || $rootScope.appData.curUserDcid
 		}
 
@@ -152,7 +152,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 
 		const formatKeys = {
-			dateKeys: ['_date'],
+			dateKeys: ['_date', 'added_date'],
 			timeKeys: ['_time']
 		}
 
@@ -214,47 +214,61 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			const medicationPayload = Object.assign({}, vm.medicationRecord || vm[recordKey] || {})
 			delete medicationPayload.inventory
 			formatService.objIterator(medicationPayload, formatKeys.dateKeys, 'formatDateForApi')
-			// payload.inventory = [vm.inventoryRecord[0]].concat(vm.additionalInventoryRows)
-			// //check for other values in dropdowns and takes the other value and puts it in the proper field in the logRecord also deletes the other field from the logRecord payload
-			// for (const key in $scope.logRecord) {
-			// 	if (key.endsWith('_other')) {
-			// 		const originalKey = key.replace('_other', '')
-			// 		if ($scope.logRecord[originalKey]) {
-			// 			$scope.logRecord[originalKey] = $scope.logRecord[key]
-			// 			delete $scope.logRecord[key]
-			// 		}
-			// 	}
-			// }
 
-			// //submitting staff changes through api
+			const getMedicationIdFromResponse = response => response && response.result && response.result[0] && response.result[0].success_message && response.result[0].success_message.id
+
+			const buildInventoryPayloads = medicationId => {
+				const inventoryRows = [vm.inventoryRecord[0]].concat(vm.additionalInventoryRows || [])
+				return inventoryRows
+					.filter(row => row && row.quantity_added)
+					.map(row => {
+						const inventoryPayload = {
+							u_student_medication_id: medicationId,
+							added_date: row.added_date,
+							users_dcid: row.users_dcid,
+							quantity_added: row.quantity_added,
+							quantity_remaining: row.quantity_added,
+							notes: row.notes
+						}
+
+						formatService.objIterator(inventoryPayload, formatKeys.dateKeys, 'formatDateForApi')
+						return inventoryPayload
+					})
+			}
+
 			let savePromise
 
 			if (medicationPayload.medication_id) {
 				let recordId = medicationPayload.medication_id
 				delete medicationPayload['medication_id']
 				delete medicationPayload['studentsdcid']
-				// if (vm[recordKey].vitals) {
-				// 	savePromise = psApiService.psApiCall('healthofficevisit', 'PUT', vm[recordKey], recordId)
-				// } else {
-				// 	delete $scope.logRecord['vitals']
-				// }
+
 				savePromise = psApiService.psApiCall('u_student_medication', 'PUT', medicationPayload, recordId)
 			} else {
-				// if (vm[recordKey].vitals) {
-				// 	savePromise = psApiService.psApiCall('healthofficevisit', 'POST', vm[recordKey])
-				// }
-				// delete vm[recordKey]['vitals']
 				savePromise = psApiService.psApiCall('u_student_medication', 'POST', medicationPayload)
 			}
 
-			return $q.when(savePromise).then(() => {
-				vm[recordKey] = {}
-				vm.medicationRecord = vm[recordKey]
-				resetInventoryRows()
-				$rootScope.reloadData()
-				closeLoading()
-				closeDrawer(true)
-			})
+			return $q
+				.when(savePromise)
+				.then(response => {
+					if (!medicationPayload.medication_id) {
+						const medicationId = getMedicationIdFromResponse(response)
+						const inventoryPayloads = buildInventoryPayloads(medicationId)
+
+						if (medicationId && inventoryPayloads.length) {
+							return $q.all(inventoryPayloads.map(payload => psApiService.psApiCall('u_student_medication_inventory', 'POST', payload)))
+						}
+					}
+					return null
+				})
+				.then(() => {
+					vm[recordKey] = {}
+					vm.medicationRecord = vm[recordKey]
+					resetInventoryRows()
+					$rootScope.reloadData()
+					closeLoading()
+					closeDrawer(true)
+				})
 		}
 		// checks required fields and enables save button if all required fields are filled out
 		vm.checkReqFields = () => {
