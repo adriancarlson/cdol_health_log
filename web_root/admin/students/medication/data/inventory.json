@@ -15,24 +15,54 @@
                     'frequency' VALUE u_student_medication.frequency,
                     'users_dcid' VALUE u_student_medication.users_dcid,
                     'inventory_unit' VALUE u_student_medication.inventory_unit,
-                    'notes' VALUE u_student_medication.notes
-                NULL ON NULL
-                RETURNING CLOB
-            )
-            ORDER BY students.last_name DESC
+                    'notes' VALUE u_student_medication.notes,
+                    'inventory_total_initial' VALUE NVL((
+                SELECT SUM(inv.quantity_added)
+                FROM u_student_medication_inventory inv
+                WHERE inv.u_student_medication_id = u_student_medication.id
+            ), 0),
+
+            'inventory_total_remaining' VALUE NVL((
+                SELECT SUM(inv.quantity_remaining)
+                FROM u_student_medication_inventory inv
+                WHERE inv.u_student_medication_id = u_student_medication.id
+            ), 0),
+
+            'inventory_batches' VALUE COALESCE((
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'added_date' VALUE TO_CHAR(inv.added_date, 'YYYY-MM-DD'),
+                        'quantity_added' VALUE inv.quantity_added,
+                        'quantity_remaining' VALUE inv.quantity_remaining,
+                        'users_dcid' VALUE inv.users_dcid,
+                        'notes' VALUE inv.notes
+                        NULL ON NULL
+                        RETURNING CLOB
+                    )
+                    ORDER BY inv.added_date DESC
+                    RETURNING CLOB
+                )
+                FROM u_student_medication_inventory inv
+                WHERE inv.u_student_medication_id = u_student_medication.id
+            ), TO_CLOB('[]')) FORMAT JSON
+
+            NULL ON NULL
             RETURNING CLOB
-        ) ,
-            TO_CLOB(CHR(91) || CHR(93))
-        ) AS json_result
-    FROM
-        u_student_medication 
-        LEFT JOIN students
-            ON u_student_medication.studentsdcid = students.dcid  
-    WHERE
-        u_student_medication.yearid = ~(gpv.yearID;num)
-        AND ~(gpv.curSchoolID;num) IN (0, u_student_medication.schoolid)
-        AND (
-                students.dcid = ~(gpv.curStudentDCID)
-                OR ~(gpv.curStudentDCID) = 0
-            )
+        )
+        ORDER BY students.last_name DESC
+        RETURNING CLOB
+    ),
+    TO_CLOB(CHR(91) || CHR(93))
+) AS json_result
+FROM
+    u_student_medication
+    LEFT JOIN students
+        ON u_student_medication.studentsdcid = students.dcid
+WHERE
+    u_student_medication.yearid = ~(gpv.yearID;num)
+    AND ~(gpv.curSchoolID;num) IN (0, u_student_medication.schoolid)
+    AND (
+        students.dcid = ~(gpv.curStudentDCID)
+        OR ~(gpv.curStudentDCID) = 0
+    )
 ;]~(data)[/tlist_sql]

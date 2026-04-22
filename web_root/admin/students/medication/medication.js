@@ -212,15 +212,31 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			loadingDialog()
 
 			const medicationPayload = Object.assign({}, vm.medicationRecord || vm[recordKey] || {})
+			const existingMedicationId = medicationPayload.medication_id || null
 			delete medicationPayload.inventory
 			formatService.objIterator(medicationPayload, formatKeys.dateKeys, 'formatDateForApi')
 
-			const getMedicationIdFromResponse = response => response && response.result && response.result[0] && response.result[0].success_message && response.result[0].success_message.id
+			const getMedicationIdFromResponse = response => {
+				if (!response) return null
+
+				if (Array.isArray(response)) {
+					const first = response[0] || {}
+					return (first.success_message && first.success_message.id) || first.id || null
+				}
+
+				if (response.result && response.result[0] && response.result[0].success_message && response.result[0].success_message.id) {
+					return response.result[0].success_message.id
+				}
+
+				if (response.success_message && response.success_message.id) return response.success_message.id
+				if (response.id) return response.id
+				return null
+			}
 
 			const buildInventoryPayloads = medicationId => {
 				const inventoryRows = [vm.inventoryRecord[0]].concat(vm.additionalInventoryRows || [])
 				return inventoryRows
-					.filter(row => row && row.quantity_added)
+					.filter(row => row && row.quantity_added !== undefined && row.quantity_added !== null && row.quantity_added !== '')
 					.map(row => {
 						const inventoryPayload = {
 							u_student_medication_id: medicationId,
@@ -230,16 +246,31 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 							quantity_remaining: row.quantity_added,
 							notes: row.notes
 						}
-
-						formatService.objIterator(inventoryPayload, formatKeys.dateKeys, 'formatDateForApi')
 						return inventoryPayload
 					})
 			}
 
+			const normalizeInventoryDatesForApi = payloads => {
+				return (payloads || []).map(payload => {
+					const normalized = Object.assign({}, payload)
+					const value = normalized.added_date
+
+					if (value && typeof value === 'string') {
+						if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+							normalized.added_date = formatService.formatDateForApi(value)
+						}
+					} else if (value) {
+						normalized.added_date = formatService.formatDateForApi(value)
+					}
+
+					return normalized
+				})
+			}
+
 			let savePromise
 
-			if (medicationPayload.medication_id) {
-				let recordId = medicationPayload.medication_id
+			if (existingMedicationId) {
+				let recordId = existingMedicationId
 				delete medicationPayload['medication_id']
 				delete medicationPayload['studentsdcid']
 
@@ -251,14 +282,24 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			return $q
 				.when(savePromise)
 				.then(response => {
-					if (!medicationPayload.medication_id) {
-						const medicationId = getMedicationIdFromResponse(response)
-						const inventoryPayloads = buildInventoryPayloads(medicationId)
+					console.log('save response', response)
+					console.log('save promise', savePromise)
 
-						if (medicationId && inventoryPayloads.length) {
-							return $q.all(inventoryPayloads.map(payload => psApiService.psApiCall('u_student_medication_inventory', 'POST', payload)))
-						}
+					const medicationId = existingMedicationId || getMedicationIdFromResponse(response)
+					const inventoryPayloads = buildInventoryPayloads(medicationId)
+					const inventoryPayloadsForApi = normalizeInventoryDatesForApi(inventoryPayloads)
+					console.log('inventory payloads', inventoryPayloads)
+					console.log('inventory post debug', { medicationId, inventoryPayloads: inventoryPayloadsForApi })
+
+					if (medicationId && inventoryPayloadsForApi.length) {
+						return $q.all(inventoryPayloadsForApi.map(payload => psApiService.psApiCall('u_student_medication_inventory', 'POST', payload)))
 					}
+
+					console.warn('Inventory submit skipped', {
+						medicationId,
+						inventoryRecord: vm.inventoryRecord,
+						additionalInventoryRows: vm.additionalInventoryRows
+					})
 					return null
 				})
 				.then(() => {

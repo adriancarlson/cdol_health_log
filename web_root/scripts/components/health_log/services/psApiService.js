@@ -91,7 +91,7 @@ define(function (require) {
 							switch (method) {
 								case 'POST':
 								case 'PUT':
-									deferredResponse.resolve(res.data.record || [])
+									deferredResponse.resolve(res.data.record || res.data.result || [])
 									break
 								case 'GET':
 									resData = res.data.tables[tableName]
