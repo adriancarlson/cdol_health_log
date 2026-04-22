@@ -33,12 +33,12 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			isTestServer: $attrs.ngServerName && $attrs.ngServerName.indexOf('.test.') !== -1,
 			unitList: { mg: 'Milligrams (MG)', ml: 'Milliliters (ML)', units: 'Units', pills: 'Pills', other: 'Other' },
 			inventoryUnitList: {
-				pill: 'Pill',
-				tablet: 'Tablet',
-				capsule: 'Capsule',
-				ml: 'Milliliters (ML)',
-				units: 'Units',
-				other: 'Other'
+				Pill: 'Pill',
+				Tablet: 'Tablet',
+				Capsule: 'Capsule',
+				'Milliliters (ML)': 'Milliliters (ML)',
+				Units: 'Units',
+				Other: 'Other'
 			},
 			routeList: { oral: 'Oral', nasal: 'Nasal', sublingual: 'Sublingual', subcutaneous: 'Subcutaneous', rectal: 'Rectal', other: 'Other' },
 			frequencyList: { daily: 'Daily', other: 'Other' }
@@ -99,11 +99,43 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		$rootScope.loadData()
 	})
 
-	medicationModule.controller('editController', function ($scope, $rootScope, $q, formatService, psApiService) {
+	medicationModule.controller('editController', function ($scope, $rootScope, $q, $timeout, formatService, psApiService) {
 		const vm = this
 		const recordKey = `${$rootScope.appData.context}Record`
 		vm[recordKey] = {}
 		vm.medicationRecord = vm[recordKey]
+		const createInventoryRow = () => ({
+			created_date: $rootScope.appData.curDate,
+			users_dcid: $rootScope.appData.curUserDcid
+		})
+
+		const withInventoryDefaults = row => Object.assign(createInventoryRow(), row || {})
+
+		const normalizeInventoryRows = () => {
+			vm.inventoryRecord = [withInventoryDefaults((vm.inventoryRecord && vm.inventoryRecord[0]) || {})]
+			vm.additionalInventoryRows = (vm.additionalInventoryRows || []).map(withInventoryDefaults)
+		}
+
+		const ensureFirstInventoryRowDefaults = () => {
+			normalizeInventoryRows()
+			vm.inventoryRecord[0].created_date = vm.inventoryRecord[0].created_date || $rootScope.appData.curDate
+			vm.inventoryRecord[0].users_dcid = vm.inventoryRecord[0].users_dcid || $rootScope.appData.curUserDcid
+		}
+
+		const resetInventoryRows = () => {
+			vm.inventoryRecord = [createInventoryRow()]
+			vm.additionalInventoryRows = []
+			ensureFirstInventoryRowDefaults()
+		}
+		resetInventoryRows()
+
+		vm.hasExistingInventory = () => Boolean(vm[recordKey] && vm[recordKey].medication_id)
+
+		vm.addInventoryRecord = () => {
+			vm.additionalInventoryRows.push(createInventoryRow())
+			ensureFirstInventoryRowDefaults()
+			vm.checkReqFields()
+		}
 
 		const initalizeDrawer = () => {
 			$scope.$emit('open.drawer.event', openDrawer)
@@ -120,6 +152,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			loadingDialog()
 			vm[recordKey] = {}
 			vm.medicationRecord = vm[recordKey]
+			resetInventoryRows()
 			$rootScope.reloadData()
 			closeLoading()
 			closeDrawer(true)
@@ -131,9 +164,10 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			console.log(data.data)
 			if (data.data.medication_id == null) {
 				const record = vm.medicationRecord || vm[recordKey] || {}
-				record.inventory = record.inventory || {}
+				resetInventoryRows()
+				ensureFirstInventoryRowDefaults()
+				delete record.inventory
 				record.created_date = $rootScope.appData.curDate
-				record.inventory.created_date = $rootScope.appData.curDate
 				record.created_by_users_dcid = $rootScope.appData.curUserDcid
 				record.studentsdcid = $rootScope.appData.curStudentDCID
 				record.schoolid = $rootScope.appData.curSchoolId
@@ -144,7 +178,9 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				formatService.objIterator(data.data, formatKeys.dateKeys, 'stripTimeFromIsoDate')
 				formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
 				// formatService.objIterator(data.data, formatKeys.timeKeys, 'convSecondsToTime12')
-				data.data.inventory = data.data.inventory || {}
+				resetInventoryRows()
+				ensureFirstInventoryRowDefaults()
+				delete data.data.inventory
 				vm[recordKey] = data.data
 				vm.medicationRecord = vm[recordKey]
 				// const complaintValues = Object.values($rootScope.appData.complaintList)
@@ -158,12 +194,17 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			}
 			vm.checkReqFields()
 			openCallBack()
+			$timeout(() => {
+				ensureFirstInventoryRowDefaults()
+				vm.checkReqFields()
+			})
 		}
 
 		const saveDrawer = (closeDrawer, data) => {
 			loadingDialog()
 
 			const payload = Object.assign({}, vm[recordKey], formatKeys)
+			payload.inventory = [vm.inventoryRecord[0]].concat(vm.additionalInventoryRows)
 			// //check for other values in dropdowns and takes the other value and puts it in the proper field in the logRecord also deletes the other field from the logRecord payload
 			// for (const key in $scope.logRecord) {
 			// 	if (key.endsWith('_other')) {
@@ -199,6 +240,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			return $q.when(savePromise).then(() => {
 				vm[recordKey] = {}
 				vm.medicationRecord = vm[recordKey]
+				resetInventoryRows()
 				$rootScope.reloadData()
 				closeLoading()
 				closeDrawer(true)
@@ -229,11 +271,17 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm.resetSeasonForm = closeDrawer => {
 			vm[recordKey] = {}
 			vm.medicationRecord = vm[recordKey]
+			resetInventoryRows()
 			$rootScope.reloadData()
 			closeLoading()
 			closeDrawer()
 		}
 		initalizeDrawer()
 		// $rootScope.loadData()
+	})
+
+	medicationModule.filter('pluralize', () => val => {
+		if (!val) return val
+		return val.slice(-1) === 's' ? val : val + 's'
 	})
 })

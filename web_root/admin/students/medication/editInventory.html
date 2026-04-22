@@ -56,17 +56,17 @@
                     <select id="dose-unit-select" class="dose-unit"
                         ng-options="key as val for (key,val) in $root.appData.unitList"
                         ng-model="vm.medicationRecord.dose_unit" ng-change="vm.checkReqFields()" aria-label="Dose unit">
-                        <option id="dose-unit-placeholder" value="">Select dose unit</option>
+                        <option id="dose-unit-placeholder" value=""></option>
                     </select>
                 </div>
             </div>
             <div id="inv-unit-group">
-                <label id="inv-unit-label">Inventory Unit <span id="inv-unit-req" class="req"><em
+                <label id="inv-unit-label"> Unit <span id="inv-unit-req" class="req"><em
                             id="inv-unit-req-mark">*</em></span> </label>
                 <select id="inv-unit-select" ng-options="key as val for (key,val) in $root.appData.inventoryUnitList"
                     ng-model="vm.medicationRecord.inventory_unit" ng-change="vm.checkReqFields()"
                     aria-label="Inventory unit">
-                    <option id="inv-unit-placeholder" value="">Select inventory unit</option>
+                    <option id="inv-unit-placeholder" value="">Select a Unit</option>
                 </select>
             </div>
         </div>
@@ -89,9 +89,8 @@
             </div>
         </div>
         <div id="inv-table-section">
-            <label id="start-inv-label"><span id="start-inv-prefix"
-                    ng-show="!vm.medicationRecord.inventory.id">Starting</span> Inventory <span id="start-inv-req"
-                    class="req"><em id="start-inv-req-mark">*</em></span> </label>
+            <label id="start-inv-label"><span id="start-inv-prefix" ng-show="!vm.hasExistingInventory()">Starting</span>
+                Inventory <span id="start-inv-req" class="req"><em id="start-inv-req-mark">*</em></span> </label>
             <table id="inv-grid" class="grid">
                 <thead id="inv-grid-head">
                     <tr id="inv-grid-head-row">
@@ -102,32 +101,50 @@
                     </tr>
                 </thead>
                 <tbody id="inv-grid-body">
-                    <tr id="inv-new-row" ng-show="!vm.medicationRecord.inventory.id">
-                        <td id="inv-qty-cell" class="center"><input id="inv-qty-input" class="inv-input" type="text"
-                                ng-model="vm.medicationRecord.inventory.quantity_added" size="10" maxlength="10"
+                    <tr id="inv-new-row-0">
+                        <td id="inv-qty-cell-0" class="center"><input id="inv-qty-input-0" class="inv-input" type="text"
+                                ng-model="vm.inventoryRecord[0].quantity_added" size="10" maxlength="10"
                                 ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
-                            {{vm.medicationRecord.inventory_unit}}</td>
-                        <td id="inv-date-cell" class="center"><input id="inv-date-input" type="text"
-                                ng-model="vm.medicationRecord.inventory.created_date" pss-date-widget
+                            {{vm.medicationRecord.inventory_unit | pluralize}}</td>
+                        <td id="inv-date-cell-0" class="center"><input id="inv-date-input-0" type="text"
+                                ng-init="vm.inventoryRecord[0].created_date = vm.inventoryRecord[0].created_date || $root.appData.curDate"
+                                ng-model="vm.inventoryRecord[0].created_date" pss-date-widget
                                 ng-change="vm.checkReqFields()" data-auto-translate="true"></td>
-                        <td id="inv-users-cell" class="center">
-                            <select id="users-dcid"
+                        <td id="inv-users-cell-0" class="center">
+                            <select id="users-dcid-0"
                                 ng-options="staff.dcid as (staff.first_name + ' ' + staff.last_name) for staff in $root.appData.staffList"
-                                ng-model="vm.medicationRecord.inventory.users_dcid" ng-change="checkReqFields()"
-                                ng-init="vm.medicationRecord.inventory = vm.appData.curUser">
+                                ng-model="vm.inventoryRecord[0].users_dcid" ng-change="vm.checkReqFields()">
                             </select>
                         </td>
-                        <td id="inv-notes-cell" class="center"><textarea id="inv-notes-text" spellcheck="true"
-                                wrap="absolute" rows="3" cols="30" ng-model="vm.medicationRecord.notes"></textarea></td>
+                        <td id="inv-notes-cell-0" class="center"><textarea id="inv-notes-text-0" spellcheck="true"
+                                wrap="absolute" rows="3" cols="30" ng-model="vm.inventoryRecord[0].notes"></textarea>
+                        </td>
                     </tr>
-                    <tr id="inv-item-row-{{item.u_student_medication_id}}"
-                        ng-repeat="item in vm.medicationInventoryRecord" data-id="{{item.u_student_medication_id}}">
-                        <td id="inv-item-qty-{{item.u_student_medication_id}}" class="center">{{item.quantity_added}} /
-                            {{item.quantity_remaining}}</td>
-                        <td id="inv-item-date-{{item.u_student_medication_id}}" class="center">{{item.date_added |
-                            date}}</td>
-                        <td id="inv-item-user-{{item.u_student_medication_id}}" class="center">{{item.users_dcid}}</td>
-                        <td id="inv-item-notes-{{item.u_student_medication_id}}" class="center">{{item.notes}}</td>
+                    <tr id="inv-new-row-{{$index + 1}}" ng-repeat="inv in vm.additionalInventoryRows track by $index">
+                        <td id="inv-qty-cell-{{$index + 1}}" class="center"><input id="inv-qty-input-{{$index + 1}}"
+                                class="inv-input" type="text" ng-model="inv.quantity_added" size="10" maxlength="10"
+                                ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
+                            {{vm.medicationRecord.inventory_unit | pluralize}}</td>
+                        <td id="inv-date-cell-{{$index + 1}}" class="center"><input id="inv-date-input-{{$index + 1}}"
+                                type="text" ng-init="inv.created_date = inv.created_date || $root.appData.curDate"
+                                ng-model="inv.created_date" pss-date-widget ng-change="vm.checkReqFields()"
+                                data-auto-translate="true"></td>
+                        <td id="inv-users-cell-{{$index + 1}}" class="center">
+                            <select id="users-dcid-{{$index + 1}}"
+                                ng-options="staff.dcid as (staff.first_name + ' ' + staff.last_name) for staff in $root.appData.staffList"
+                                ng-model="inv.users_dcid" ng-change="vm.checkReqFields()">
+                            </select>
+                        </td>
+                        <td id="inv-notes-cell-{{$index + 1}}" class="center"><textarea
+                                id="inv-notes-text-{{$index + 1}}" spellcheck="true" wrap="absolute" rows="3" cols="30"
+                                ng-model="inv.notes"></textarea>
+                        </td>
+                    </tr>
+                    <tr id="inv-add-row">
+                        <td id="inv-add-cell" class="center" colspan="4">
+                            <button id="inv-add-btn" type="button" ng-click="vm.addInventoryRecord()">Add Inventory
+                                Entry</button>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -141,8 +158,13 @@
         </div>
         <div id="debug-box" class="box-round" ng-if="$root.appData.districtUser && $root.appData.isTestServer">
             <strong id="debug-label">vm.medicationRecord:</strong>
-            <br id="debug-break">
-            <pre id="debug-json">{{vm.medicationRecord | json}}</pre>
+            <br id="debug-break-1">
+            <pre id="debug-json-1">{{vm.medicationRecord | json}}</pre>
+            <strong id="debug-label">vm.inventoryRecord:
+                <pre id="debug-json-2">{{vm.inventoryRecord | json}}</pre>
+            </strong>
+            <br id="debug-break-2">
+
         </div>
     </div>
 </form>
