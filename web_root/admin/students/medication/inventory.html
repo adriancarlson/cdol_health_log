@@ -28,7 +28,7 @@
     <body>
         ~[wc:admin_header_frame_css]
         ~[wc:admin_navigation_frame_css]
-        ~[wc:title_student_begin_css]~(first_name) ~(last_name)'s Medication Inventory~[wc:title_student_end_css]
+        ~[wc:title_student_begin_css]~(first_name)'s Medication Inventory~[wc:title_student_end_css]
         <div data-require-path="./medication.js" data-module-name="medicationModule"
             ng-controller="medicationController as vm" data-bootstrap-local="true" ng-cur-student-dcid="~(rn)"
             ng-cur-student-name="~(studentname)" ng-cur-user-dcid="~[x:users_dcid]" ng-cur-school-id="~(curschoolid)"
@@ -51,12 +51,13 @@
                 <table class="grid">
                     <thead>
                         <tr>
-                            <th data-pss-sort-fields="created_date">Date Added</th>
                             <th data-pss-sort-fields="medication_name">Medication</th>
+                            <th data-pss-sort-fields="dose_amount">Dosage</th>
+                            <th data-pss-sort-fields="inventory_unit">Unit</th>
                             <th data-pss-sort-fields="route">Route</th>
-                            <th data-pss-sort-fields="dosage">Dosage</th>
                             <th data-pss-sort-fields="frequency">Frequency</th>
                             <th>Inventory</th>
+                            <th data-pss-sort-fields="created_date">Date Added</th>
                             <th>Notes</th>
                             <th style="width: 65px;">Actions</th>
                         </tr>
@@ -67,12 +68,13 @@
                             </td>
                         </tr>
                         <tr ng-repeat="medication in vm.filteredInventoryList" data-id="{{medication.medication_id}}">
-                            <td class="center">{{medication.created_date | date}}</td>
                             <td class="center">{{medication.medication_name}}</td>
+                            <td class="center">{{medication.dose_amount}} {{medication.dose_unit}}</td>
+                            <td class="center">{{medication.inventory_unit}}</td>
                             <td class="center">{{medication.route}}</td>
-                            <td class="center">{{medication.dosage}}</td>
                             <td class="center">{{medication.frequency}}</td>
                             <td class="center">{{medication.inventory}}</td>
+                            <td class="center">{{medication.created_date | date}}</td>
                             <td class="center">{{medication.notes}}</td>
                             <td class="actions center">
                                 <button type="button" id="mod-btn-{{medication.medication_id}}" pss-dialog-drawer

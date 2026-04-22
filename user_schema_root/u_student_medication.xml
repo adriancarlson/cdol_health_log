@@ -10,7 +10,7 @@
         <field name="frequency" type="String" length="250" />
         <field name="route" type="String" length="250" />
         <field name="created_date" type="Date"/>
-        <field name="created_by_users_dcid" type="Integer" />
+        <field name="users_dcid" type="Integer" />
         <field name="notes" type="String" length="4000" />
         <field name="schoolid" type="Integer" />
         <field name="yearid" type="Integer" />

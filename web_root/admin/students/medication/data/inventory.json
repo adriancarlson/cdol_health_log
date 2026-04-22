@@ -13,7 +13,7 @@
                     'dose_unit' VALUE u_student_medication.dose_unit,
                     'route' VALUE u_student_medication.route,
                     'frequency' VALUE u_student_medication.frequency,
-                    'created_by_users_dcid' VALUE u_student_medication.created_by_users_dcid,
+                    'users_dcid' VALUE u_student_medication.users_dcid,
                     'inventory_unit' VALUE u_student_medication.inventory_unit,
                     'notes' VALUE u_student_medication.notes
                 NULL ON NULL

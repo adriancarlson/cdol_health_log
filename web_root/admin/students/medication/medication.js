@@ -29,7 +29,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			curUserDcid: $attrs.ngCurUserDcid,
 			curDate: $attrs.ngCurDate,
 			curTime: $rootScope.getCurrentTime(),
-			districtUser: $attrs.ngCurUserSecurityRoles && $attrs.ngCurUserSecurityRoles.split(',').includes('9'),
+			districtUser: $attrs.ngCurUserSecurityRoles && ($attrs.ngCurUserSecurityRoles.split(',').includes('9') || $attrs.ngCurUserSecurityRoles.split(',').includes('6')),
 			isTestServer: $attrs.ngServerName && $attrs.ngServerName.indexOf('.test.') !== -1,
 			unitList: { mg: 'Milligrams (MG)', ml: 'Milliliters (ML)', units: 'Units', pills: 'Pills', other: 'Other' },
 			inventoryUnitList: {
@@ -105,7 +105,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm[recordKey] = {}
 		vm.medicationRecord = vm[recordKey]
 		const createInventoryRow = () => ({
-			created_date: $rootScope.appData.curDate,
+			date_added: $rootScope.appData.curDate,
 			users_dcid: $rootScope.appData.curUserDcid
 		})
 
@@ -118,7 +118,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		const ensureFirstInventoryRowDefaults = () => {
 			normalizeInventoryRows()
-			vm.inventoryRecord[0].created_date = vm.inventoryRecord[0].created_date || $rootScope.appData.curDate
+			vm.inventoryRecord[0].date_added = vm.inventoryRecord[0].date_added || $rootScope.appData.curDate
 			vm.inventoryRecord[0].users_dcid = vm.inventoryRecord[0].users_dcid || $rootScope.appData.curUserDcid
 		}
 
@@ -136,6 +136,14 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			ensureFirstInventoryRowDefaults()
 			vm.checkReqFields()
 		}
+
+		$scope.$watch(
+			() => vm.medicationRecord,
+			() => {
+				vm.checkReqFields()
+			},
+			true
+		)
 
 		const initalizeDrawer = () => {
 			$scope.$emit('open.drawer.event', openDrawer)
@@ -168,7 +176,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				ensureFirstInventoryRowDefaults()
 				delete record.inventory
 				record.created_date = $rootScope.appData.curDate
-				record.created_by_users_dcid = $rootScope.appData.curUserDcid
+				record.users_dcid = $rootScope.appData.curUserDcid
 				record.studentsdcid = $rootScope.appData.curStudentDCID
 				record.schoolid = $rootScope.appData.curSchoolId
 				record.yearid = $rootScope.appData.curYearId
@@ -203,8 +211,10 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		const saveDrawer = (closeDrawer, data) => {
 			loadingDialog()
 
-			const payload = Object.assign({}, vm[recordKey], formatKeys)
-			payload.inventory = [vm.inventoryRecord[0]].concat(vm.additionalInventoryRows)
+			const medicationPayload = Object.assign({}, vm.medicationRecord || vm[recordKey] || {})
+			delete medicationPayload.inventory
+			formatService.objIterator(medicationPayload, formatKeys.dateKeys, 'formatDateForApi')
+			// payload.inventory = [vm.inventoryRecord[0]].concat(vm.additionalInventoryRows)
 			// //check for other values in dropdowns and takes the other value and puts it in the proper field in the logRecord also deletes the other field from the logRecord payload
 			// for (const key in $scope.logRecord) {
 			// 	if (key.endsWith('_other')) {
@@ -219,22 +229,22 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			// //submitting staff changes through api
 			let savePromise
 
-			if (payload.medication_id) {
-				let recordId = payload.medication_id
-				delete payload['medication_id']
-				delete payload['studentsdcid']
+			if (medicationPayload.medication_id) {
+				let recordId = medicationPayload.medication_id
+				delete medicationPayload['medication_id']
+				delete medicationPayload['studentsdcid']
 				// if (vm[recordKey].vitals) {
 				// 	savePromise = psApiService.psApiCall('healthofficevisit', 'PUT', vm[recordKey], recordId)
 				// } else {
 				// 	delete $scope.logRecord['vitals']
 				// }
-				savePromise = psApiService.psApiCall('u_student_medication', 'PUT', payload, recordId)
+				savePromise = psApiService.psApiCall('u_student_medication', 'PUT', medicationPayload, recordId)
 			} else {
 				// if (vm[recordKey].vitals) {
 				// 	savePromise = psApiService.psApiCall('healthofficevisit', 'POST', vm[recordKey])
 				// }
 				// delete vm[recordKey]['vitals']
-				savePromise = psApiService.psApiCall('u_student_medication', 'POST', payload)
+				savePromise = psApiService.psApiCall('u_student_medication', 'POST', medicationPayload)
 			}
 
 			return $q.when(savePromise).then(() => {
@@ -248,7 +258,8 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 		// checks required fields and enables save button if all required fields are filled out
 		vm.checkReqFields = () => {
-			const enableSaveButton = vm[recordKey].medication_name && vm[recordKey].created_date && vm[recordKey].dose_amount && vm[recordKey].dose_unit && vm[recordKey].inventory_unit && vm[recordKey].route && vm[recordKey].frequency
+			const record = vm.medicationRecord || vm[recordKey] || {}
+			const enableSaveButton = record.medication_name && record.created_date && record.dose_amount && record.dose_unit && record.inventory_unit && record.route && record.frequency
 			// switch ($scope.logRecord.log_type) {
 			// 	case 'Daily':
 			// 		enableSaveButton = $scope.logRecord.complaint && $scope.logRecord.treatment && $scope.logRecord.users_dcid

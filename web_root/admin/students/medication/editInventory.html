@@ -97,7 +97,7 @@
                         <th id="inv-qty-head">Quantity</th>
                         <th id="inv-date-head">Date Added</th>
                         <th id="inv-user-head">Who Added?</th>
-                        <th id="inv-notes-head">Notes</th>
+                        <th id="inv-notes-head">Inventory Notes</th>
                     </tr>
                 </thead>
                 <tbody id="inv-grid-body">
@@ -107,8 +107,8 @@
                                 ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
                             {{vm.medicationRecord.inventory_unit | pluralize}}</td>
                         <td id="inv-date-cell-0" class="center"><input id="inv-date-input-0" type="text"
-                                ng-init="vm.inventoryRecord[0].created_date = vm.inventoryRecord[0].created_date || $root.appData.curDate"
-                                ng-model="vm.inventoryRecord[0].created_date" pss-date-widget
+                                ng-init="vm.inventoryRecord[0].date_added = vm.inventoryRecord[0].date_added || $root.appData.curDate"
+                                ng-model="vm.inventoryRecord[0].date_added" pss-date-widget
                                 ng-change="vm.checkReqFields()" data-auto-translate="true"></td>
                         <td id="inv-users-cell-0" class="center">
                             <select id="users-dcid-0"
@@ -126,8 +126,8 @@
                                 ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
                             {{vm.medicationRecord.inventory_unit | pluralize}}</td>
                         <td id="inv-date-cell-{{$index + 1}}" class="center"><input id="inv-date-input-{{$index + 1}}"
-                                type="text" ng-init="inv.created_date = inv.created_date || $root.appData.curDate"
-                                ng-model="inv.created_date" pss-date-widget ng-change="vm.checkReqFields()"
+                                type="text" ng-init="inv.date_added = inv.date_added || $root.appData.curDate"
+                                ng-model="inv.date_added" pss-date-widget ng-change="vm.checkReqFields()"
                                 data-auto-translate="true"></td>
                         <td id="inv-users-cell-{{$index + 1}}" class="center">
                             <select id="users-dcid-{{$index + 1}}"
@@ -140,10 +140,11 @@
                                 ng-model="inv.notes"></textarea>
                         </td>
                     </tr>
-                    <tr id="inv-add-row">
+                    <tr id="inv-add-row"
+                        ng-show="vm.inventoryRecord[0].quantity_added && vm.inventoryRecord[0].date_added && vm.inventoryRecord[0].users_dcid">
                         <td id="inv-add-cell" class="center" colspan="4">
-                            <button id="inv-add-btn" type="button" ng-click="vm.addInventoryRecord()">Add Inventory
-                                Entry</button>
+                            <button id="inv-add-btn" type="button" ng-click="vm.addInventoryRecord()">Add Additional
+                                Inventory</button>
                         </td>
                     </tr>
                 </tbody>
@@ -151,7 +152,7 @@
         </div>
         <div id="notes-row">
             <div id="notes-group">
-                <label id="notes-label">Notes:</label>
+                <label id="notes-label">Medication Notes:</label>
                 <textarea id="notes-text" spellcheck="true" wrap="absolute" rows="5" cols="60"
                     ng-model="vm.medicationRecord.notes"></textarea>
             </div>
