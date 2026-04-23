@@ -127,6 +127,45 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			vm.additionalInventoryRows = []
 			ensureFirstInventoryRowDefaults()
 		}
+
+		const parseInventoryBatches = inventoryBatches => {
+			if (typeof inventoryBatches === 'string') {
+				try {
+					return JSON.parse(inventoryBatches)
+				} catch (e) {
+					return []
+				}
+			}
+			return Array.isArray(inventoryBatches) ? inventoryBatches : []
+		}
+
+		const normalizeIncomingInventoryRow = row => {
+			const normalizedRow = Object.assign({}, row || {})
+			const addedDate = normalizedRow.added_date
+
+			if (addedDate) {
+				normalizedRow.added_date = formatService.formatDateFromApi(formatService.stripTimeFromIsoDate(addedDate))
+			}
+
+			if ((normalizedRow.quantity_added === undefined || normalizedRow.quantity_added === null || normalizedRow.quantity_added === '') && normalizedRow.quantity_remaining !== undefined && normalizedRow.quantity_remaining !== null && normalizedRow.quantity_remaining !== '') {
+				normalizedRow.quantity_added = normalizedRow.quantity_remaining
+			}
+
+			if (normalizedRow.users_dcid !== undefined && normalizedRow.users_dcid !== null && normalizedRow.users_dcid !== '') {
+				normalizedRow.users_dcid = String(normalizedRow.users_dcid)
+			}
+
+			return normalizedRow
+		}
+
+		const hydrateInventoryRowsForEdit = inventoryBatches => {
+			resetInventoryRows()
+			if (inventoryBatches.length > 0) {
+				vm.inventoryRecord[0] = withInventoryDefaults(inventoryBatches[0])
+				vm.additionalInventoryRows = inventoryBatches.slice(1).map(withInventoryDefaults)
+			}
+			ensureFirstInventoryRowDefaults()
+		}
 		resetInventoryRows()
 
 		vm.hasExistingInventory = () => Boolean(vm[recordKey] && vm[recordKey].medication_id)
@@ -183,26 +222,26 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				vm[recordKey] = record
 				vm.medicationRecord = record
 			} else {
-				formatService.objIterator(data.data, formatKeys.dateKeys, 'stripTimeFromIsoDate')
-				formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
-				// formatService.objIterator(data.data, formatKeys.timeKeys, 'convSecondsToTime12')
+				const sourceRecord = Object.assign({}, data.data || {})
+				formatService.objIterator(sourceRecord, formatKeys.dateKeys, 'stripTimeFromIsoDate')
+				formatService.objIterator(sourceRecord, formatKeys.dateKeys, 'formatDateFromApi')
 
-				// Populate inventory records from inventory_batches array
-				resetInventoryRows()
-				if (data.data.inventory_batches && Array.isArray(data.data.inventory_batches) && data.data.inventory_batches.length > 0) {
-					vm.inventoryRecord[0] = withInventoryDefaults(data.data.inventory_batches[0])
-					vm.additionalInventoryRows = data.data.inventory_batches.slice(1).map(withInventoryDefaults)
-				}
-				ensureFirstInventoryRowDefaults()
+				const inventoryBatches = parseInventoryBatches(sourceRecord.inventory_batches).map(normalizeIncomingInventoryRow)
+				hydrateInventoryRowsForEdit(inventoryBatches)
 
-				delete data.data.inventory
-				delete data.data.inventory_batches
-				vm[recordKey] = data.data
+				delete sourceRecord.inventory
+				delete sourceRecord.inventory_batches
+				vm[recordKey] = sourceRecord
 				vm.medicationRecord = vm[recordKey]
+
+				vm._lastOpenedInventoryBatches = inventoryBatches
 			}
 			vm.checkReqFields()
 			openCallBack()
 			$timeout(() => {
+				if (vm.hasExistingInventory() && Array.isArray(vm._lastOpenedInventoryBatches)) {
+					hydrateInventoryRowsForEdit(vm._lastOpenedInventoryBatches)
+				}
 				ensureFirstInventoryRowDefaults()
 				vm.checkReqFields()
 			})
@@ -214,6 +253,9 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			const medicationPayload = Object.assign({}, vm.medicationRecord || vm[recordKey] || {})
 			const existingMedicationId = medicationPayload.medication_id || null
 			delete medicationPayload.inventory
+			delete medicationPayload.inventory_batches
+			delete medicationPayload.inventory_total_initial
+			delete medicationPayload.inventory_total_remaining
 			formatService.objIterator(medicationPayload, formatKeys.dateKeys, 'formatDateForApi')
 
 			const getMedicationIdFromResponse = response => {
@@ -291,7 +333,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 					console.log('inventory payloads', inventoryPayloads)
 					console.log('inventory post debug', { medicationId, inventoryPayloads: inventoryPayloadsForApi })
 
-					if (medicationId && inventoryPayloadsForApi.length) {
+					if (!existingMedicationId && medicationId && inventoryPayloadsForApi.length) {
 						return $q.all(inventoryPayloadsForApi.map(payload => psApiService.psApiCall('u_student_medication_inventory', 'POST', payload)))
 					}
 
