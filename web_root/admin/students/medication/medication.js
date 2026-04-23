@@ -66,7 +66,6 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				params: paramValues
 			}).then(res => {
 				const resData = Array.isArray(res?.data) ? res.data : []
-				// Load grid data once response is ready
 				const sanitizedData = psUtils.htmlEntitiesToCharCode(resData)
 				vm[`${$rootScope.appData.context}List`] = sanitizedData
 			})
@@ -191,14 +190,6 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				delete data.data.inventory
 				vm[recordKey] = data.data
 				vm.medicationRecord = vm[recordKey]
-				// const complaintValues = Object.values($rootScope.appData.complaintList)
-
-				// if (complaintValues.indexOf($scope.logRecord.complaint) === -1) {
-				// 	// The complaint value does not exist in the complaintList
-				// 	$scope.displayComplaintOther = true
-				// 	$scope.logRecord.complaint_other = $scope.logRecord.complaint
-				// 	$scope.logRecord.complaint = 'Other'
-				// }
 			}
 			vm.checkReqFields()
 			openCallBack()
@@ -315,22 +306,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm.checkReqFields = () => {
 			const record = vm.medicationRecord || vm[recordKey] || {}
 			const enableSaveButton = record.medication_name && record.created_date && record.dose_amount && record.dose_unit && record.inventory_unit && record.route && record.frequency
-			// switch ($scope.logRecord.log_type) {
-			// 	case 'Daily':
-			// 		enableSaveButton = $scope.logRecord.complaint && $scope.logRecord.treatment && $scope.logRecord.users_dcid
-			// 		break
-			// 	case 'Athletic':
-			// 		enableSaveButton = $scope.logRecord.treatment
-			// 		break
-			// 	case 'Concussion':
-			// 		enableSaveButton = $scope.logRecord.users_dcid
-			// 	case 'Injury':
-			// 		enableSaveButton = $scope.logRecord.users_dcid
-			// 		break
-			// 	case 'Conversation':
-			// 		enableSaveButton = $scope.logRecord.conversation_type && $scope.logRecord.contact && $scope.logRecord.users_dcid
-			// 		break
-			// }
+
 			$scope.$emit(enableSaveButton ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
 		}
 
@@ -343,7 +319,6 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			closeDrawer()
 		}
 		initalizeDrawer()
-		// $rootScope.loadData()
 	})
 
 	medicationModule.filter('pluralize', () => val => {
