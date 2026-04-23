@@ -121,7 +121,7 @@
                                     <table class="inventory-batches-table" style="width: 100%; margin: 0; padding: 0;">
                                         <tbody>
                                             <tr class="inventory-batch-row"
-                                                ng-repeat="batch in medication.inventory_batches">
+                                                ng-repeat="batch in (medication.inventory_batches | orderBy:'added_date')">
                                                 <td style="text-align: right; padding: 2px 4px 2px 0;">
                                                     {{batch.quantity_remaining}} / {{batch.quantity_added}}
                                                     {{medication.inventory_unit | pluralize}}</td>
@@ -145,7 +145,7 @@
                             <td class="center">{{medication.notes}}</td>
                             <td class="actions center">
                                 <button type="button" id="mod-btn-{{medication.medication_id}}" pss-dialog-drawer
-                                    width="850" edit-button-icon="true" drawer-title="Edit {{vm.appData.contextTitle}}"
+                                    width="1050" edit-button-icon="true" drawer-title="Edit {{vm.appData.contextTitle}}"
                                     template-url="editInventory.html" data-data="medication"></button>
                                 <button type="button" id="delBtn" ng-click="vm.delConfirm(medication.medication_id)"><em
                                         class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>

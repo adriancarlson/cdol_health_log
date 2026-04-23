@@ -31,6 +31,7 @@
             'inventory_batches' VALUE COALESCE((
                 SELECT JSON_ARRAYAGG(
                     JSON_OBJECT(
+                        'inventory_id' VALUE inv.id,
                         'added_date' VALUE TO_CHAR(inv.added_date, 'YYYY-MM-DD'),
                         'quantity_added' VALUE inv.quantity_added,
                         'quantity_remaining' VALUE inv.quantity_remaining,
@@ -39,7 +40,7 @@
                         NULL ON NULL
                         RETURNING CLOB
                     )
-                    ORDER BY inv.added_date DESC
+                    ORDER BY inv.added_date ASC
                     RETURNING CLOB
                 )
                 FROM u_student_medication_inventory inv

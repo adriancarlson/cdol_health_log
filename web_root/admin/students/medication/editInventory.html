@@ -24,6 +24,28 @@
                 max-width: 8ch;
             }
 
+            .inv-qty-edit-wrap {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .inv-qty-separator {
+                display: inline-block;
+                min-width: 0.75ch;
+                text-align: center;
+            }
+
+            #inv-grid {
+                margin: 0 !important;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            #inv-table-section {
+                padding-right: 0 !important;
+            }
+
             .dose-unit {
                 width: fit-content;
                 min-width: 0;
@@ -89,8 +111,8 @@
             </div>
         </div>
         <div id="inv-table-section">
-            <label id="start-inv-label"><span id="start-inv-prefix" ng-show="!vm.hasExistingInventory()">Starting</span>
-                Inventory <span id="start-inv-req" class="req"><em id="start-inv-req-mark">*</em></span> </label>
+            <label id="start-inv-label">{{vm.isEditMode ? 'Inventory' : 'Starting Inventory'}}
+                <span id="start-inv-req" class="req"><em id="start-inv-req-mark">*</em></span> </label>
             <table id="inv-grid" class="grid">
                 <thead id="inv-grid-head">
                     <tr id="inv-grid-head-row">
@@ -102,10 +124,28 @@
                 </thead>
                 <tbody id="inv-grid-body">
                     <tr id="inv-new-row-0">
-                        <td id="inv-qty-cell-0" class="center"><input id="inv-qty-input-0" class="inv-input" type="text"
-                                ng-model="vm.inventoryRecord[0].quantity_added" size="10" maxlength="10"
-                                ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
-                            {{vm.medicationRecord.inventory_unit | pluralize}}</td>
+                        <td id="inv-qty-cell-0" class="center">
+                            <span ng-if="!vm.isEditMode">
+                                <input id="inv-qty-input-0" class="inv-input" type="text"
+                                    ng-model="vm.inventoryRecord[0].quantity_added" size="10" maxlength="10"
+                                    ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
+                            </span>
+                            <span ng-if="vm.isEditMode && !vm.inventoryRecord[0]._isExisting">
+                                <input id="inv-qty-input-0-edit-new" class="inv-input" type="text"
+                                    ng-model="vm.inventoryRecord[0].quantity_added" size="10" maxlength="10"
+                                    ng-change="vm.checkReqFields()" aria-label="Quantity added" inputmode="decimal">
+                            </span>
+                            <span class="inv-qty-edit-wrap" ng-if="vm.isEditMode && vm.inventoryRecord[0]._isExisting">
+                                <input id="inv-qty-remaining-input-0" class="inv-input" type="text"
+                                    ng-model="vm.inventoryRecord[0].quantity_remaining" size="10" maxlength="10"
+                                    ng-change="vm.checkReqFields()" aria-label="Quantity remaining" inputmode="decimal">
+                                <span class="inv-qty-separator">/</span>
+                                <input id="inv-qty-added-input-0" class="inv-input" type="text"
+                                    ng-model="vm.inventoryRecord[0].quantity_added" size="10" maxlength="10"
+                                    ng-change="vm.checkReqFields()" aria-label="Quantity added" inputmode="decimal">
+                            </span>
+                            {{vm.medicationRecord.inventory_unit | pluralize}}
+                        </td>
                         <td id="inv-date-cell-0" class="center"><input id="inv-date-input-0" type="text"
                                 ng-init="vm.inventoryRecord[0].added_date = vm.inventoryRecord[0].added_date || $root.appData.curDate"
                                 ng-model="vm.inventoryRecord[0].added_date" pss-date-widget
@@ -121,10 +161,28 @@
                         </td>
                     </tr>
                     <tr id="inv-new-row-{{$index + 1}}" ng-repeat="inv in vm.additionalInventoryRows track by $index">
-                        <td id="inv-qty-cell-{{$index + 1}}" class="center"><input id="inv-qty-input-{{$index + 1}}"
-                                class="inv-input" type="text" ng-model="inv.quantity_added" size="10" maxlength="10"
-                                ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
-                            {{vm.medicationRecord.inventory_unit | pluralize}}</td>
+                        <td id="inv-qty-cell-{{$index + 1}}" class="center">
+                            <span ng-if="!vm.isEditMode">
+                                <input id="inv-qty-input-{{$index + 1}}" class="inv-input" type="text"
+                                    ng-model="inv.quantity_added" size="10" maxlength="10"
+                                    ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
+                            </span>
+                            <span ng-if="vm.isEditMode && !inv._isExisting">
+                                <input id="inv-qty-input-edit-new-{{$index + 1}}" class="inv-input" type="text"
+                                    ng-model="inv.quantity_added" size="10" maxlength="10"
+                                    ng-change="vm.checkReqFields()" aria-label="Quantity added" inputmode="decimal">
+                            </span>
+                            <span class="inv-qty-edit-wrap" ng-if="vm.isEditMode && inv._isExisting">
+                                <input id="inv-qty-remaining-input-{{$index + 1}}" class="inv-input" type="text"
+                                    ng-model="inv.quantity_remaining" size="10" maxlength="10"
+                                    ng-change="vm.checkReqFields()" aria-label="Quantity remaining" inputmode="decimal">
+                                <span class="inv-qty-separator">/</span>
+                                <input id="inv-qty-added-input-{{$index + 1}}" class="inv-input" type="text"
+                                    ng-model="inv.quantity_added" size="10" maxlength="10"
+                                    ng-change="vm.checkReqFields()" aria-label="Quantity added" inputmode="decimal">
+                            </span>
+                            {{vm.medicationRecord.inventory_unit | pluralize}}
+                        </td>
                         <td id="inv-date-cell-{{$index + 1}}" class="center"><input id="inv-date-input-{{$index + 1}}"
                                 type="text" ng-init="inv.added_date = inv.added_date || $root.appData.curDate"
                                 ng-model="inv.added_date" pss-date-widget ng-change="vm.checkReqFields()"
