@@ -22,6 +22,42 @@
             #medication-grid {
                 margin: 0 !important;
             }
+
+            .inventory-cell {
+                text-align: right;
+                padding-right: 6px;
+            }
+
+            .inventory-cell-content {
+                padding-right: 2px;
+            }
+
+            .inventory-total-row {
+                border-top: 1px solid rgba(0, 0, 0, 0.12);
+                font-weight: bold;
+                background-color: #C2E2FF !important;
+            }
+
+            .inventory-total-row td {
+                background-color: #C2E2FF !important;
+            }
+
+            .inventory-batches-table {
+                border-collapse: separate;
+                border-spacing: 0;
+                border: 1px solid rgba(0, 0, 0, 0.12);
+                border-radius: 6px;
+                overflow: hidden;
+            }
+
+            .inventory-batches-table tr,
+            .inventory-batches-table td {
+                border: none !important;
+            }
+
+            .inventory-batches-table .inventory-batch-row td {
+                box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+            }
         </style>
     </head>
 
@@ -73,7 +109,38 @@
                             <td class="center">{{medication.inventory_unit}}</td>
                             <td class="center">{{medication.route}}</td>
                             <td class="center">{{medication.frequency}}</td>
-                            <td class="center">{{medication.inventory}}</td>
+                            <td class="inventory-cell">
+                                <div class="inventory-cell-content"
+                                    ng-if="medication.inventory_batches && medication.inventory_batches.length === 1">
+                                    {{medication.inventory_batches[0].quantity_remaining}} /
+                                    {{medication.inventory_batches[0].quantity_added}} {{medication.inventory_unit |
+                                    pluralize}}
+                                </div>
+                                <div class="inventory-cell-content"
+                                    ng-if="medication.inventory_batches && medication.inventory_batches.length > 1">
+                                    <table class="inventory-batches-table" style="width: 100%; margin: 0; padding: 0;">
+                                        <tbody>
+                                            <tr class="inventory-batch-row"
+                                                ng-repeat="batch in medication.inventory_batches">
+                                                <td style="text-align: right; padding: 2px 4px 2px 0;">
+                                                    {{batch.quantity_remaining}} / {{batch.quantity_added}}
+                                                    {{medication.inventory_unit | pluralize}}</td>
+                                            </tr>
+                                            <tr class="inventory-total-row">
+                                                <td style="text-align: right; padding: 2px 4px 2px 0;">
+                                                    <strong>Total:</strong>
+                                                    {{medication.inventory_total_remaining}} /
+                                                    {{medication.inventory_total_initial}} {{medication.inventory_unit |
+                                                    pluralize}}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div ng-if="!medication.inventory_batches || medication.inventory_batches.length === 0">
+                                    -
+                                </div>
+                            </td>
                             <td class="center">{{medication.created_date | date}}</td>
                             <td class="center">{{medication.notes}}</td>
                             <td class="actions center">

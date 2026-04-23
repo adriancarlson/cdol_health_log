@@ -61,7 +61,7 @@
                 </div>
             </div>
             <div id="inv-unit-group">
-                <label id="inv-unit-label"> Unit <span id="inv-unit-req" class="req"><em
+                <label id="inv-unit-label">Unit <span id="inv-unit-req" class="req"><em
                             id="inv-unit-req-mark">*</em></span> </label>
                 <select id="inv-unit-select" ng-options="key as val for (key,val) in $root.appData.inventoryUnitList"
                     ng-model="vm.medicationRecord.inventory_unit" ng-change="vm.checkReqFields()"

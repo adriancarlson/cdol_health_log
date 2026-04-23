@@ -31,12 +31,13 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			curTime: $rootScope.getCurrentTime(),
 			districtUser: $attrs.ngCurUserSecurityRoles && ($attrs.ngCurUserSecurityRoles.split(',').includes('9') || $attrs.ngCurUserSecurityRoles.split(',').includes('6')),
 			isTestServer: $attrs.ngServerName && $attrs.ngServerName.indexOf('.test.') !== -1,
-			unitList: { mg: 'Milligrams (MG)', ml: 'Milliliters (ML)', units: 'Units', pills: 'Pills', other: 'Other' },
+			unitList: { mg: '(MG) Milligrams ', ml: '(ML) Milliliters', units: 'Units', pills: 'Pills', other: 'Other' },
 			inventoryUnitList: {
 				Pill: 'Pill',
 				Tablet: 'Tablet',
 				Capsule: 'Capsule',
-				'Milliliters (ML)': 'Milliliters (ML)',
+				'(ML) Milliliters': 'Milliliters (ML)',
+				'(MG) Milligrams': 'Milligrams (MG)',
 				Units: 'Units',
 				Other: 'Other'
 			},
@@ -185,9 +186,17 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				formatService.objIterator(data.data, formatKeys.dateKeys, 'stripTimeFromIsoDate')
 				formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
 				// formatService.objIterator(data.data, formatKeys.timeKeys, 'convSecondsToTime12')
+
+				// Populate inventory records from inventory_batches array
 				resetInventoryRows()
+				if (data.data.inventory_batches && Array.isArray(data.data.inventory_batches) && data.data.inventory_batches.length > 0) {
+					vm.inventoryRecord[0] = withInventoryDefaults(data.data.inventory_batches[0])
+					vm.additionalInventoryRows = data.data.inventory_batches.slice(1).map(withInventoryDefaults)
+				}
 				ensureFirstInventoryRowDefaults()
+
 				delete data.data.inventory
+				delete data.data.inventory_batches
 				vm[recordKey] = data.data
 				vm.medicationRecord = vm[recordKey]
 			}
