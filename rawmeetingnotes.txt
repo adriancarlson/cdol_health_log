@@ -1,0 +1,53 @@
+Prescription administration of prescription. - documenting who took it daily controlled meds. 
+
+Does not need to be a calendar format can be a table. 
+
+Inventory. medication and dosage. - brought in on which date. who counted it.  -
+multiple rows 
+add another group. then total 
+
+free form - zophram. and migraine med. 
+
+
+Specifically - fre form text that HAVE slow down and look. 
+
+- * be sure to doublecheck spelling and does.
+
+
+
+mark that student Daily - 
+
+
+table with only the the days that were administered then if there is a gap of a day that should have been administered then some sort of alert. with then some sort of note or reason. not administered - and then dropdown with reason with other option. 
+
+color indicator when getting close to not  sick, ill, student refused. gone absent. 
+
+maybe later tied 
+
+person that gave it would be just health log. 
+
+time ofn administration not on adding to inventory. 
+
+dosage. mg- ml - pill -- no cc  - fre form on route. 
+
+route a list. - 
+
+frequency- as needed, daily and free form. 
+
+- notes - on inventory and administration. 
+
+- daily alert - at time customizable. - 
+
+more to do list - 
+
+
+daily - time left - 
+- now - 
+
+Parent comes in and needs to take 3 both home. 
+
+dosage will need to be and integers with decimals. 
+
+-----------------------------------------------------------
+
+Daily log limit visibility to. 
