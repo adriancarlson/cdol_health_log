@@ -5,21 +5,17 @@
                 JSON_OBJECT(
                     'transaction_id' VALUE u_student_med_inv_txn.id,
                     'medication_id' VALUE u_student_med_inv_txn.u_student_medication_id,
-                    'inventory_id' VALUE u_student_med_inv_txn.inventory_id,
-                    'event_key' VALUE u_student_med_inv_txn.event_key,
                     'transaction_type' VALUE u_student_med_inv_txn.transaction_type,
                     'quantity_change' VALUE u_student_med_inv_txn.quantity_change,
-                    'transaction_date' VALUE TO_CHAR(u_student_med_inv_txn.transaction_date, 'YYYY-MM-DD'),
-                    'transaction_time' VALUE u_student_med_inv_txn.transaction_time,
+                    'event_date' VALUE TO_CHAR(u_student_med_inv_txn.event_date, 'YYYY-MM-DD'),
                     'users_dcid' VALUE u_student_med_inv_txn.users_dcid,
                     'user_name' VALUE users.first_name || ' ' || users.last_name,
                     'notes' VALUE u_student_med_inv_txn.notes,
-                    'reversal_of_event_key' VALUE u_student_med_inv_txn.reversal_of_event_key
+                    'reversal_of_transaction_id' VALUE u_student_med_inv_txn.reversal_of_transaction_id
                     NULL ON NULL
                     RETURNING CLOB
                 )
-                ORDER BY u_student_med_inv_txn.transaction_date DESC,
-                    u_student_med_inv_txn.transaction_time DESC,
+                ORDER BY u_student_med_inv_txn.event_date DESC,
                     u_student_med_inv_txn.id DESC
                 RETURNING CLOB
             ),

@@ -60,7 +60,6 @@ Each inventory lot must track:
 
 - Medication link
 - Quantity added
-- Quantity remaining
 - Inventory unit
 - Date received or added
 - Person who counted or added it
@@ -71,7 +70,8 @@ Rules:
 - Do not create a second medication definition when a refill arrives.
 - Do not overwrite the original inventory quantity or history.
 - Create a new inventory lot for each refill or count-in event.
-- Preserve prior lots, including their original quantity, remaining quantity, date, user, and notes.
+- Preserve prior lots, including their original quantity, date, user, and notes.
+- Derive each lot's remaining quantity from immutable received lots and the transaction history.
 - Deduct administered medication using FIFO, beginning with the oldest lot that still has quantity remaining.
 - Support inventory deductions when medication is picked up by a parent or otherwise removed.
 - Show total quantity remaining across all open lots.
@@ -94,7 +94,7 @@ Each administration event should capture:
 - Person who administered it
 - Status
 - Notes
-- Inventory deduction and lot allocation
+- Inventory deduction
 
 Expected statuses include at least:
 
@@ -114,7 +114,7 @@ When a scheduled dose is not given:
 For administration:
 
 - Inventory should be reduced automatically using FIFO.
-- The resulting inventory transaction must remain auditable.
+- Each administration creates one auditable inventory transaction; FIFO lot balances are derived when inventory is displayed.
 - The system should include a spelling and dose double-check step or confirmation prompt before committing sensitive medication details.
 - PRN administrations must be supported without creating false missed-dose alerts.
 

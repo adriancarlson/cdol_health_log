@@ -360,10 +360,10 @@
                 </thead>
                 <tbody>
                     <tr
-                        ng-if="!vm.removalMedication.transaction_groups || !vm.removalMedication.transaction_groups.length">
+                        ng-if="!vm.removalMedication.inventory_transactions || !vm.removalMedication.inventory_transactions.length">
                         <td colspan="5" class="center">No transactions</td>
                     </tr>
-                    <tr ng-repeat="transaction in vm.removalMedication.transaction_groups">
+                    <tr ng-repeat="transaction in vm.removalMedication.inventory_transactions">
                         <td>
                             <div>{{vm.transactionTypeLabel(transaction.transaction_type)}}</div>
                             <div ng-if="transaction.is_reversed"><em>Reversed</em></div>
@@ -375,7 +375,7 @@
                             {{transaction.quantity_change > 0 ? '+' : ''}}{{transaction.quantity_change}}
                             {{vm.removalMedication.inventory_unit | pluralize}}
                         </td>
-                        <td>{{transaction.transaction_date | date}}</td>
+                        <td>{{transaction.event_date | date}}</td>
                         <td>{{transaction.user_name || transaction.users_dcid}}</td>
                         <td>{{transaction.notes}}</td>
                     </tr>
@@ -431,7 +431,7 @@
                 <div id="transaction-details-row">
                     <div>
                         <label>Date <span class="req"><em>*</em></span></label>
-                        <input type="text" ng-model="vm.transactionRecord.transaction_date" pss-date-widget
+                        <input type="text" ng-model="vm.transactionRecord.event_date" pss-date-widget
                             ng-change="vm.checkReqFields()" data-auto-translate="true">
                     </div>
                     <div>

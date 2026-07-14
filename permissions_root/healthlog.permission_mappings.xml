@@ -6,6 +6,8 @@
 		<implies allow="post">/ws/schema/table/u_cdol_health_log</implies>
 		<implies allow="put">/ws/schema/table/u_cdol_health_log/#</implies>
 		<implies allow="delete">/ws/schema/table/u_cdol_health_log/#</implies>
+	</permission>
+	<permission name="/admin/students/medication/inventory.html">
 		<implies allow="get">/ws/schema/table/u_student_medication</implies>
 		<implies allow="get">/ws/schema/table/u_student_medication/#</implies>
 		<implies allow="get">/ws/schema/table/u_student_medication/count</implies>

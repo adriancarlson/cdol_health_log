@@ -22,10 +22,10 @@
 18. Dose values must support whole numbers and decimals.
 19. Frequency must support daily and PRN behavior without treating PRN as a missed daily dose.
 20. Sensitive medication entries should include a double-check or confirmation step.
-21. Inventory removals use an append-only transaction ledger tied directly to affected lots.
-22. One event may create multiple transaction rows with a shared event key when FIFO spans lots.
+21. Inventory removals use an append-only transaction ledger with one row per real-world event.
+22. FIFO lot balances are derived from immutable received lots and the medication-level transaction history; transactions are not split into per-lot allocation rows.
 23. Existing inventory lots are read-only after creation.
-24. Corrections use compensating reversal events rather than editing or deleting history.
+24. Corrections use one compensating transaction linked to the original transaction ID rather than editing or deleting history.
 25. Added-in-error corrections, parent pickup, disposal, lost/damaged medication, and other removal require notes.
 26. Medication editing, inventory removal, and transaction reversal share one drawer; nested PowerSchool drawers are not used.
 
@@ -37,3 +37,4 @@
 - Do not allow arbitrary route text.
 - Do not use `cc`.
 - Do not place timing or an active flag on each inventory lot merely to represent medication scheduling.
+- Do not create per-lot transaction allocations or event grouping keys for a single inventory event.
