@@ -85,7 +85,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			console.log(logId)
 			psConfirm({
 				title: `Delete ${$rootScope.appData.contextTitle} Item`,
-				message: `    Are you sure you want to delete this ${$rootScope.appData.contextTitle} Item?    `,
+				message: `<div style="padding: 0 12px 6px;">Are you sure you want to delete this ${$rootScope.appData.contextTitle} Item?</div>`,
 				oktext: 'Delete',
 				canceltext: 'Cancel',
 				ok: () => {
@@ -189,6 +189,33 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 		resetInventoryRows()
 
+		const hasValue = value => value !== undefined && value !== null && value !== ''
+		const isDecimalNumber = value => {
+			if (!hasValue(value)) return false
+			const normalizedValue = String(value).trim()
+			return /^(?:\d+\.?\d*|\.\d+)$/.test(normalizedValue) && Number.isFinite(Number(normalizedValue))
+		}
+		const isPositiveNumber = value => isDecimalNumber(value) && Number(value) > 0
+		const isNonNegativeNumber = value => isDecimalNumber(value) && Number(value) >= 0
+
+		const isInventoryRowValid = row => {
+			if (!row || !isPositiveNumber(row.quantity_added) || !row.added_date || !row.users_dcid) return false
+
+			if (row._isExisting || hasValue(row.quantity_remaining)) {
+				return isNonNegativeNumber(row.quantity_remaining) && Number(row.quantity_remaining) <= Number(row.quantity_added)
+			}
+
+			return true
+		}
+
+		vm.isFormValid = () => {
+			const record = vm.medicationRecord || vm[recordKey] || {}
+			const inventoryRows = [vm.inventoryRecord && vm.inventoryRecord[0]].concat(vm.additionalInventoryRows || [])
+			const medicationIsValid = record.medication_name && record.created_date && isPositiveNumber(record.dose_amount) && record.dose_unit && record.inventory_unit && record.route && record.frequency
+
+			return Boolean(medicationIsValid && inventoryRows.length && inventoryRows.every(isInventoryRowValid))
+		}
+
 		vm.hasExistingInventory = () => Boolean(vm.isEditMode)
 
 		vm.addInventoryRecord = () => {
@@ -276,6 +303,16 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		const saveDrawer = (closeDrawer, data) => {
 			loadingDialog()
+
+			if (!vm.isFormValid()) {
+				closeLoading()
+				$scope.$emit('drawer.disable.save.button')
+				psAlert({
+					title: 'Invalid Medication Inventory',
+					message: 'Enter a valid positive dosage and complete inventory information. Inventory quantities must be numeric, quantity added must be greater than zero, and quantity remaining cannot exceed quantity added.'
+				})
+				return
+			}
 
 			const medicationPayload = Object.assign({}, vm.medicationRecord || vm[recordKey] || {})
 			const existingMedicationId = medicationPayload.medication_id || vm.currentMedicationId || (data && data.data && data.data.medication_id) || null
@@ -417,10 +454,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 		// checks required fields and enables save button if all required fields are filled out
 		vm.checkReqFields = () => {
-			const record = vm.medicationRecord || vm[recordKey] || {}
-			const enableSaveButton = record.medication_name && record.created_date && record.dose_amount && record.dose_unit && record.inventory_unit && record.route && record.frequency
-
-			$scope.$emit(enableSaveButton ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
+			$scope.$emit(vm.isFormValid() ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
 		}
 
 		vm.resetSeasonForm = closeDrawer => {

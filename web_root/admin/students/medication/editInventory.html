@@ -72,8 +72,8 @@
                 <label id="dose-label">Dosage <span id="dose-req" class="req"><em
                             id="dose-req-mark">*</em></span></label>
                 <div id="dose-input-group" class="dose-group">
-                    <input id="dose-amt-input" type="text" class="dose-input" ng-model="vm.medicationRecord.dose_amount"
-                        size="10" maxlength="10" ng-change="vm.checkReqFields()" aria-label="Dosage amount"
+                    <input id="dose-amt-input" type="number" class="dose-input" ng-model="vm.medicationRecord.dose_amount"
+                        size="10" min="0" step="any" required ng-change="vm.checkReqFields()" aria-label="Dosage amount"
                         inputmode="decimal">
                     <select id="dose-unit-select" class="dose-unit"
                         ng-options="key as val for (key,val) in $root.appData.unitList"
@@ -126,22 +126,22 @@
                     <tr id="inv-new-row-0">
                         <td id="inv-qty-cell-0" class="center">
                             <span ng-if="!vm.isEditMode">
-                                <input id="inv-qty-input-0" class="inv-input" type="text"
-                                    ng-model="vm.inventoryRecord[0].quantity_added" size="10" maxlength="10"
+                                <input id="inv-qty-input-0" class="inv-input" type="number"
+                                    ng-model="vm.inventoryRecord[0].quantity_added" size="10" min="0" step="any" required
                                     ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
                             </span>
                             <span ng-if="vm.isEditMode && !vm.inventoryRecord[0]._isExisting">
-                                <input id="inv-qty-input-0-edit-new" class="inv-input" type="text"
-                                    ng-model="vm.inventoryRecord[0].quantity_added" size="10" maxlength="10"
+                                <input id="inv-qty-input-0-edit-new" class="inv-input" type="number"
+                                    ng-model="vm.inventoryRecord[0].quantity_added" size="10" min="0" step="any" required
                                     ng-change="vm.checkReqFields()" aria-label="Quantity added" inputmode="decimal">
                             </span>
                             <span class="inv-qty-edit-wrap" ng-if="vm.isEditMode && vm.inventoryRecord[0]._isExisting">
-                                <input id="inv-qty-remaining-input-0" class="inv-input" type="text"
-                                    ng-model="vm.inventoryRecord[0].quantity_remaining" size="10" maxlength="10"
+                                <input id="inv-qty-remaining-input-0" class="inv-input" type="number"
+                                    ng-model="vm.inventoryRecord[0].quantity_remaining" size="10" min="0" step="any" required
                                     ng-change="vm.checkReqFields()" aria-label="Quantity remaining" inputmode="decimal">
                                 <span class="inv-qty-separator">/</span>
-                                <input id="inv-qty-added-input-0" class="inv-input" type="text"
-                                    ng-model="vm.inventoryRecord[0].quantity_added" size="10" maxlength="10"
+                                <input id="inv-qty-added-input-0" class="inv-input" type="number"
+                                    ng-model="vm.inventoryRecord[0].quantity_added" size="10" min="0" step="any" required
                                     ng-change="vm.checkReqFields()" aria-label="Quantity added" inputmode="decimal">
                             </span>
                             {{vm.medicationRecord.inventory_unit | pluralize}}
@@ -163,22 +163,22 @@
                     <tr id="inv-new-row-{{$index + 1}}" ng-repeat="inv in vm.additionalInventoryRows track by $index">
                         <td id="inv-qty-cell-{{$index + 1}}" class="center">
                             <span ng-if="!vm.isEditMode">
-                                <input id="inv-qty-input-{{$index + 1}}" class="inv-input" type="text"
-                                    ng-model="inv.quantity_added" size="10" maxlength="10"
+                                <input id="inv-qty-input-{{$index + 1}}" class="inv-input" type="number"
+                                    ng-model="inv.quantity_added" size="10" min="0" step="any" required
                                     ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
                             </span>
                             <span ng-if="vm.isEditMode && !inv._isExisting">
-                                <input id="inv-qty-input-edit-new-{{$index + 1}}" class="inv-input" type="text"
-                                    ng-model="inv.quantity_added" size="10" maxlength="10"
+                                <input id="inv-qty-input-edit-new-{{$index + 1}}" class="inv-input" type="number"
+                                    ng-model="inv.quantity_added" size="10" min="0" step="any" required
                                     ng-change="vm.checkReqFields()" aria-label="Quantity added" inputmode="decimal">
                             </span>
                             <span class="inv-qty-edit-wrap" ng-if="vm.isEditMode && inv._isExisting">
-                                <input id="inv-qty-remaining-input-{{$index + 1}}" class="inv-input" type="text"
-                                    ng-model="inv.quantity_remaining" size="10" maxlength="10"
+                                <input id="inv-qty-remaining-input-{{$index + 1}}" class="inv-input" type="number"
+                                    ng-model="inv.quantity_remaining" size="10" min="0" step="any" required
                                     ng-change="vm.checkReqFields()" aria-label="Quantity remaining" inputmode="decimal">
                                 <span class="inv-qty-separator">/</span>
-                                <input id="inv-qty-added-input-{{$index + 1}}" class="inv-input" type="text"
-                                    ng-model="inv.quantity_added" size="10" maxlength="10"
+                                <input id="inv-qty-added-input-{{$index + 1}}" class="inv-input" type="number"
+                                    ng-model="inv.quantity_added" size="10" min="0" step="any" required
                                     ng-change="vm.checkReqFields()" aria-label="Quantity added" inputmode="decimal">
                             </span>
                             {{vm.medicationRecord.inventory_unit | pluralize}}
