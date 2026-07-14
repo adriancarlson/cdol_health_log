@@ -18,7 +18,8 @@
 
 ## Deployment cleanup
 
-- Install both generated version `26.7.0.35` plugins and validate them in PowerSchool with the old `cdol_health_log_pqs` plugin disabled.
+- Install both generated version `26.7.0.38` plugins, approve the requested `u_student_med_inv_txn` field access, and validate them in PowerSchool with the old `cdol_health_log_pqs` plugin disabled.
+- The permission mappings expose the full schema API action set consistently for all four tables. Confirm during testing that application code still treats historical inventory lots and transaction rows as read-only and never issues PUT or DELETE requests for them.
 - After health-log reads, staff dropdowns, and schema API writes pass that validation, uninstall and archive the separately maintained `cdol_health_log_pqs` repository and plugin.
 
 ## Open design questions
