@@ -58,6 +58,41 @@
             .inventory-batches-table .inventory-batch-row td {
                 box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
             }
+
+            .inventory-history {
+                min-width: 260px;
+            }
+
+            .inventory-history summary {
+                cursor: pointer;
+            }
+
+            .inventory-history-entry {
+                border-top: 1px solid rgba(0, 0, 0, 0.12);
+                padding: 6px 0;
+            }
+
+            .inventory-history-entry:first-of-type {
+                border-top: 0;
+            }
+
+            .inventory-change-negative {
+                color: #a12622;
+                font-weight: bold;
+            }
+
+            .inventory-change-positive {
+                color: #237804;
+                font-weight: bold;
+            }
+
+            .inventory-minus-symbol {
+                display: inline-block;
+                font-size: 20px;
+                font-weight: bold;
+                line-height: 12px;
+                vertical-align: middle;
+            }
         </style>
     </head>
 
@@ -95,7 +130,7 @@
                             <th>Inventory</th>
                             <th data-pss-sort-fields="created_date" data-primary-sort="ascending">Date Added</th>
                             <th>Notes</th>
-                            <th style="width: 65px;">Actions</th>
+                            <th style="width: 145px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -147,8 +182,14 @@
                                 <button type="button" id="mod-btn-{{medication.medication_id}}" pss-dialog-drawer
                                     width="1050" edit-button-icon="true" drawer-title="Edit {{vm.appData.contextTitle}}"
                                     template-url="editInventory.html" data-data="medication"></button>
-                                <button type="button" id="delBtn" ng-click="vm.delConfirm(medication.medication_id)"><em
-                                        class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>
+                                <button type="button" id="remove-inventory-btn-{{medication.medication_id}}"
+                                    pss-dialog-drawer width="1050" drawer-title="Remove Inventory"
+                                    data-data="{ mode: 'remove', medication: medication }"
+                                    template-url="editInventory.html"
+                                    ng-click="vm.beginTransactionDrawer()"
+                                    ng-disabled="medication.inventory_total_remaining <= 0"
+                                    aria-label="Remove Inventory" title="Remove Inventory"><span
+                                        class="inventory-minus-symbol" aria-hidden="true">&minus;</span></button>
                             </td>
                         </tr>
                     </tbody>

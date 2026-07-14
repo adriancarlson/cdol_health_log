@@ -36,6 +36,11 @@
                         'quantity_added' VALUE inv.quantity_added,
                         'quantity_remaining' VALUE inv.quantity_remaining,
                         'users_dcid' VALUE inv.users_dcid,
+                        'added_by_name' VALUE (
+                            SELECT users.first_name || ' ' || users.last_name
+                            FROM users
+                            WHERE users.dcid = inv.users_dcid
+                        ),
                         'notes' VALUE inv.notes
                         NULL ON NULL
                         RETURNING CLOB

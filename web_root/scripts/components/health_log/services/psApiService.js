@@ -90,9 +90,21 @@ define(function (require) {
 						res => {
 							switch (method) {
 								case 'POST':
-								case 'PUT':
-									deferredResponse.resolve(res.data.record || res.data.result || [])
+								case 'PUT': {
+									const records = res.data.record || res.data.result || []
+									const recordList = Array.isArray(records) ? records : [records]
+									const failedRecord = recordList.find(record => record && record.status && record.status.toUpperCase() !== 'SUCCESS')
+
+									if (failedRecord) {
+										psAlert({ message: `PowerSchool did not save the ${tableName} record. Check the browser console for the returned error.`, title: `${method} Error` })
+										console.error('PowerSchool schema API save failure', failedRecord)
+										deferredResponse.reject(failedRecord)
+										break
+									}
+
+									deferredResponse.resolve(records)
 									break
+								}
 								case 'GET':
 									resData = res.data.tables[tableName]
 									if (apiPayload.dateKeys) {
@@ -110,6 +122,7 @@ define(function (require) {
 						},
 						res => {
 							psAlert({ message: `There was an error ${method}ing the data to ${tableName}`, title: `${method} Error` })
+							deferredResponse.reject(res)
 						}
 					)
 					return deferredResponse.promise

@@ -1,0 +1,41 @@
+~[tlist_sql;
+    SELECT
+        COALESCE(
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'transaction_id' VALUE u_student_med_inv_txn.id,
+                    'medication_id' VALUE u_student_med_inv_txn.u_student_medication_id,
+                    'inventory_id' VALUE u_student_med_inv_txn.inventory_id,
+                    'event_key' VALUE u_student_med_inv_txn.event_key,
+                    'transaction_type' VALUE u_student_med_inv_txn.transaction_type,
+                    'quantity_change' VALUE u_student_med_inv_txn.quantity_change,
+                    'transaction_date' VALUE TO_CHAR(u_student_med_inv_txn.transaction_date, 'YYYY-MM-DD'),
+                    'transaction_time' VALUE u_student_med_inv_txn.transaction_time,
+                    'users_dcid' VALUE u_student_med_inv_txn.users_dcid,
+                    'user_name' VALUE users.first_name || ' ' || users.last_name,
+                    'notes' VALUE u_student_med_inv_txn.notes,
+                    'reversal_of_event_key' VALUE u_student_med_inv_txn.reversal_of_event_key
+                    NULL ON NULL
+                    RETURNING CLOB
+                )
+                ORDER BY u_student_med_inv_txn.transaction_date DESC,
+                    u_student_med_inv_txn.transaction_time DESC,
+                    u_student_med_inv_txn.id DESC
+                RETURNING CLOB
+            ),
+            TO_CLOB(CHR(91) || CHR(93))
+        ) AS json_result
+    FROM u_student_med_inv_txn
+    INNER JOIN u_student_medication
+        ON u_student_medication.id = u_student_med_inv_txn.u_student_medication_id
+    LEFT JOIN users
+        ON users.dcid = u_student_med_inv_txn.users_dcid
+    LEFT JOIN students
+        ON students.dcid = u_student_medication.studentsdcid
+    WHERE u_student_medication.yearid = ~(gpv.yearID;num)
+        AND ~(gpv.curSchoolID;num) IN (0, u_student_medication.schoolid)
+        AND (
+            students.dcid = ~(gpv.curStudentDCID)
+            OR ~(gpv.curStudentDCID) = 0
+        )
+;]~(data)[/tlist_sql]

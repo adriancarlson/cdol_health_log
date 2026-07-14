@@ -42,10 +42,96 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				Other: 'Other'
 			},
 			routeList: { oral: 'Oral', nasal: 'Nasal', sublingual: 'Sublingual', subcutaneous: 'Subcutaneous', rectal: 'Rectal', other: 'Other' },
-			frequencyList: { daily: 'Daily', other: 'Other' }
+			frequencyList: { daily: 'Daily', other: 'Other' },
+			inventoryTransactionTypeList: {
+				ADDED_IN_ERROR: 'Added in Error',
+				PARENT_PICKUP: 'Parent Pickup',
+				DISPOSAL: 'Disposal',
+				LOST_DAMAGED: 'Lost or Damaged',
+				OTHER_REMOVAL: 'Other Removal'
+			}
 		}
 
 		$rootScope.appData = vm.appData
+		vm.transactionTypeLabel = transactionType => {
+			if (transactionType === 'REVERSAL') return 'Reversal'
+			if (transactionType === 'SYSTEM_ROLLBACK') return 'Automatic Rollback'
+			return vm.appData.inventoryTransactionTypeList[transactionType] || transactionType
+		}
+		vm.beginTransactionDrawer = () => loadingDialog()
+
+		const parseJsonArray = value => {
+			if (Array.isArray(value)) return value
+			if (typeof value !== 'string') return []
+			try {
+				return JSON.parse(value)
+			} catch (error) {
+				return []
+			}
+		}
+
+		const prepareMedicationData = (medications, transactions) => {
+			const transactionRows = Array.isArray(transactions) ? transactions : []
+
+			return (medications || []).map(medication => {
+				medication.inventory_batches = parseJsonArray(medication.inventory_batches)
+				medication.inventory_transactions = transactionRows.filter(transaction =>
+					Number(transaction.medication_id) === Number(medication.medication_id)
+				)
+
+				const inventoryChanges = medication.inventory_transactions.reduce((changes, transaction) => {
+					const inventoryId = Number(transaction.inventory_id)
+					changes[inventoryId] = (changes[inventoryId] || 0) + (Number(transaction.quantity_change) || 0)
+					return changes
+				}, {})
+
+				medication.inventory_batches.forEach(batch => {
+					batch.quantity_remaining = (Number(batch.quantity_remaining) || 0) + (inventoryChanges[Number(batch.inventory_id)] || 0)
+				})
+				medication.inventory_total_remaining = medication.inventory_batches.reduce(
+					(total, batch) => total + (Number(batch.quantity_remaining) || 0),
+					0
+				)
+
+				const groups = {}
+
+				medication.inventory_transactions.forEach(transaction => {
+					const eventKey = transaction.event_key || `transaction-${transaction.transaction_id}`
+					if (!groups[eventKey]) {
+						groups[eventKey] = {
+							event_key: eventKey,
+							transaction_type: transaction.transaction_type,
+							transaction_date: transaction.transaction_date,
+							transaction_time: transaction.transaction_time,
+							user_name: transaction.user_name,
+							notes: transaction.notes,
+							reversal_of_event_key: transaction.reversal_of_event_key,
+							quantity_change: 0,
+							rows: []
+						}
+					}
+					groups[eventKey].quantity_change += Number(transaction.quantity_change) || 0
+					groups[eventKey].rows.push(transaction)
+				})
+
+				const transactionGroups = Object.values(groups)
+				const directlyReversedEventKeys = new Set(transactionGroups.map(group => group.reversal_of_event_key).filter(Boolean))
+				const effectivelyReversedEventKeys = new Set(
+					transactionGroups
+						.filter(group => group.reversal_of_event_key && !directlyReversedEventKeys.has(group.event_key))
+						.map(group => group.reversal_of_event_key)
+				)
+
+				medication.transaction_groups = transactionGroups.map(group => {
+					group.is_reversed = effectivelyReversedEventKeys.has(group.event_key)
+					group.can_reverse = group.transaction_type !== 'REVERSAL' && !group.is_reversed
+					if (group.transaction_type === 'SYSTEM_ROLLBACK') group.can_reverse = false
+					return group
+				})
+
+				return medication
+			})
+		}
 
 		$rootScope.loadData = () => {
 			loadingDialog()
@@ -61,14 +147,20 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				$rootScope.appData.staffList = staffList
 			})
 
-			const dataPromise = $http({
+			const medicationPromise = $http({
 				url: `./data/${$rootScope.appData.context}.json`,
 				method: 'GET',
 				params: paramValues
-			}).then(res => {
-				const resData = Array.isArray(res?.data) ? res.data : []
-				const sanitizedData = psUtils.htmlEntitiesToCharCode(resData)
-				vm[`${$rootScope.appData.context}List`] = sanitizedData
+			}).then(res => Array.isArray(res?.data) ? psUtils.htmlEntitiesToCharCode(res.data) : [])
+
+			const transactionPromise = $http({
+				url: './data/inventoryTransactions.json',
+				method: 'GET',
+				params: paramValues
+			}).then(res => Array.isArray(res?.data) ? psUtils.htmlEntitiesToCharCode(res.data) : [])
+
+			const dataPromise = $q.all([medicationPromise, transactionPromise]).then(results => {
+				vm[`${$rootScope.appData.context}List`] = prepareMedicationData(results[0], results[1])
 			})
 
 			$q.all([staffPromise, dataPromise]).finally(() => {
@@ -81,21 +173,6 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			$rootScope.loadData()
 		}
 
-		vm.delConfirm = logId => {
-			console.log(logId)
-			psConfirm({
-				title: `Delete ${$rootScope.appData.contextTitle} Item`,
-				message: `<div style="padding: 0 12px 6px;">Are you sure you want to delete this ${$rootScope.appData.contextTitle} Item?</div>`,
-				oktext: 'Delete',
-				canceltext: 'Cancel',
-				ok: () => {
-					$q.when(psApiService.psApiCall('u_student_medication', 'DELETE', {}, logId)).then(() => {
-						$rootScope.reloadData()
-					})
-				}
-			})
-		}
-
 		$rootScope.loadData()
 	})
 
@@ -106,6 +183,15 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm.medicationRecord = vm[recordKey]
 		vm.currentMedicationId = null
 		vm.isEditMode = false
+		vm.removalMedication = null
+		vm.drawerMode = 'edit'
+		vm.sourceTransaction = null
+		vm.transactionRecord = {}
+		vm.transactionTypeLabel = transactionType => {
+			if (transactionType === 'REVERSAL') return 'Reversal'
+			if (transactionType === 'SYSTEM_ROLLBACK') return 'Automatic Rollback'
+			return $rootScope.appData.inventoryTransactionTypeList[transactionType] || transactionType
+		}
 		const createInventoryRow = () => ({
 			added_date: $rootScope.appData.curDate,
 			users_dcid: $rootScope.appData.curUserDcid,
@@ -199,9 +285,10 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		const isNonNegativeNumber = value => isDecimalNumber(value) && Number(value) >= 0
 
 		const isInventoryRowValid = row => {
+			if (row && row._isExisting) return true
 			if (!row || !isPositiveNumber(row.quantity_added) || !row.added_date || !row.users_dcid) return false
 
-			if (row._isExisting || hasValue(row.quantity_remaining)) {
+			if (hasValue(row.quantity_remaining)) {
 				return isNonNegativeNumber(row.quantity_remaining) && Number(row.quantity_remaining) <= Number(row.quantity_added)
 			}
 
@@ -216,7 +303,148 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			return Boolean(medicationIsValid && inventoryRows.length && inventoryRows.every(isInventoryRowValid))
 		}
 
+		const createEventKey = () => {
+			if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, character => {
+				const randomValue = Math.random() * 16 | 0
+				const value = character === 'x' ? randomValue : (randomValue & 0x3 | 0x8)
+				return value.toString(16)
+			})
+		}
+
+		const resetTransactionRecord = () => {
+			vm.transactionRecord = {
+				transaction_type: '',
+				transaction_date: $rootScope.appData.curDate,
+				transaction_time: $rootScope.appData.curTime,
+				users_dcid: $rootScope.appData.curUserDcid,
+				notes: ''
+			}
+		}
+
+		const buildFifoAllocations = quantity => {
+			let quantityToAllocate = Number(quantity)
+			const allocations = []
+			const batches = (vm.removalMedication.inventory_batches || []).slice().sort((left, right) => {
+				const dateComparison = String(left.added_date || '').localeCompare(String(right.added_date || ''))
+				return dateComparison || Number(left.inventory_id) - Number(right.inventory_id)
+			})
+
+			batches.forEach(batch => {
+				const available = Number(batch.quantity_remaining) || 0
+				if (quantityToAllocate <= 0 || available <= 0) return
+				const allocated = Math.min(available, quantityToAllocate)
+				allocations.push({ inventory_id: batch.inventory_id, quantity_change: -allocated })
+				quantityToAllocate = Number((quantityToAllocate - allocated).toFixed(10))
+			})
+
+			return quantityToAllocate === 0 ? allocations : []
+		}
+
+		const buildTransactionPayloads = () => {
+			const eventKey = createEventKey()
+			const allocations = vm.drawerMode === 'reverse'
+				? (vm.sourceTransaction.rows || []).map(row => ({
+					inventory_id: row.inventory_id,
+					quantity_change: -(Number(row.quantity_change) || 0)
+				}))
+				: buildFifoAllocations(vm.transactionRecord.quantity)
+
+			return allocations.map(allocation => ({
+				u_student_medication_id: vm.removalMedication.medication_id,
+				inventory_id: allocation.inventory_id,
+				event_key: eventKey,
+				transaction_type: vm.drawerMode === 'reverse' ? 'REVERSAL' : vm.transactionRecord.transaction_type,
+				quantity_change: allocation.quantity_change,
+				transaction_date: vm.transactionRecord.transaction_date,
+				transaction_time: vm.transactionRecord.transaction_time,
+				users_dcid: vm.transactionRecord.users_dcid,
+				notes: vm.transactionRecord.notes,
+				reversal_of_event_key: vm.drawerMode === 'reverse' ? vm.sourceTransaction.event_key : undefined,
+				dateKeys: ['_date'],
+				timeKeys: ['_time']
+			}))
+		}
+
+		const postTransactionPayloads = payloads => {
+			const postedPayloads = []
+			return payloads
+				.reduce((promise, payload) => promise.then(() =>
+					psApiService.psApiCall('u_student_med_inv_txn', 'POST', payload).then(() => postedPayloads.push(payload))
+				), $q.when())
+				.catch(error => {
+					if (!postedPayloads.length) return $q.reject(error)
+
+					const rollbackEventKey = createEventKey()
+					const rollbackPayloads = postedPayloads.map(payload => ({
+						u_student_medication_id: payload.u_student_medication_id,
+						inventory_id: payload.inventory_id,
+						event_key: rollbackEventKey,
+						transaction_type: 'SYSTEM_ROLLBACK',
+						quantity_change: -Number(payload.quantity_change),
+						transaction_date: payload.transaction_date,
+						transaction_time: payload.transaction_time,
+						users_dcid: payload.users_dcid,
+						notes: `Automatic rollback after an incomplete ${payload.transaction_type} event.`,
+						reversal_of_event_key: payload.event_key,
+						dateKeys: ['_date'],
+						timeKeys: ['_time']
+					}))
+
+					return $q.all(rollbackPayloads.map(payload => psApiService.psApiCall('u_student_med_inv_txn', 'POST', payload)))
+						.then(() => $q.reject(error), () => $q.reject(error))
+				})
+		}
+
+		vm.isTransactionValid = () => {
+			const record = vm.transactionRecord || {}
+			const commonFieldsAreValid = record.transaction_date && record.transaction_time && record.users_dcid && record.notes && record.notes.trim()
+			if (!commonFieldsAreValid) return false
+			if (vm.drawerMode === 'reverse') return Boolean(vm.sourceTransaction && vm.sourceTransaction.can_reverse)
+
+			const quantityText = String(record.quantity === undefined || record.quantity === null ? '' : record.quantity).trim()
+			const quantity = Number(quantityText)
+			const quantityIsValid = /^(?:\d+\.?\d*|\.\d+)$/.test(quantityText) && Number.isFinite(quantity) && quantity > 0
+			return Boolean(record.transaction_type && quantityIsValid && quantity <= Number(vm.removalMedication.inventory_total_remaining))
+		}
+
+		vm.enterRemovalMode = () => {
+			loadingDialog()
+			vm.drawerMode = 'remove'
+			vm.sourceTransaction = null
+			resetTransactionRecord()
+			$timeout(() => {
+				vm.checkReqFields()
+				closeLoading()
+			})
+		}
+
+		vm.enterReversalMode = transaction => {
+			loadingDialog()
+			vm.drawerMode = 'reverse'
+			vm.sourceTransaction = transaction
+			resetTransactionRecord()
+			vm.transactionRecord.quantity = Math.abs(Number(transaction.quantity_change) || 0)
+			$timeout(() => {
+				vm.checkReqFields()
+				closeLoading()
+			})
+		}
+
+		vm.returnToEditMode = () => {
+			vm.drawerMode = 'edit'
+			vm.sourceTransaction = null
+			resetTransactionRecord()
+			vm.checkReqFields()
+		}
+
 		vm.hasExistingInventory = () => Boolean(vm.isEditMode)
+		vm.hasExistingInventoryLines = () => Boolean(
+			vm.isEditMode &&
+			vm.removalMedication &&
+			Array.isArray(vm.removalMedication.inventory_batches) &&
+			vm.removalMedication.inventory_batches.length
+		)
 
 		vm.addInventoryRecord = () => {
 			vm.additionalInventoryRows.push(createInventoryRow())
@@ -249,6 +477,9 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			vm.medicationRecord = vm[recordKey]
 			vm.currentMedicationId = null
 			vm.isEditMode = false
+			vm.removalMedication = null
+			vm.drawerMode = 'edit'
+			vm.sourceTransaction = null
 			resetInventoryRows()
 			$rootScope.reloadData()
 			closeLoading()
@@ -257,11 +488,18 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 
 		const openDrawer = (openCallBack, data) => {
-			$scope.$emit('drawer.enable.save.button')
-			console.log(data.data)
-			if (data.data.medication_id == null) {
+			const drawerData = (data && data.data) || {}
+			const requestedMode = drawerData.mode || 'edit'
+			const medicationData = drawerData.medication || drawerData
+			vm.drawerMode = requestedMode
+			vm.sourceTransaction = drawerData.transaction || null
+			resetTransactionRecord()
+
+			if (medicationData.medication_id == null) {
 				vm.currentMedicationId = null
 				vm.isEditMode = false
+				vm.removalMedication = null
+				vm.drawerMode = 'edit'
 				const record = vm.medicationRecord || vm[recordKey] || {}
 				resetInventoryRows()
 				ensureFirstInventoryRowDefaults()
@@ -274,7 +512,8 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				vm[recordKey] = record
 				vm.medicationRecord = record
 			} else {
-				const sourceRecord = Object.assign({}, data.data || {})
+				vm.removalMedication = medicationData
+				const sourceRecord = Object.assign({}, medicationData)
 				vm.currentMedicationId = sourceRecord.medication_id || null
 				vm.isEditMode = true
 				formatService.objIterator(sourceRecord, formatKeys.dateKeys, 'stripTimeFromIsoDate')
@@ -285,10 +524,15 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 				delete sourceRecord.inventory
 				delete sourceRecord.inventory_batches
+				delete sourceRecord.inventory_transactions
+				delete sourceRecord.transaction_groups
 				vm[recordKey] = sourceRecord
 				vm.medicationRecord = vm[recordKey]
 
 				vm._lastOpenedInventoryBatches = inventoryBatches
+				if (vm.drawerMode === 'reverse' && vm.sourceTransaction) {
+					vm.transactionRecord.quantity = Math.abs(Number(vm.sourceTransaction.quantity_change) || 0)
+				}
 			}
 			vm.checkReqFields()
 			openCallBack()
@@ -298,10 +542,37 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				}
 				ensureFirstInventoryRowDefaults()
 				vm.checkReqFields()
+				closeLoading()
 			})
 		}
 
+		const saveInventoryTransaction = closeDrawer => {
+			if (!vm.isTransactionValid()) {
+				psAlert({
+					title: 'Invalid Inventory Transaction',
+					message: 'Enter a valid quantity that does not exceed the available inventory and complete the date, time, staff member, and notes.'
+				})
+				return
+			}
+
+			const payloads = buildTransactionPayloads()
+			if (!payloads.length) {
+				psAlert({ title: 'Insufficient Inventory', message: 'The requested quantity could not be allocated from the available inventory lots.' })
+				return
+			}
+
+			loadingDialog()
+			return postTransactionPayloads(payloads)
+				.then(() => {
+					$rootScope.reloadData()
+					closeLoading()
+					closeDrawer(true)
+				})
+				.catch(() => closeLoading())
+		}
+
 		const saveDrawer = (closeDrawer, data) => {
+			if (vm.drawerMode !== 'edit') return saveInventoryTransaction(closeDrawer)
 			loadingDialog()
 
 			if (!vm.isFormValid()) {
@@ -320,6 +591,8 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			delete medicationPayload.inventory_batches
 			delete medicationPayload.inventory_total_initial
 			delete medicationPayload.inventory_total_remaining
+			delete medicationPayload.inventory_transactions
+			delete medicationPayload.transaction_groups
 			formatService.objIterator(medicationPayload, formatKeys.dateKeys, 'formatDateForApi')
 
 			const getMedicationIdFromResponse = response => {
@@ -390,14 +663,9 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			return $q
 				.when(savePromise)
 				.then(response => {
-					console.log('save response', response)
-					console.log('save promise', savePromise)
-
 					const medicationId = existingMedicationId || getMedicationIdFromResponse(response)
 					const inventoryPayloads = buildInventoryPayloads(medicationId)
 					const inventoryPayloadsForApi = normalizeInventoryDatesForApi(inventoryPayloads)
-					console.log('inventory payloads', inventoryPayloads)
-					console.log('inventory post debug', { medicationId, inventoryPayloads: inventoryPayloadsForApi })
 
 					if (!medicationId || !inventoryPayloadsForApi.length) {
 						console.warn('Inventory submit skipped', {
@@ -419,42 +687,40 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 						)
 					}
 
-					const updateCalls = []
 					const createCalls = []
 
 					inventoryPayloadsForApi.forEach(payload => {
-						if (payload.inventory_id) {
-							const updatePayload = Object.assign({}, payload)
-							const inventoryId = updatePayload.inventory_id
-							delete updatePayload.inventory_id
-							delete updatePayload._isExisting
-							updateCalls.push(psApiService.psApiCall('u_student_medication_inventory', 'PUT', updatePayload, inventoryId))
-						} else if (!payload._isExisting) {
+						if (!payload._isExisting) {
 							const createPayload = Object.assign({}, payload)
 							delete createPayload.inventory_id
 							delete createPayload._isExisting
 							createCalls.push(psApiService.psApiCall('u_student_medication_inventory', 'POST', createPayload))
-						} else {
-							console.warn('Skipping inventory update because row is existing but has no inventory_id', payload)
 						}
 					})
 
-					return $q.all(updateCalls.concat(createCalls))
+					return $q.all(createCalls)
 				})
 				.then(() => {
 					vm[recordKey] = {}
 					vm.medicationRecord = vm[recordKey]
 					vm.currentMedicationId = null
 					vm.isEditMode = false
+					vm.removalMedication = null
+					vm.drawerMode = 'edit'
+					vm.sourceTransaction = null
 					resetInventoryRows()
 					$rootScope.reloadData()
 					closeLoading()
 					closeDrawer(true)
 				})
+				.catch(() => {
+					closeLoading()
+				})
 		}
 		// checks required fields and enables save button if all required fields are filled out
 		vm.checkReqFields = () => {
-			$scope.$emit(vm.isFormValid() ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
+			const isValid = vm.drawerMode === 'edit' ? vm.isFormValid() : vm.isTransactionValid()
+			$scope.$emit(isValid ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
 		}
 
 		vm.resetSeasonForm = closeDrawer => {
@@ -462,6 +728,9 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			vm.medicationRecord = vm[recordKey]
 			vm.currentMedicationId = null
 			vm.isEditMode = false
+			vm.removalMedication = null
+			vm.drawerMode = 'edit'
+			vm.sourceTransaction = null
 			resetInventoryRows()
 			$rootScope.reloadData()
 			closeLoading()
@@ -470,8 +739,193 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		initalizeDrawer()
 	})
 
+	medicationModule.controller('inventoryTransactionController', function ($scope, $rootScope, $q, formatService, psApiService) {
+		const vm = this
+		vm.mode = 'remove'
+		vm.medication = {}
+		vm.sourceTransaction = null
+		vm.transactionRecord = {}
+
+		const createEventKey = () => {
+			if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, character => {
+				const randomValue = Math.random() * 16 | 0
+				const value = character === 'x' ? randomValue : (randomValue & 0x3 | 0x8)
+				return value.toString(16)
+			})
+		}
+
+		const reset = () => {
+			vm.transactionRecord = {
+				transaction_type: '',
+				transaction_date: $rootScope.appData.curDate,
+				transaction_time: $rootScope.appData.curTime,
+				users_dcid: $rootScope.appData.curUserDcid,
+				notes: ''
+			}
+		}
+
+		const buildFifoAllocations = quantity => {
+			let quantityToAllocate = Number(quantity)
+			const allocations = []
+			const batches = (vm.medication.inventory_batches || []).slice().sort((left, right) => {
+				const dateComparison = String(left.added_date || '').localeCompare(String(right.added_date || ''))
+				return dateComparison || Number(left.inventory_id) - Number(right.inventory_id)
+			})
+
+			batches.forEach(batch => {
+				const available = Number(batch.quantity_remaining) || 0
+				if (quantityToAllocate <= 0 || available <= 0) return
+				const allocated = Math.min(available, quantityToAllocate)
+				allocations.push({ inventory_id: batch.inventory_id, quantity_change: -allocated })
+				quantityToAllocate = Number((quantityToAllocate - allocated).toFixed(10))
+			})
+
+			return quantityToAllocate === 0 ? allocations : []
+		}
+
+		const buildTransactionPayloads = () => {
+			const eventKey = createEventKey()
+			let allocations
+
+			if (vm.mode === 'reverse') {
+				allocations = (vm.sourceTransaction.rows || []).map(row => ({
+					inventory_id: row.inventory_id,
+					quantity_change: -(Number(row.quantity_change) || 0)
+				}))
+			} else {
+				allocations = buildFifoAllocations(vm.transactionRecord.quantity)
+			}
+
+			return allocations.map(allocation => ({
+				u_student_medication_id: vm.medication.medication_id,
+				inventory_id: allocation.inventory_id,
+				event_key: eventKey,
+				transaction_type: vm.mode === 'reverse' ? 'REVERSAL' : vm.transactionRecord.transaction_type,
+				quantity_change: allocation.quantity_change,
+				transaction_date: vm.transactionRecord.transaction_date,
+				transaction_time: vm.transactionRecord.transaction_time,
+				users_dcid: vm.transactionRecord.users_dcid,
+				notes: vm.transactionRecord.notes,
+				reversal_of_event_key: vm.mode === 'reverse' ? vm.sourceTransaction.event_key : undefined,
+				dateKeys: ['_date'],
+				timeKeys: ['_time']
+			}))
+		}
+
+		const postTransactionPayloads = payloads => {
+			const postedPayloads = []
+			return payloads
+				.reduce((promise, payload) => {
+					return promise.then(() => psApiService.psApiCall('u_student_med_inv_txn', 'POST', payload).then(() => {
+						postedPayloads.push(payload)
+					}))
+				}, $q.when())
+				.catch(error => {
+					if (!postedPayloads.length) return $q.reject(error)
+
+					const rollbackEventKey = createEventKey()
+					const rollbackPayloads = postedPayloads.map(payload => ({
+						u_student_medication_id: payload.u_student_medication_id,
+						inventory_id: payload.inventory_id,
+						event_key: rollbackEventKey,
+						transaction_type: 'SYSTEM_ROLLBACK',
+						quantity_change: -Number(payload.quantity_change),
+						transaction_date: payload.transaction_date,
+						transaction_time: payload.transaction_time,
+						users_dcid: payload.users_dcid,
+						notes: `Automatic rollback after an incomplete ${payload.transaction_type} event.`,
+						reversal_of_event_key: payload.event_key,
+						dateKeys: ['_date'],
+						timeKeys: ['_time']
+					}))
+
+					return $q.all(rollbackPayloads.map(payload => psApiService.psApiCall('u_student_med_inv_txn', 'POST', payload)))
+						.then(() => $q.reject(error), () => $q.reject(error))
+				})
+		}
+
+		vm.isValid = () => {
+			const record = vm.transactionRecord || {}
+			const commonFieldsAreValid = record.transaction_date && record.transaction_time && record.users_dcid && record.notes && record.notes.trim()
+			if (!commonFieldsAreValid) return false
+			if (vm.mode === 'reverse') return Boolean(vm.sourceTransaction && vm.sourceTransaction.can_reverse)
+			const quantityText = String(record.quantity === undefined || record.quantity === null ? '' : record.quantity).trim()
+			const quantity = Number(quantityText)
+			const quantityIsValid = /^(?:\d+\.?\d*|\.\d+)$/.test(quantityText) && Number.isFinite(quantity) && quantity > 0
+			return Boolean(record.transaction_type && quantityIsValid && quantity <= Number(vm.medication.inventory_total_remaining))
+		}
+
+		vm.checkReqFields = () => {
+			$scope.$emit(vm.isValid() ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
+		}
+
+		const openDrawer = (openCallBack, data) => {
+			const drawerData = data.data || {}
+			reset()
+			vm.mode = drawerData.mode || 'remove'
+			vm.medication = drawerData.medication || {}
+			vm.sourceTransaction = drawerData.transaction || null
+			if (vm.mode === 'reverse' && vm.sourceTransaction) {
+				vm.transactionRecord.quantity = Math.abs(Number(vm.sourceTransaction.quantity_change) || 0)
+			}
+			vm.checkReqFields()
+			openCallBack()
+			closeLoading()
+		}
+
+		const cancelDrawer = closeDrawer => {
+			reset()
+			closeDrawer(true)
+			closeDrawer()
+		}
+
+		const saveDrawer = closeDrawer => {
+			if (!vm.isValid()) {
+				psAlert({
+					title: 'Invalid Inventory Transaction',
+					message: 'Enter a valid quantity that does not exceed the available inventory and complete the date, time, staff member, and notes.'
+				})
+				return
+			}
+
+			const payloads = buildTransactionPayloads()
+			if (!payloads.length) {
+				psAlert({ title: 'Insufficient Inventory', message: 'The requested quantity could not be allocated from the available inventory lots.' })
+				return
+			}
+
+			loadingDialog()
+			return postTransactionPayloads(payloads)
+				.then(() => {
+					$rootScope.reloadData()
+					closeLoading()
+					closeDrawer(true)
+				})
+				.catch(() => {
+					closeLoading()
+				})
+		}
+
+		$scope.$emit('open.drawer.event', openDrawer)
+		$scope.$emit('cancel.drawer.event', cancelDrawer)
+		$scope.$emit('save.drawer.event', saveDrawer)
+		reset()
+	})
+
 	medicationModule.filter('pluralize', () => val => {
 		if (!val) return val
 		return val.slice(-1) === 's' ? val : val + 's'
+	})
+
+	medicationModule.filter('inventoryTime', () => value => {
+		const seconds = Number(value)
+		if (!Number.isFinite(seconds)) return ''
+		const totalMinutes = Math.floor(seconds / 60)
+		const hours24 = Math.floor(totalMinutes / 60) % 24
+		const minutes = totalMinutes % 60
+		const hours12 = hours24 % 12 || 12
+		const meridiem = hours24 >= 12 ? 'PM' : 'AM'
+		return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${meridiem}`
 	})
 })

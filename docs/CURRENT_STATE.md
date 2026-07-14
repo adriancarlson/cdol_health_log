@@ -8,6 +8,11 @@
   - `u_student_medication_inventory`, a standalone table for inventory lots.
 - The schema includes medication name, dose, dose unit, inventory unit, frequency, route, audit user/date, notes, quantity added, and quantity remaining.
 - The data model direction of one medication to many inventory lots has been established.
+- The repository schema defines the append-only `u_student_med_inv_txn` inventory transaction table.
+- Existing inventory lots are read-only in the drawer; refills create new lots.
+- Parent pickup and other approved removals allocate FIFO across lots and display in the transaction table at the bottom of Edit Inventory.
+- Add/edit, removal, and reversal use one PowerSchool drawer with internal modes so medication context is preserved.
+- Reversal creates compensating transaction rows and preserves the original event.
 - Health-log and active-staff reads are served by SQL-backed JSON pages in this plugin.
 - The application no longer calls the `net.cdolinc.health.healthLog.logs` or `net.cdolinc.health.healthLog.staff` PowerQueries at runtime.
 - The field access requests and schema API permission mappings formerly supplied by `cdol_health_log_pqs` are maintained in this repository.
@@ -32,17 +37,16 @@ The available project files do not prove completion of:
 - Administration UI
 - Missed-dose workflow
 - Required missed-dose reasons
-- FIFO deduction implementation
-- Parent-pickup inventory deductions
+- Live PowerSchool installation validation of FIFO and parent-pickup deductions
 - Low-inventory thresholds and alerts
 - Gap detection
 - Reminder scheduling
 - Controlled-medication reconciliation
 - Authorization enforcement
-- Correction and reversal workflow
+- Atomic server-side transaction enforcement for multi-lot FIFO events
 - Automated tests
 - Plugin packaging and installation validation
 
-## Source-file gap
+## Source files
 
-Only the schema XML was recovered from the ChatGPT File Library. The HTML, JavaScript, CSS, PowerQueries, and other plugin files referenced in prior work were not recovered into this package. Add the current versions from the development machine or existing repository before asking Codex to modify the implementation.
+The medication inventory, health-log pages, JavaScript services, SQL-backed JSON pages, schema, and permission mappings are present in this repository.

@@ -23,4 +23,16 @@
         <field name="users_dcid" type="Integer" />
         <field name="notes" type="String" length="4000" />
     </extendedTable>
+    <extendedTable type="standalone" dbTableName="u_student_med_inv_txn" childName="u_student_med_inv_txn" comment="Append-only medication inventory transactions">
+        <field name="u_student_medication_id" type="Integer" />
+        <field name="inventory_id" type="Integer" />
+        <field name="event_key" type="String" length="36" />
+        <field name="transaction_type" type="String" length="50" />
+        <field name="quantity_change" type="Double" />
+        <field name="transaction_date" type="Date" />
+        <field name="transaction_time" type="Integer" />
+        <field name="users_dcid" type="Integer" />
+        <field name="notes" type="String" length="4000" />
+        <field name="reversal_of_event_key" type="String" length="36" />
+    </extendedTable>
 </psExtension>

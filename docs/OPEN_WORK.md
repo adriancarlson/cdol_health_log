@@ -2,23 +2,23 @@
 
 ## Highest-priority implementation work
 
-1. Add all existing project source files to the repository.
-2. Inspect the current medication page and drawer code.
-3. Add or verify the `inventory_unit` field in the medication UI.
-4. Implement inventory-lot listing, count-in, refill, edit/correction, and save behavior.
-5. Create the first inventory lot when a new medication and starting quantity are entered.
-6. Implement FIFO inventory deduction.
-7. Design and approve the administration record schema.
-8. Build the table-based administration workflow.
-9. Implement required missed-dose reasons and notes.
-10. Add low-inventory and missed-administration alerts.
-11. Implement permission and authorization controls.
-12. Add audit-safe correction, reversal, parent pickup, disposal, and reconciliation workflows.
-13. Add tests and PowerSchool plugin installation validation.
+1. Package and install the current repository build on the PowerSchool test server.
+2. Revalidate medication creation, required inventory, refills, and read-only historical lots.
+3. Confirm the final dose-unit, inventory-unit, route, and frequency lists with the nurse.
+4. Install and validate the append-only inventory transaction schema and permissions.
+5. Test FIFO parent pickup across one and multiple lots, reversal, and insufficient inventory handling.
+6. Confirm the supported PowerSchool server-side mechanism for atomic multi-lot transactions and concurrency control.
+7. Add controlled-medication reconciliation and returned-to-school workflows after nurse review.
+8. Design and approve the administration record schema.
+9. Build the table-based administration workflow.
+10. Implement required missed-dose reasons and notes.
+11. Add low-inventory and missed-administration alerts.
+12. Complete authorization testing with nurse, ordinary staff, district, and cross-school accounts.
+13. Add automated tests and PowerSchool plugin installation validation.
 
 ## Deployment cleanup
 
-- Install both generated version `26.7.0.1` plugins and validate them in PowerSchool with the old `cdol_health_log_pqs` plugin disabled.
+- Install both generated version `26.7.0.10` plugins and validate them in PowerSchool with the old `cdol_health_log_pqs` plugin disabled.
 - After health-log reads, staff dropdowns, and schema API writes pass that validation, uninstall and archive the separately maintained `cdol_health_log_pqs` repository and plugin.
 
 ## Open design questions
@@ -39,7 +39,7 @@ These should be resolved explicitly before Codex hard-codes behavior:
 - How are controlled-medication counts reconciled?
 - Does each administration need a second-person verification option?
 - How should partial tablets, liquid doses, and unit conversion be handled?
-- Is parent pickup represented as a transaction type, a dedicated workflow, or both?
+- Should medication returned after parent pickup create a newly counted lot? Current recommendation: yes.
 - Should medication definitions have start/end dates or a status outside the inventory table?
 - What reports and exports are required?
 - What exact plugin paths and PowerSchool APIs are already used by the current code?
