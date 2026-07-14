@@ -1,6 +1,6 @@
 <form id="med-inv-form" name="inventoryForm">
-    <div id="med-inv-wrap" ng-class="{'fluid-form': vm.drawerMode === 'edit'}"
-        ng-controller="editController as vm" ng-cloak>
+    <div id="med-inv-wrap" ng-class="{'fluid-form': vm.drawerMode === 'edit'}" ng-controller="editController as vm"
+        ng-cloak>
         <style id="med-inv-styles">
             .fluid-form>div[id$="-row"] {
                 margin: 0 0 10px 0;
@@ -52,6 +52,10 @@
                 width: 100% !important;
                 max-width: 100%;
                 box-sizing: border-box;
+            }
+
+            #inv-cancel-head {
+                width: 70px;
             }
 
             .inventory-form-table-section {
@@ -214,6 +218,8 @@
                         <th id="inv-date-head">Date Added</th>
                         <th id="inv-user-head">Who Added?</th>
                         <th id="inv-notes-head">Inventory Notes</th>
+                        <th id="inv-cancel-head" ng-if="vm.hasPendingInventoryRows()"
+                            aria-label="Cancel inventory row"></th>
                     </tr>
                 </thead>
                 <tbody id="inv-grid-body">
@@ -259,6 +265,7 @@
                             <textarea ng-if="!vm.inventoryRecord[0]._isExisting" id="inv-notes-text-0" spellcheck="true"
                                 wrap="absolute" rows="3" cols="30" ng-model="vm.inventoryRecord[0].notes"></textarea>
                         </td>
+                        <td id="inv-cancel-cell-0" class="center" ng-if="vm.hasPendingInventoryRows()"></td>
                     </tr>
                     <tr id="inv-new-row-{{$index + 1}}" ng-repeat="inv in vm.additionalInventoryRows track by $index">
                         <td id="inv-qty-cell-{{$index + 1}}" class="center">
@@ -299,22 +306,30 @@
                             <textarea ng-if="!inv._isExisting" id="inv-notes-text-{{$index + 1}}" spellcheck="true"
                                 wrap="absolute" rows="3" cols="30" ng-model="inv.notes"></textarea>
                         </td>
+                        <td id="inv-cancel-cell-{{$index + 1}}" class="center"
+                            ng-if="vm.hasPendingInventoryRows()">
+                            <button id="inv-cancel-btn-{{$index + 1}}" type="button"
+                                ng-if="!inv._isExisting"
+                                ng-click="$event.stopPropagation(); vm.cancelAdditionalInventory(inv)">Cancel</button>
+                        </td>
                     </tr>
                     <tr id="inv-add-row"
                         ng-show="vm.inventoryRecord[0].quantity_added && vm.inventoryRecord[0].added_date && vm.inventoryRecord[0].users_dcid">
-                        <td id="inv-add-cell" class="center" colspan="4">
+                        <td id="inv-add-cell" class="center"
+                            ng-attr-colspan="{{vm.hasPendingInventoryRows() ? 5 : 4}}">
                             <button id="inv-add-btn" type="button" ng-click="vm.addInventoryRecord()">Add Additional
                                 Inventory</button>
                             <button id="inv-remove-btn" type="button" ng-if="vm.hasExistingInventoryLines()"
                                 ng-click="vm.enterRemovalMode()"
-                                ng-disabled="vm.removalMedication.inventory_total_remaining <= 0">Remove
+                                ng-disabled="vm.removalMedication.inventory_total_remaining <= 0 || vm.hasPendingInventoryRows()">Remove
                                 Inventory</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            <div class="feedback-info" ng-if="vm.isEditMode">Existing count-in records are read-only. Use Add
-                Additional Inventory for a refill or Remove Inventory for medication leaving school custody.</div>
+            <div class="feedback-info" ng-if="vm.isEditMode">Existing inventory is read-only. Use Add Additional
+                Inventory to record medication received, or Remove Inventory to record medication leaving the school.
+            </div>
         </div>
         <div id="notes-row" ng-show="vm.drawerMode === 'edit'">
             <div id="notes-group">
@@ -372,7 +387,8 @@
                 <div id="transaction-medication-row">
                     <div>
                         <label>Medication</label>
-                        <span class="transaction-summary-value transaction-medication-value">{{vm.removalMedication.medication_name}}</span>
+                        <span
+                            class="transaction-summary-value transaction-medication-value">{{vm.removalMedication.medication_name}}</span>
                     </div>
                     <div class="transaction-summary-center">
                         <label>Dosage</label>

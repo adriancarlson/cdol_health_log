@@ -465,10 +465,17 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			Array.isArray(vm.removalMedication.inventory_batches) &&
 			vm.removalMedication.inventory_batches.length
 		)
+		vm.hasPendingInventoryRows = () => (vm.additionalInventoryRows || []).some(row => row && !row._isExisting)
 
 		vm.addInventoryRecord = () => {
 			vm.additionalInventoryRows.push(createInventoryRow())
 			ensureFirstInventoryRowDefaults()
+			vm.checkReqFields()
+		}
+
+		vm.cancelAdditionalInventory = row => {
+			if (!row || row._isExisting) return
+			vm.additionalInventoryRows = (vm.additionalInventoryRows || []).filter(candidate => candidate !== row)
 			vm.checkReqFields()
 		}
 
