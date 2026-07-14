@@ -6,9 +6,9 @@ define(function (require) {
 		'$scope',
 		'$rootScope',
 		'$attrs',
-		'pqService',
+		'jsonDataService',
 		'psApiService',
-		function ($scope, $rootScope, $attrs, pqService, psApiService) {
+		function ($scope, $rootScope, $attrs, jsonDataService, psApiService) {
 			$j(document).dblclick(() => console.log($scope))
 
 			$rootScope.getCurrentTime = () => {
@@ -85,9 +85,9 @@ define(function (require) {
 
 			$rootScope.loadLogData = async logData => {
 				loadingDialog()
-				const pqData = { curSchoolID: $rootScope.appData.curSchoolId, yearID: $rootScope.appData.curYearId, curStudentDCID: $rootScope.appData.curStudentDCID, logType: logData }
-				$scope.healthLogList = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
-				$rootScope.appData.staffList = await pqService.getPQResults('net.cdolinc.health.healthLog.staff', { curSchoolID: $rootScope.appData.curSchoolId })
+				const requestParams = { curSchoolID: $rootScope.appData.curSchoolId, yearID: $rootScope.appData.curYearId, curStudentDCID: $rootScope.appData.curStudentDCID, logType: logData }
+				$scope.healthLogList = await jsonDataService.getData('healthLogs', requestParams)
+				$rootScope.appData.staffList = await jsonDataService.getData('staff', { curSchoolID: $rootScope.appData.curSchoolId })
 				$scope.setfullContext()
 				$scope.$digest()
 				closeLoading()

@@ -1,0 +1,25 @@
+~[tlist_sql;
+	SELECT
+		COALESCE(
+			JSON_ARRAYAGG(
+				JSON_OBJECT(
+					'dcid' VALUE TO_CHAR(users.dcid),
+					'first_name' VALUE users.first_name,
+					'last_name' VALUE users.last_name
+					NULL ON NULL
+					RETURNING CLOB
+				)
+				ORDER BY users.last_name, users.first_name, users.dcid
+				RETURNING CLOB
+			),
+			TO_CLOB('[]')
+		)
+	FROM
+		schoolstaff
+		INNER JOIN users
+			ON users.dcid = schoolstaff.users_dcid
+	WHERE
+		schoolstaff.status = 1
+		AND (schoolstaff.schoolid = ~(gpv.curSchoolID;num) OR ~(gpv.curSchoolID;num) = 0)
+;]~(data)[/tlist_sql]
+

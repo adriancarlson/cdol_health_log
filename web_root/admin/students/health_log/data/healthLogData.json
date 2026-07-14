@@ -1,0 +1,64 @@
+~[tlist_sql;
+	SELECT
+		COALESCE(
+			JSON_ARRAYAGG(
+				JSON_OBJECT(
+					'id' VALUE TO_CHAR(u_cdol_health_log.id),
+					'studentsdcid' VALUE TO_CHAR(u_cdol_health_log.studentsdcid),
+					'log_type' VALUE u_cdol_health_log.log_type,
+					'log_date' VALUE TO_CHAR(u_cdol_health_log.log_date, 'YYYY-MM-DD'),
+					'log_time' VALUE TO_CHAR(u_cdol_health_log.log_time),
+					'sport' VALUE u_cdol_health_log.sport,
+					'complaint' VALUE u_cdol_health_log.complaint,
+					'treatment' VALUE u_cdol_health_log.treatment,
+					'destination' VALUE u_cdol_health_log.destination,
+					'left_time' VALUE TO_CHAR(u_cdol_health_log.left_time),
+					'users_dcid' VALUE TO_CHAR(u_cdol_health_log.users_dcid),
+					'users_title' VALUE users.title,
+					'first_name' VALUE users.first_name,
+					'last_name' VALUE users.last_name,
+					'injury_site' VALUE u_cdol_health_log.injury_site,
+					'injury_type' VALUE u_cdol_health_log.injury_type,
+					'injury_date' VALUE TO_CHAR(u_cdol_health_log.injury_date, 'YYYY-MM-DD'),
+					'total_systems_score' VALUE TO_CHAR(u_cdol_health_log.total_systems_score),
+					'systems_score' VALUE TO_CHAR(u_cdol_health_log.systems_score),
+					'notes' VALUE u_cdol_health_log.notes,
+					'notes_memory' VALUE u_cdol_health_log.notes_memory,
+					'notes_bess' VALUE u_cdol_health_log.notes_bess,
+					'notes_voms' VALUE u_cdol_health_log.notes_voms,
+					'notes_s' VALUE u_cdol_health_log.notes_s,
+					'notes_o' VALUE u_cdol_health_log.notes_o,
+					'notes_a' VALUE u_cdol_health_log.notes_a,
+					'notes_p' VALUE u_cdol_health_log.notes_p,
+					'contact' VALUE u_cdol_health_log.contact,
+					'conversation_type' VALUE u_cdol_health_log.conversation_type,
+					'temperature' VALUE TO_CHAR(u_cdol_health_log.temperature),
+					'respiratoryrate' VALUE TO_CHAR(u_cdol_health_log.respiratoryrate),
+					'pulserate' VALUE TO_CHAR(u_cdol_health_log.pulserate),
+					'oxygensaturation' VALUE TO_CHAR(u_cdol_health_log.oxygensaturation),
+					'bloodpressuresystolic' VALUE TO_CHAR(u_cdol_health_log.bloodpressuresystolic),
+					'bloodpressurediastolic' VALUE TO_CHAR(u_cdol_health_log.bloodpressurediastolic),
+					'bloodsugar' VALUE TO_CHAR(u_cdol_health_log.bloodsugar),
+					'schoolid' VALUE TO_CHAR(u_cdol_health_log.schoolid),
+					'yearid' VALUE TO_CHAR(u_cdol_health_log.yearid)
+					NULL ON NULL
+					RETURNING CLOB
+				)
+				ORDER BY u_cdol_health_log.log_date DESC, u_cdol_health_log.id DESC
+				RETURNING CLOB
+			),
+			TO_CLOB('[]')
+		)
+	FROM
+		u_cdol_health_log
+		INNER JOIN students
+			ON u_cdol_health_log.studentsdcid = students.dcid
+		INNER JOIN users
+			ON u_cdol_health_log.users_dcid = users.dcid
+	WHERE
+		u_cdol_health_log.yearid = ~(gpv.yearID;num)
+		AND (u_cdol_health_log.schoolid = ~(gpv.curSchoolID;num) OR ~(gpv.curSchoolID;num) = 0)
+		AND ('~(gpv.logType;sqlText)' = 'All' OR u_cdol_health_log.log_type = '~(gpv.logType;sqlText)')
+		AND (students.dcid = ~(gpv.curStudentDCID;num) OR ~(gpv.curStudentDCID;num) = 0)
+;]~(data)[/tlist_sql]
+

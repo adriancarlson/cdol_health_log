@@ -8,6 +8,10 @@
   - `u_student_medication_inventory`, a standalone table for inventory lots.
 - The schema includes medication name, dose, dose unit, inventory unit, frequency, route, audit user/date, notes, quantity added, and quantity remaining.
 - The data model direction of one medication to many inventory lots has been established.
+- Health-log and active-staff reads are served by SQL-backed JSON pages in this plugin.
+- The application no longer calls the `net.cdolinc.health.healthLog.logs` or `net.cdolinc.health.healthLog.staff` PowerQueries at runtime.
+- The field access requests and schema API permission mappings formerly supplied by `cdol_health_log_pqs` are maintained in this repository.
+- The default VS Code build creates two installable plugins from the one repository and source `plugin.xml`: the main plugin without `permissions_root`, and a `CDOL Health Log - Data Access` plugin containing the permission mappings without `user_schema_root` or application files.
 
 ## Prior implementation status reported in ChatGPT
 

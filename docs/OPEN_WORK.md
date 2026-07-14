@@ -16,6 +16,11 @@
 12. Add audit-safe correction, reversal, parent pickup, disposal, and reconciliation workflows.
 13. Add tests and PowerSchool plugin installation validation.
 
+## Deployment cleanup
+
+- Install both generated version `26.7.0.1` plugins and validate them in PowerSchool with the old `cdol_health_log_pqs` plugin disabled.
+- After health-log reads, staff dropdowns, and schema API writes pass that validation, uninstall and archive the separately maintained `cdol_health_log_pqs` repository and plugin.
+
 ## Open design questions
 
 These should be resolved explicitly before Codex hard-codes behavior:
