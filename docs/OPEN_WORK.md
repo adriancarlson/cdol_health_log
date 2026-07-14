@@ -18,7 +18,7 @@
 
 ## Deployment cleanup
 
-- Install both generated version `26.7.0.10` plugins and validate them in PowerSchool with the old `cdol_health_log_pqs` plugin disabled.
+- Install both generated version `26.7.0.29` plugins and validate them in PowerSchool with the old `cdol_health_log_pqs` plugin disabled.
 - After health-log reads, staff dropdowns, and schema API writes pass that validation, uninstall and archive the separately maintained `cdol_health_log_pqs` repository and plugin.
 
 ## Open design questions

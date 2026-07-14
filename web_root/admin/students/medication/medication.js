@@ -185,6 +185,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm.isEditMode = false
 		vm.removalMedication = null
 		vm.drawerMode = 'edit'
+		vm.transactionOpenedFromEdit = false
 		vm.sourceTransaction = null
 		vm.transactionRecord = {}
 		vm.transactionTypeLabel = transactionType => {
@@ -322,6 +323,19 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			}
 		}
 
+		const drawerTitleForMode = mode => {
+			if (mode === 'remove') return 'Remove Inventory'
+			if (mode === 'reverse') return 'Reverse Inventory Transaction'
+			return vm.isEditMode ? 'Edit Inventory' : 'Add Inventory'
+		}
+
+		const updateDrawerTitle = mode => {
+			const formElement = document.getElementById('med-inv-form')
+			const drawerElement = formElement && formElement.closest ? formElement.closest('.ui-dialog') : null
+			const titleElement = drawerElement ? drawerElement.querySelector('.ui-dialog-title') : null
+			if (titleElement) titleElement.textContent = drawerTitleForMode(mode)
+		}
+
 		const buildFifoAllocations = quantity => {
 			let quantityToAllocate = Number(quantity)
 			const allocations = []
@@ -410,10 +424,12 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		vm.enterRemovalMode = () => {
 			loadingDialog()
+			vm.transactionOpenedFromEdit = true
 			vm.drawerMode = 'remove'
 			vm.sourceTransaction = null
 			resetTransactionRecord()
 			$timeout(() => {
+				updateDrawerTitle(vm.drawerMode)
 				vm.checkReqFields()
 				closeLoading()
 			})
@@ -421,11 +437,13 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		vm.enterReversalMode = transaction => {
 			loadingDialog()
+			vm.transactionOpenedFromEdit = true
 			vm.drawerMode = 'reverse'
 			vm.sourceTransaction = transaction
 			resetTransactionRecord()
 			vm.transactionRecord.quantity = Math.abs(Number(transaction.quantity_change) || 0)
 			$timeout(() => {
+				updateDrawerTitle(vm.drawerMode)
 				vm.checkReqFields()
 				closeLoading()
 			})
@@ -433,8 +451,10 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		vm.returnToEditMode = () => {
 			vm.drawerMode = 'edit'
+			vm.transactionOpenedFromEdit = false
 			vm.sourceTransaction = null
 			resetTransactionRecord()
+			updateDrawerTitle(vm.drawerMode)
 			vm.checkReqFields()
 		}
 
@@ -472,6 +492,11 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 
 		const cancelDrawer = closeDrawer => {
+			if (vm.drawerMode !== 'edit' && vm.transactionOpenedFromEdit) {
+				$timeout(() => vm.returnToEditMode())
+				return
+			}
+
 			loadingDialog()
 			vm[recordKey] = {}
 			vm.medicationRecord = vm[recordKey]
@@ -479,6 +504,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			vm.isEditMode = false
 			vm.removalMedication = null
 			vm.drawerMode = 'edit'
+			vm.transactionOpenedFromEdit = false
 			vm.sourceTransaction = null
 			resetInventoryRows()
 			$rootScope.reloadData()
@@ -492,6 +518,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			const requestedMode = drawerData.mode || 'edit'
 			const medicationData = drawerData.medication || drawerData
 			vm.drawerMode = requestedMode
+			vm.transactionOpenedFromEdit = false
 			vm.sourceTransaction = drawerData.transaction || null
 			resetTransactionRecord()
 
@@ -541,6 +568,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 					hydrateInventoryRowsForEdit(vm._lastOpenedInventoryBatches)
 				}
 				ensureFirstInventoryRowDefaults()
+				updateDrawerTitle(vm.drawerMode)
 				vm.checkReqFields()
 				closeLoading()
 			})
@@ -550,7 +578,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			if (!vm.isTransactionValid()) {
 				psAlert({
 					title: 'Invalid Inventory Transaction',
-					message: 'Enter a valid quantity that does not exceed the available inventory and complete the date, time, staff member, and notes.'
+					message: 'Enter a valid quantity that does not exceed the available inventory and complete the date, staff member, and notes.'
 				})
 				return
 			}
@@ -884,7 +912,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			if (!vm.isValid()) {
 				psAlert({
 					title: 'Invalid Inventory Transaction',
-					message: 'Enter a valid quantity that does not exceed the available inventory and complete the date, time, staff member, and notes.'
+					message: 'Enter a valid quantity that does not exceed the available inventory and complete the date, staff member, and notes.'
 				})
 				return
 			}

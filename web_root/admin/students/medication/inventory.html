@@ -113,7 +113,7 @@
                     <span>
                         <!--<strong>DOB:</strong>   ~(dob) <strong>Age:</strong>   ~(age)-->
                     </span>
-                    <button id="add-btn" type="button" pss-dialog-drawer width="850"
+                    <button id="add-btn" type="button" pss-dialog-drawer width="900"
                         drawer-title="Add {{vm.appData.contextTitle}}" data-data="{
                     studentsdcid: '~(rn)',
                     id: null
@@ -180,10 +180,10 @@
                             <td class="center">{{medication.notes}}</td>
                             <td class="actions center">
                                 <button type="button" id="mod-btn-{{medication.medication_id}}" pss-dialog-drawer
-                                    width="1050" edit-button-icon="true" drawer-title="Edit {{vm.appData.contextTitle}}"
+                                    width="900" edit-button-icon="true" drawer-title="Edit {{vm.appData.contextTitle}}"
                                     template-url="editInventory.html" data-data="medication"></button>
                                 <button type="button" id="remove-inventory-btn-{{medication.medication_id}}"
-                                    pss-dialog-drawer width="1050" drawer-title="Remove Inventory"
+                                    pss-dialog-drawer width="900" drawer-title="Remove Inventory"
                                     data-data="{ mode: 'remove', medication: medication }"
                                     template-url="editInventory.html"
                                     ng-click="vm.beginTransactionDrawer()"

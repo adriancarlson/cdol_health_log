@@ -51,7 +51,7 @@ Append-only standalone inventory transaction/allocation table.
 | `transaction_type` | String(50) | Controlled removal or reversal type |
 | `quantity_change` | Double | Signed change applied to the lot |
 | `transaction_date` | Date | Date the event occurred |
-| `transaction_time` | Integer | PowerSchool-style seconds since midnight |
+| `transaction_time` | Integer | System-captured PowerSchool-style seconds since midnight used for audit ordering; not entered on the removal form |
 | `users_dcid` | Integer | Staff member who processed the event |
 | `notes` | String(4000) | Required audit explanation |
 | `reversal_of_event_key` | String(36) | Event reversed by this compensating entry |

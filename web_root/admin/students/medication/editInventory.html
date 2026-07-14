@@ -1,5 +1,6 @@
 <form id="med-inv-form" name="inventoryForm">
-    <div id="med-inv-wrap" class="fluid-form" ng-controller="editController as vm" ng-cloak>
+    <div id="med-inv-wrap" ng-class="{'fluid-form': vm.drawerMode === 'edit'}"
+        ng-controller="editController as vm" ng-cloak>
         <style id="med-inv-styles">
             .fluid-form>div[id$="-row"] {
                 margin: 0 0 10px 0;
@@ -46,14 +47,20 @@
                 color: #555;
             }
 
-            #inv-grid {
+            .inventory-form-grid {
                 margin: 0 !important;
-                width: 100%;
+                width: 100% !important;
+                max-width: 100%;
                 box-sizing: border-box;
             }
 
-            #inv-table-section {
-                padding-right: 0 !important;
+            .inventory-form-table-section {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100%;
+                margin: 0 !important;
+                padding: 0 8px 8px !important;
+                box-sizing: border-box;
             }
 
             .dose-unit {
@@ -62,9 +69,85 @@
                 margin-left: -1px;
                 border-radius: 0 4px 4px 0;
             }
+
+            #inventory-transaction-mode {
+                display: block !important;
+                width: 100%;
+                margin-top: -6px;
+                box-sizing: border-box;
+            }
+
+            #transactions-label {
+                display: block;
+                margin: 0 0 4px;
+            }
+
+            #inventory-transactions-table {
+                table-layout: fixed;
+            }
+
+            #inventory-transactions-table td {
+                white-space: normal;
+                overflow-wrap: anywhere;
+            }
+
+            .transaction-fluid-form {
+                width: 100%;
+                margin-top: 0 !important;
+                padding-top: 0 !important;
+            }
+
+            #med-inv-wrap label {
+                margin-left: 0 !important;
+                padding-left: 0 !important;
+            }
+
+            #transaction-medication-row>div:first-child>label {
+                margin-left: 6px !important;
+            }
+
+            #transaction-medication-row {
+                display: grid !important;
+                grid-template-columns: 150px 90px 150px;
+                column-gap: 8px;
+                width: 100% !important;
+                margin-top: 0 !important;
+                padding-top: 8px !important;
+                padding-bottom: 8px !important;
+                box-sizing: border-box;
+            }
+
+            #transaction-medication-row>div {
+                width: auto !important;
+                min-width: 0;
+                margin: 0 !important;
+            }
+
+            .transaction-summary-center {
+                text-align: center;
+            }
+
+            .transaction-summary-value {
+                display: block;
+                margin-top: 4px;
+                line-height: 1.4;
+            }
+
+            .transaction-medication-value {
+                margin-left: 6px;
+            }
+
+            .transaction-fluid-form textarea {
+                width: 100%;
+                max-width: 520px;
+                box-sizing: border-box;
+            }
+
+            .transaction-explanation {
+                margin: 8px 10px;
+            }
         </style>
-        <div ng-if="vm.drawerMode === 'edit'">
-        <div id="med-date-row">
+        <div id="med-date-row" ng-show="vm.drawerMode === 'edit'">
             <div id="med-name-group">
                 <label id="med-name-label">Medication Name <span id="med-name-req" class="req"><em
                             id="med-name-req-mark">*</em></span></label>
@@ -78,7 +161,7 @@
                     ng-change="vm.checkReqFields()" data-auto-translate="true">
             </div>
         </div>
-        <div id="dose-units-row">
+        <div id="dose-units-row" ng-show="vm.drawerMode === 'edit'">
             <div id="dose-group">
                 <label id="dose-label">Dosage <span id="dose-req" class="req"><em
                             id="dose-req-mark">*</em></span></label>
@@ -103,7 +186,7 @@
                 </select>
             </div>
         </div>
-        <div id="route-freq-row">
+        <div id="route-freq-row" ng-show="vm.drawerMode === 'edit'">
             <div id="route-group">
                 <label id="route-label">Route <span id="route-req" class="req"><em id="route-req-mark">*</em></span>
                 </label>
@@ -121,11 +204,10 @@
                 </select>
             </div>
         </div>
-        <div id="inv-table-section">
+        <div id="inv-table-section" class="inventory-form-table-section" ng-show="vm.drawerMode === 'edit'">
             <label id="start-inv-label">{{vm.isEditMode ? 'Inventory' : 'Starting Inventory'}}
                 <span id="start-inv-req" class="req"><em id="start-inv-req-mark">*</em></span> </label>
-            <p class="inv-history-note" ng-if="vm.isEditMode">Existing count-in records are read-only. Use Add Additional Inventory for a refill or Remove Inventory for medication leaving school custody.</p>
-            <table id="inv-grid" class="grid">
+            <table id="inv-grid" class="grid inventory-form-grid">
                 <thead id="inv-grid-head">
                     <tr id="inv-grid-head-row">
                         <th id="inv-qty-head">Quantity</th>
@@ -155,21 +237,25 @@
                             {{vm.medicationRecord.inventory_unit | pluralize}}
                         </td>
                         <td id="inv-date-cell-0" class="center">
-                            <span class="inv-readonly" ng-if="vm.inventoryRecord[0]._isExisting">{{vm.inventoryRecord[0].added_date}}</span>
+                            <span class="inv-readonly"
+                                ng-if="vm.inventoryRecord[0]._isExisting">{{vm.inventoryRecord[0].added_date}}</span>
                             <input ng-if="!vm.inventoryRecord[0]._isExisting" id="inv-date-input-0" type="text"
                                 ng-init="vm.inventoryRecord[0].added_date = vm.inventoryRecord[0].added_date || $root.appData.curDate"
                                 ng-model="vm.inventoryRecord[0].added_date" pss-date-widget
                                 ng-change="vm.checkReqFields()" data-auto-translate="true">
                         </td>
                         <td id="inv-users-cell-0" class="center">
-                            <span class="inv-readonly" ng-if="vm.inventoryRecord[0]._isExisting">{{vm.inventoryRecord[0].added_by_name || vm.inventoryRecord[0].users_dcid}}</span>
+                            <span class="inv-readonly"
+                                ng-if="vm.inventoryRecord[0]._isExisting">{{vm.inventoryRecord[0].added_by_name ||
+                                vm.inventoryRecord[0].users_dcid}}</span>
                             <select ng-if="!vm.inventoryRecord[0]._isExisting" id="users-dcid-0"
                                 ng-options="staff.dcid as (staff.first_name + ' ' + staff.last_name) for staff in $root.appData.staffList"
                                 ng-model="vm.inventoryRecord[0].users_dcid" ng-change="vm.checkReqFields()">
                             </select>
                         </td>
                         <td id="inv-notes-cell-0" class="center">
-                            <span class="inv-readonly" ng-if="vm.inventoryRecord[0]._isExisting">{{vm.inventoryRecord[0].notes || '-'}}</span>
+                            <span class="inv-readonly"
+                                ng-if="vm.inventoryRecord[0]._isExisting">{{vm.inventoryRecord[0].notes || '-'}}</span>
                             <textarea ng-if="!vm.inventoryRecord[0]._isExisting" id="inv-notes-text-0" spellcheck="true"
                                 wrap="absolute" rows="3" cols="30" ng-model="vm.inventoryRecord[0].notes"></textarea>
                         </td>
@@ -178,13 +264,13 @@
                         <td id="inv-qty-cell-{{$index + 1}}" class="center">
                             <span ng-if="!vm.isEditMode">
                                 <input id="inv-qty-input-{{$index + 1}}" class="inv-input" type="text"
-                                    ng-model="inv.quantity_added" size="10" required
-                                    ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
+                                    ng-model="inv.quantity_added" size="10" required ng-change="vm.checkReqFields()"
+                                    aria-label="Dosage amount" inputmode="decimal">
                             </span>
                             <span ng-if="vm.isEditMode && !inv._isExisting">
                                 <input id="inv-qty-input-edit-new-{{$index + 1}}" class="inv-input" type="text"
-                                    ng-model="inv.quantity_added" size="10" required
-                                    ng-change="vm.checkReqFields()" aria-label="Quantity added" inputmode="decimal">
+                                    ng-model="inv.quantity_added" size="10" required ng-change="vm.checkReqFields()"
+                                    aria-label="Quantity added" inputmode="decimal">
                             </span>
                             <span class="inv-qty-edit-wrap" ng-if="vm.isEditMode && inv._isExisting">
                                 <span class="inv-readonly">{{inv.quantity_remaining}}</span>
@@ -195,13 +281,14 @@
                         </td>
                         <td id="inv-date-cell-{{$index + 1}}" class="center">
                             <span class="inv-readonly" ng-if="inv._isExisting">{{inv.added_date}}</span>
-                            <input ng-if="!inv._isExisting" id="inv-date-input-{{$index + 1}}"
-                                type="text" ng-init="inv.added_date = inv.added_date || $root.appData.curDate"
+                            <input ng-if="!inv._isExisting" id="inv-date-input-{{$index + 1}}" type="text"
+                                ng-init="inv.added_date = inv.added_date || $root.appData.curDate"
                                 ng-model="inv.added_date" pss-date-widget ng-change="vm.checkReqFields()"
                                 data-auto-translate="true">
                         </td>
                         <td id="inv-users-cell-{{$index + 1}}" class="center">
-                            <span class="inv-readonly" ng-if="inv._isExisting">{{inv.added_by_name || inv.users_dcid}}</span>
+                            <span class="inv-readonly" ng-if="inv._isExisting">{{inv.added_by_name ||
+                                inv.users_dcid}}</span>
                             <select ng-if="!inv._isExisting" id="users-dcid-{{$index + 1}}"
                                 ng-options="staff.dcid as (staff.first_name + ' ' + staff.last_name) for staff in $root.appData.staffList"
                                 ng-model="inv.users_dcid" ng-change="vm.checkReqFields()">
@@ -209,9 +296,8 @@
                         </td>
                         <td id="inv-notes-cell-{{$index + 1}}" class="center">
                             <span class="inv-readonly" ng-if="inv._isExisting">{{inv.notes || '-'}}</span>
-                            <textarea ng-if="!inv._isExisting"
-                                id="inv-notes-text-{{$index + 1}}" spellcheck="true" wrap="absolute" rows="3" cols="30"
-                                ng-model="inv.notes"></textarea>
+                            <textarea ng-if="!inv._isExisting" id="inv-notes-text-{{$index + 1}}" spellcheck="true"
+                                wrap="absolute" rows="3" cols="30" ng-model="inv.notes"></textarea>
                         </td>
                     </tr>
                     <tr id="inv-add-row"
@@ -221,134 +307,140 @@
                                 Inventory</button>
                             <button id="inv-remove-btn" type="button" ng-if="vm.hasExistingInventoryLines()"
                                 ng-click="vm.enterRemovalMode()"
-                                ng-disabled="vm.removalMedication.inventory_total_remaining <= 0">Remove Inventory</button>
+                                ng-disabled="vm.removalMedication.inventory_total_remaining <= 0">Remove
+                                Inventory</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
+            <div class="feedback-info" ng-if="vm.isEditMode">Existing count-in records are read-only. Use Add
+                Additional Inventory for a refill or Remove Inventory for medication leaving school custody.</div>
         </div>
-        <div id="notes-row">
+        <div id="notes-row" ng-show="vm.drawerMode === 'edit'">
             <div id="notes-group">
                 <label id="notes-label">Medication Notes:</label>
                 <textarea id="notes-text" spellcheck="true" wrap="absolute" rows="5" cols="60"
                     ng-model="vm.medicationRecord.notes"></textarea>
             </div>
         </div>
-        <div id="inventory-transactions-section" ng-if="vm.isEditMode">
-            <h2>Inventory Transactions</h2>
-            <table id="inventory-transactions-table" class="grid">
+        <div id="inventory-transactions-section" class="inventory-form-table-section" ng-if="vm.isEditMode"
+            ng-show="vm.drawerMode === 'edit'">
+            <label id="transactions-label">Transactions</label>
+            <table id="inventory-transactions-table" class="grid inventory-form-grid">
+                <colgroup>
+                    <col style="width: 20%;">
+                    <col style="width: 13%;">
+                    <col style="width: 20%;">
+                    <col style="width: 20%;">
+                    <col style="width: 27%;">
+                </colgroup>
                 <thead>
                     <tr>
                         <th>Type</th>
                         <th>Quantity</th>
-                        <th>Date and Time</th>
+                        <th>Date</th>
                         <th>Processed By</th>
                         <th>Notes</th>
-                        <th>Status</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-if="!vm.removalMedication.transaction_groups || !vm.removalMedication.transaction_groups.length">
-                        <td colspan="7" class="center">No inventory transactions</td>
+                    <tr
+                        ng-if="!vm.removalMedication.transaction_groups || !vm.removalMedication.transaction_groups.length">
+                        <td colspan="5" class="center">No transactions</td>
                     </tr>
                     <tr ng-repeat="transaction in vm.removalMedication.transaction_groups">
-                        <td>{{vm.transactionTypeLabel(transaction.transaction_type)}}</td>
-                        <td class="center" ng-class="transaction.quantity_change < 0 ? 'inventory-change-negative' : 'inventory-change-positive'">
-                            {{transaction.quantity_change > 0 ? '+' : ''}}{{transaction.quantity_change}}
-                            {{vm.removalMedication.inventory_unit | pluralize}}
-                        </td>
-                        <td>{{transaction.transaction_date | date}} {{transaction.transaction_time | inventoryTime}}</td>
-                        <td>{{transaction.user_name || transaction.users_dcid}}</td>
-                        <td>{{transaction.notes}}</td>
-                        <td>{{transaction.is_reversed ? 'Reversed' : 'Active'}}</td>
-                        <td class="center">
+                        <td>
+                            <div>{{vm.transactionTypeLabel(transaction.transaction_type)}}</div>
+                            <div ng-if="transaction.is_reversed"><em>Reversed</em></div>
                             <button type="button" ng-if="transaction.can_reverse"
                                 ng-click="vm.enterReversalMode(transaction)">Reverse</button>
                         </td>
+                        <td class="center"
+                            ng-class="transaction.quantity_change < 0 ? 'inventory-change-negative' : 'inventory-change-positive'">
+                            {{transaction.quantity_change > 0 ? '+' : ''}}{{transaction.quantity_change}}
+                            {{vm.removalMedication.inventory_unit | pluralize}}
+                        </td>
+                        <td>{{transaction.transaction_date | date}}</td>
+                        <td>{{transaction.user_name || transaction.users_dcid}}</td>
+                        <td>{{transaction.notes}}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        </div>
         <div id="inventory-transaction-mode" ng-if="vm.drawerMode !== 'edit'">
-            <h2>{{vm.drawerMode === 'reverse' ? 'Reverse Inventory Transaction' : 'Remove Inventory'}}</h2>
-            <button type="button" ng-click="vm.returnToEditMode()">Back to Edit Inventory</button>
-
-            <div>
-                <div>
-                    <label>Medication</label>
-                    <span>{{vm.removalMedication.medication_name}} {{vm.removalMedication.dose_amount}}
-                        {{vm.removalMedication.dose_unit}}</span>
+            <div class="fluid-form transaction-fluid-form">
+                <div id="transaction-medication-row">
+                    <div>
+                        <label>Medication</label>
+                        <span class="transaction-summary-value transaction-medication-value">{{vm.removalMedication.medication_name}}</span>
+                    </div>
+                    <div class="transaction-summary-center">
+                        <label>Dosage</label>
+                        <span class="transaction-summary-value">{{vm.removalMedication.dose_amount}}
+                            {{vm.removalMedication.dose_unit}}</span>
+                    </div>
+                    <div class="transaction-summary-center">
+                        <label>Available Inventory</label>
+                        <span class="transaction-summary-value">{{vm.removalMedication.inventory_total_remaining}}
+                            {{vm.removalMedication.inventory_unit | pluralize}}</span>
+                    </div>
                 </div>
-                <div>
-                    <label>Available Inventory</label>
-                    <span>{{vm.removalMedication.inventory_total_remaining}}
-                        {{vm.removalMedication.inventory_unit | pluralize}}</span>
+
+                <div id="transaction-removal-row" ng-if="vm.drawerMode === 'remove'">
+                    <div>
+                        <label>Quantity to Remove <span class="req"><em>*</em></span></label>
+                        <input type="text" class="inv-input" size="10" inputmode="decimal"
+                            ng-model="vm.transactionRecord.quantity" ng-change="vm.checkReqFields()"
+                            aria-label="Quantity to Remove">
+                        {{vm.removalMedication.inventory_unit | pluralize}}
+                    </div>
+                    <div>
+                        <label>Removal Type <span class="req"><em>*</em></span></label>
+                        <select ng-options="key as value for (key, value) in $root.appData.inventoryTransactionTypeList"
+                            ng-model="vm.transactionRecord.transaction_type" ng-change="vm.checkReqFields()">
+                            <option value="">Select a Removal Type</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="transaction-reversal-row" ng-if="vm.drawerMode === 'reverse'">
+                    <div>
+                        <label>Transaction Being Reversed</label>
+                        <span>{{vm.transactionTypeLabel(vm.sourceTransaction.transaction_type)}} —
+                            {{vm.sourceTransaction.quantity_change}} {{vm.removalMedication.inventory_unit |
+                            pluralize}}</span>
+                    </div>
+                </div>
+
+                <div id="transaction-details-row">
+                    <div>
+                        <label>Date <span class="req"><em>*</em></span></label>
+                        <input type="text" ng-model="vm.transactionRecord.transaction_date" pss-date-widget
+                            ng-change="vm.checkReqFields()" data-auto-translate="true">
+                    </div>
+                    <div>
+                        <label>Processed By <span class="req"><em>*</em></span></label>
+                        <select
+                            ng-options="staff.dcid as (staff.first_name + ' ' + staff.last_name) for staff in $root.appData.staffList"
+                            ng-model="vm.transactionRecord.users_dcid" ng-change="vm.checkReqFields()">
+                        </select>
+                    </div>
+                </div>
+
+                <div id="transaction-notes-row">
+                    <div>
+                        <label>{{vm.drawerMode === 'reverse' ? 'Reversal Reason' : 'Notes'}}
+                            <span class="req"><em>*</em></span></label>
+                        <textarea spellcheck="true" wrap="absolute" rows="4" cols="60"
+                            ng-model="vm.transactionRecord.notes" ng-change="vm.checkReqFields()"></textarea>
+                    </div>
                 </div>
             </div>
 
-            <div ng-if="vm.drawerMode === 'remove'">
-                <div>
-                    <label>Removal Type <span class="req"><em>*</em></span></label>
-                    <select ng-options="key as value for (key, value) in $root.appData.inventoryTransactionTypeList"
-                        ng-model="vm.transactionRecord.transaction_type" ng-change="vm.checkReqFields()">
-                        <option value="">Select a Removal Type</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Quantity Removed <span class="req"><em>*</em></span></label>
-                    <input type="text" inputmode="decimal" ng-model="vm.transactionRecord.quantity"
-                        ng-change="vm.checkReqFields()">
-                    {{vm.removalMedication.inventory_unit | pluralize}}
-                </div>
-            </div>
-
-            <div ng-if="vm.drawerMode === 'reverse'">
-                <label>Transaction Being Reversed</label>
-                <span>{{vm.transactionTypeLabel(vm.sourceTransaction.transaction_type)}} —
-                    {{vm.sourceTransaction.quantity_change}} {{vm.removalMedication.inventory_unit | pluralize}}</span>
-            </div>
-
-            <div>
-                <div>
-                    <label>Date <span class="req"><em>*</em></span></label>
-                    <input type="text" ng-model="vm.transactionRecord.transaction_date" pss-date-widget
-                        ng-change="vm.checkReqFields()" data-auto-translate="true">
-                </div>
-                <div>
-                    <label>Time <span class="req"><em>*</em></span></label>
-                    <input type="text" class="timeEntry" size="8" ng-model="vm.transactionRecord.transaction_time"
-                        ng-change="vm.checkReqFields()">
-                </div>
-            </div>
-
-            <div>
-                <label>Processed By <span class="req"><em>*</em></span></label>
-                <select ng-options="staff.dcid as (staff.first_name + ' ' + staff.last_name) for staff in $root.appData.staffList"
-                    ng-model="vm.transactionRecord.users_dcid" ng-change="vm.checkReqFields()">
-                </select>
-            </div>
-
-            <div>
-                <label>{{vm.drawerMode === 'reverse' ? 'Reversal Reason' : 'Notes'}}
-                    <span class="req"><em>*</em></span></label>
-                <textarea spellcheck="true" wrap="absolute" rows="4" cols="60"
-                    ng-model="vm.transactionRecord.notes" ng-change="vm.checkReqFields()"></textarea>
-            </div>
-
-            <p ng-if="vm.drawerMode === 'remove'">The quantity will be removed automatically from the oldest inventory lot with medication remaining.</p>
-            <p ng-if="vm.drawerMode === 'reverse'">Reversing creates a new audit record. The original transaction will remain in history.</p>
-        </div>
-        <div id="debug-box" class="box-round" ng-if="$root.appData.districtUser && $root.appData.isTestServer">
-            <strong id="debug-label">vm.medicationRecord:</strong>
-            <br id="debug-break-1">
-            <pre id="debug-json-1">{{vm.medicationRecord | json}}</pre>
-            <strong id="debug-label">vm.inventoryRecord:
-                <pre id="debug-json-2">{{vm.inventoryRecord | json}}</pre>
-            </strong>
-            <br id="debug-break-2">
-
+            <div class="feedback-info" ng-if="vm.drawerMode === 'remove'">The quantity will be removed automatically
+                from the oldest inventory lot with medication remaining.</div>
+            <p class="transaction-explanation" ng-if="vm.drawerMode === 'reverse'">Reversing creates a new audit record.
+                The original transaction will remain in history.</p>
         </div>
     </div>
 </form>
