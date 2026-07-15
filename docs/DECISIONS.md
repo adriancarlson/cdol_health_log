@@ -37,6 +37,10 @@
 33. The main inventory page uses `Add Medication` for creating a medication definition and its starting inventory; `Add Inventory` remains the action for adding inventory to an existing medication.
 34. A student cannot have duplicate medication definitions with the same normalized medication name, numeric dosage amount, and dose unit. A different dosage amount or dose unit is allowed. The form disables Save and directs the nurse to add inventory to the existing medication.
 35. Medication names are trimmed, repeated internal spaces are collapsed, and the first character is capitalized before saving. The remainder of the entered capitalization is preserved; full title case is not used.
+36. Remaining/original inventory quantities display spaces around the slash, such as `2.75 / 5 Pills`, to keep decimal quantities readable.
+37. A given medication administration is stored as one `ADMINISTRATION` row in `u_student_med_inv_txn`. The row holds administration snapshots and its negative quantity is the inventory deduction, avoiding a two-record partial-save risk.
+38. The initial Administration page is student-specific and contains one Administer Medication button followed by one history table with no section heading. Inventory is not displayed on the page; the drawer's medication selector includes only medications whose calculated available inventory is greater than zero.
+39. Administration history can contain mixed medications. When more than one medication is present, a medication-and-dosage filter is available above the table.
 
 ## Superseded or rejected approaches
 

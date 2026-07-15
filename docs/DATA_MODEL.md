@@ -51,9 +51,18 @@ Append-only standalone inventory transaction table. Each real-world removal crea
 | `transaction_type` | String(50) | Controlled removal type |
 | `quantity_change` | Double | Signed change applied to the medication's total inventory |
 | `event_date` | Date | Date the event occurred |
+| `event_time` | Integer | Administration time in PowerSchool seconds-from-midnight format; blank for removal-only events |
 | `users_dcid` | Integer | Staff member who processed the event |
 | `notes` | String(4000) | Required audit explanation |
+| `medication_name` | String(250) | Medication-name snapshot for an administration |
+| `dose_amount` | Double | Prescribed-dose snapshot for an administration |
+| `dose_unit` | String(250) | Prescribed-dose-unit snapshot for an administration |
+| `inventory_unit` | String(250) | Inventory-unit snapshot for an administration |
+| `route` | String(250) | Route snapshot for an administration |
+| `frequency` | String(250) | Frequency snapshot for an administration |
 | `reversal_of_transaction_id` | Integer | Reserved for historical data and a future correction workflow; not used by the nurse-facing removal form |
+
+Removal rows use the common transaction fields. A given dose uses `transaction_type = ADMINISTRATION`, stores the administration details in the snapshot fields, and records the administered inventory quantity as a negative `quantity_change`. One row therefore serves as both the administration audit record and the inventory deduction, avoiding a partial two-record save.
 
 ## Required relationship behavior
 
@@ -65,30 +74,10 @@ Append-only standalone inventory transaction table. Each real-world removal crea
 - Each inventory removal creates one transaction row rather than updating an original lot.
 - Saved removal transactions remain append-only. The nurse-facing workflow does not currently provide correction or reversal controls.
 
-## Missing schema
+## Initial administration model
 
-The repository schema does not yet define a medication administration table.
+The initial implementation records only doses that were actually administered. The administration page filters the shared ledger to `ADMINISTRATION` rows and shows those rows as administration history. Student and school-year context are derived through the linked medication definition.
 
-A production design will likely need one or both of the following concepts:
+The administration form collects the actual quantity used in the medication's inventory unit and shows the prescribed dose amount and unit in parentheses for reference. That entered quantity becomes the transaction's negative `quantity_change`.
 
-### Administration record
-
-Possible fields to evaluate:
-
-- Student reference
-- Medication reference
-- Expected date/time
-- Administered date/time
-- Status
-- Dose amount
-- Dose unit
-- Route
-- Administered-by user
-- Required missed-dose reason
-- Notes
-- Created/updated audit metadata
-- Correction, reversal, or void metadata
-
-Medication administration will later create one row in `u_student_med_inv_txn`; the administration-link field and administration schema must be approved together.
-
-The administration form will collect the actual quantity used in the medication's inventory unit and show the prescribed dose amount and unit in parentheses for reference. That entered quantity becomes the transaction's negative `quantity_change`.
+Expected schedules, missed-dose statuses and reasons, and correction metadata remain later phases and may require additional schema after those workflows are approved.

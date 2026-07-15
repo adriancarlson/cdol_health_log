@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Medication Administration</title>
+        ~[wc:commonscripts]
+        <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+        <link href="/images/css/cdol.css" rel="stylesheet" media="screen">
+        <link href="/images/css/print.css" rel="stylesheet" media="print">
+        <style>
+            .administration-quantity {
+                white-space: nowrap;
+            }
+
+            .administration-toolbar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .administration-filter label {
+                display: inline;
+                padding-left: 0;
+                margin-right: 4px;
+            }
+
+            #administer-medication-btn {
+                margin-left: auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        ~[wc:admin_header_frame_css]
+        ~[wc:admin_navigation_frame_css]
+        ~[wc:title_student_begin_css]~(first_name)'s Medication Administration~[wc:title_student_end_css]
+
+        <div data-require-path="./medication.js" data-module-name="medicationModule"
+            ng-controller="medicationController as vm" data-bootstrap-local="true" ng-cur-student-dcid="~(rn)"
+            ng-cur-student-name="~(studentname)" ng-cur-user-dcid="~[x:users_dcid]" ng-cur-school-id="~(curschoolid)"
+            ng-cur-year-id="~(curyearid)" ng-cur-date="~[date]" ng-cur-time="~[time]"
+            ng-server-name="~[x:WEB_GetServerInfo;name=HostName]" ng-cur-user-security-roles="~[x:usersroles]"
+            ng-context="administration" ng-cloak>
+
+            <div class="button-row administration-toolbar">
+                <div class="administration-filter" ng-if="vm.administrationMedicationOptions.length > 1">
+                    <label for="administration-medication-filter">Filter Medication</label>
+                    <select id="administration-medication-filter" ng-model="vm.historyMedicationId"
+                        ng-options="option.medication_id as option.label for option in vm.administrationMedicationOptions">
+                        <option value="">All Medications</option>
+                    </select>
+                </div>
+                <button id="administer-medication-btn" type="button" pss-dialog-drawer width="900"
+                    drawer-title="Administer Medication" data-data="{ id: null }"
+                    template-url="administerMedication.html" ng-disabled="!vm.availableMedicationList.length">
+                    Administer Medication
+                </button>
+            </div>
+
+            <div id="administration-history-grid" data-pss-grid-widget
+                data-data="vm.administrationList" data-filtered-data="vm.filteredAdministrationList"
+                data-client-side-pagination="false" data-filter-constraint="no-filters">
+                <table class="grid">
+                    <thead>
+                        <tr>
+                            <th style="width: 150px;" data-pss-sort-fields="event_date,event_time"
+                                data-primary-sort="descending">Date/Time</th>
+                            <th data-pss-sort-fields="medication_name">Medication</th>
+                            <th data-pss-sort-fields="dose_amount">Prescribed Dosage</th>
+                            <th data-pss-sort-fields="quantity_administered">Quantity Administered</th>
+                            <th data-pss-sort-fields="route">Route</th>
+                            <th data-pss-sort-fields="user_name">Administered By</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-show="!(vm.filteredAdministrationList | filter:vm.filterAdministrationByMedication).length">
+                            <td colspan="7">No matching medication administrations have been recorded for this student.</td>
+                        </tr>
+                        <tr ng-repeat="administration in (vm.filteredAdministrationList | filter:vm.filterAdministrationByMedication)"
+                            data-id="{{administration.transaction_id}}">
+                            <td class="center">{{administration.event_date | date:'MM/dd/yyyy'}}
+                                {{administration.event_time | medTime12}}</td>
+                            <td>{{administration.medication_name}}</td>
+                            <td class="center">{{administration.dose_amount}} {{administration.dose_unit}}</td>
+                            <td class="center administration-quantity">{{administration.quantity_administered}}
+                                {{administration.inventory_unit | pluralize}}</td>
+                            <td class="center">{{administration.route}}</td>
+                            <td class="center">{{administration.user_name}}</td>
+                            <td>{{administration.notes}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="box-round" ng-if="$root.appData.districtUser && $root.appData.isTestServer">
+                <strong>appData:</strong>
+                <pre>{{$root.appData | json}}</pre>
+            </div>
+        </div>
+
+        ~[wc:admin_footer_frame_css]
+    </body>
+
+</html>

@@ -207,7 +207,7 @@
                                                     <div class="inventory-row-content">
                                                         <span class="inventory-status-text"
                                                             ng-if="medication.inventory_batches.length === 1 && medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
-                                                        <span class="inventory-quantity-text">{{batch.quantity_remaining}}/{{batch.quantity_added}}
+                                                        <span class="inventory-quantity-text">{{batch.quantity_remaining}} / {{batch.quantity_added}}
                                                             {{medication.inventory_unit | pluralize}}</span>
                                                     </div>
                                                 </td>
@@ -219,7 +219,7 @@
                                                         <span class="inventory-status-text"
                                                             ng-if="medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
                                                         <span class="inventory-quantity-text"><strong>Total:</strong>
-                                                            {{medication.inventory_total_remaining}}/{{medication.inventory_total_initial}}
+                                                            {{medication.inventory_total_remaining}} / {{medication.inventory_total_initial}}
                                                             {{medication.inventory_unit | pluralize}}</span>
                                                     </div>
                                                 </td>

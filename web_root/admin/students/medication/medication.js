@@ -63,8 +63,17 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		$rootScope.appData = vm.appData
 		$rootScope.existingMedicationList = []
+		vm.medicationList = []
+		vm.availableMedicationList = []
+		vm.administrationList = []
+		vm.administrationMedicationOptions = []
+		vm.historyMedicationId = ''
+		vm.filterAdministrationByMedication = administration => {
+			return !vm.historyMedicationId || String(administration.medication_id) === String(vm.historyMedicationId)
+		}
 		vm.transactionTypeLabel = transactionType => {
 			if (transactionType === 'REVERSAL') return 'Reversal'
+			if (transactionType === 'ADMINISTRATION') return 'Administration'
 			return vm.appData.inventoryTransactionTypeList[transactionType] || transactionType
 		}
 		vm.beginTransactionDrawer = () => loadingDialog()
@@ -158,6 +167,38 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			})
 		}
 
+		const prepareAdministrationHistory = (medications, transactions) => {
+			const medicationById = new Map((medications || []).map(medication => [Number(medication.medication_id), medication]))
+
+			return (transactions || [])
+				.filter(transaction => transaction.transaction_type === 'ADMINISTRATION')
+				.map(transaction => {
+					const medication = medicationById.get(Number(transaction.medication_id)) || {}
+					return Object.assign({}, transaction, {
+						medication_name: transaction.medication_name || medication.medication_name,
+						dose_amount: transaction.dose_amount || medication.dose_amount,
+						dose_unit: transaction.dose_unit || medication.dose_unit,
+						inventory_unit: transaction.inventory_unit || medication.inventory_unit,
+						route: transaction.route || medication.route,
+						quantity_administered: Math.abs(Number(transaction.quantity_change) || 0)
+					})
+			})
+		}
+
+		const prepareAdministrationMedicationOptions = administrations => {
+			const optionsByMedication = new Map()
+			const administrationRows = administrations || []
+			administrationRows.forEach(administration => {
+				const medicationId = Number(administration.medication_id)
+				if (!Number.isFinite(medicationId) || optionsByMedication.has(medicationId)) return
+				optionsByMedication.set(medicationId, {
+					medication_id: medicationId,
+					label: `${administration.medication_name} - ${administration.dose_amount} ${administration.dose_unit}`
+				})
+			})
+			return Array.from(optionsByMedication.values()).sort((left, right) => left.label.localeCompare(right.label))
+		}
+
 		$rootScope.loadData = () => {
 			loadingDialog()
 			const paramValues = {
@@ -172,8 +213,9 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				$rootScope.appData.staffList = staffList
 			})
 
+			const medicationDataName = $rootScope.appData.context === 'administration' ? 'inventory' : $rootScope.appData.context
 			const medicationPromise = $http({
-				url: `./data/${$rootScope.appData.context}.json`,
+				url: `./data/${medicationDataName}.json`,
 				method: 'GET',
 				params: paramValues
 			}).then(res => Array.isArray(res?.data) ? psUtils.htmlEntitiesToCharCode(res.data) : [])
@@ -186,7 +228,15 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 			const dataPromise = $q.all([medicationPromise, transactionPromise]).then(results => {
 				const medicationList = prepareMedicationData(results[0], results[1])
-				vm[`${$rootScope.appData.context}List`] = medicationList
+				vm.medicationList = medicationList
+				vm.availableMedicationList = medicationList.filter(medication => Number(medication.inventory_total_remaining) > 0)
+				$rootScope.appData.availableMedicationList = vm.availableMedicationList
+				if ($rootScope.appData.context === 'administration') {
+					vm.administrationList = prepareAdministrationHistory(medicationList, results[1])
+					vm.administrationMedicationOptions = prepareAdministrationMedicationOptions(vm.administrationList)
+				} else {
+					vm[`${$rootScope.appData.context}List`] = medicationList
+				}
 				$rootScope.existingMedicationList = medicationList
 			})
 
@@ -197,6 +247,13 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		$rootScope.reloadData = () => {
 			vm[`${$rootScope.appData.context}List`] = []
+			vm.medicationList = []
+			vm.availableMedicationList = []
+			$rootScope.appData.availableMedicationList = []
+			if ($rootScope.appData.context === 'administration') {
+				vm.administrationList = []
+				vm.administrationMedicationOptions = []
+			}
 			$rootScope.loadData()
 		}
 
@@ -216,6 +273,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm.transactionRecord = {}
 		vm.transactionTypeLabel = transactionType => {
 			if (transactionType === 'REVERSAL') return 'Reversal'
+			if (transactionType === 'ADMINISTRATION') return 'Administration'
 			return $rootScope.appData.inventoryTransactionTypeList[transactionType] || transactionType
 		}
 		const createInventoryRow = () => ({
@@ -739,9 +797,163 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		initalizeDrawer()
 	})
 
+	medicationModule.controller('administrationEditController', function ($scope, $rootScope, psApiService) {
+		const vm = this
+		vm.medication = null
+		vm.administrationRecord = {}
+		vm.saveInProgress = false
+
+		const resetRecord = () => {
+			vm.administrationRecord = {
+				quantity: '',
+				event_date: $rootScope.appData.curDate,
+				event_time: $rootScope.appData.curTime,
+				users_dcid: $rootScope.appData.curUserDcid,
+				notes: ''
+			}
+		}
+
+		const normalizedQuantity = () => {
+			const quantityText = String(vm.administrationRecord.quantity === undefined || vm.administrationRecord.quantity === null ? '' : vm.administrationRecord.quantity).trim()
+			if (!/^(?:\d+\.?\d*|\.\d+)$/.test(quantityText)) return null
+			const quantity = Number(quantityText)
+			return Number.isFinite(quantity) && quantity > 0 ? quantity : null
+		}
+
+		const normalizeTime = value => {
+			const match = String(value || '').trim().toUpperCase().match(/^(0?[1-9]|1[0-2]):([0-5]\d)\s*(AM|PM)$/)
+			if (!match) return ''
+			return `${match[1].padStart(2, '0')}:${match[2]} ${match[3]}`
+		}
+
+		const timeToSeconds = value => {
+			const normalizedTime = normalizeTime(value)
+			if (!normalizedTime) return null
+			const hours = Number(normalizedTime.slice(0, 2)) % 12 + (normalizedTime.endsWith('PM') ? 12 : 0)
+			const minutes = Number(normalizedTime.slice(3, 5))
+			return hours * 3600 + minutes * 60
+		}
+
+		vm.quantityExceedsAvailable = () => {
+			const quantity = normalizedQuantity()
+			return quantity !== null && quantity > Number(vm.medication && vm.medication.inventory_total_remaining)
+		}
+
+		vm.isFormValid = () => {
+			const record = vm.administrationRecord || {}
+			const quantity = normalizedQuantity()
+			return Boolean(
+				vm.medication &&
+				quantity !== null &&
+				quantity <= Number(vm.medication.inventory_total_remaining) &&
+				record.event_date &&
+				normalizeTime(record.event_time) &&
+				record.users_dcid &&
+				!vm.saveInProgress
+			)
+		}
+
+		vm.checkReqFields = () => {
+			$scope.$emit(vm.isFormValid() ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
+		}
+
+		vm.medicationChanged = () => {
+			vm.administrationRecord.quantity = ''
+			vm.checkReqFields()
+		}
+
+		const openDrawer = (openCallBack, data) => {
+			const drawerData = (data && data.data) || {}
+			vm.medication = drawerData.medication || null
+			vm.saveInProgress = false
+			resetRecord()
+			vm.checkReqFields()
+			openCallBack()
+		}
+
+		const cancelDrawer = closeDrawer => {
+			vm.medication = null
+			vm.saveInProgress = false
+			resetRecord()
+			closeDrawer(true)
+		}
+
+		const buildPayload = () => ({
+			u_student_medication_id: vm.medication.medication_id,
+			transaction_type: 'ADMINISTRATION',
+			quantity_change: -normalizedQuantity(),
+			event_date: vm.administrationRecord.event_date,
+			event_time: timeToSeconds(vm.administrationRecord.event_time),
+			users_dcid: vm.administrationRecord.users_dcid,
+			notes: String(vm.administrationRecord.notes || '').trim(),
+			medication_name: vm.medication.medication_name,
+			dose_amount: vm.medication.dose_amount,
+			dose_unit: vm.medication.dose_unit,
+			inventory_unit: vm.medication.inventory_unit,
+			route: vm.medication.route,
+			frequency: vm.medication.frequency,
+			dateKeys: ['_date']
+		})
+
+		const saveDrawer = closeDrawer => {
+			if (!vm.isFormValid()) {
+				psAlert({
+					title: 'Invalid Medication Administration',
+					message: 'Enter a valid quantity that does not exceed the available inventory and complete the date, time, and administered-by fields.'
+				})
+				return
+			}
+
+			const quantity = normalizedQuantity()
+			const administeredBy = ($rootScope.appData.staffList || []).find(staff => String(staff.dcid) === String(vm.administrationRecord.users_dcid))
+			const administeredByName = administeredBy ? `${administeredBy.first_name} ${administeredBy.last_name}` : 'the selected staff member'
+
+			psConfirm({
+				title: 'Confirm Medication Administration',
+				message: `Confirm ${quantity} ${vm.medication.inventory_unit} (${vm.medication.dose_amount} ${vm.medication.dose_unit}) of ${vm.medication.medication_name} was administered by ${administeredByName} on ${vm.administrationRecord.event_date} at ${normalizeTime(vm.administrationRecord.event_time)}.`,
+				oktext: 'Administer',
+				canceltext: 'Cancel',
+				ok: () => {
+					vm.saveInProgress = true
+					vm.checkReqFields()
+					loadingDialog()
+					psApiService.psApiCall('u_student_med_inv_txn', 'POST', buildPayload())
+						.then(() => {
+							$rootScope.reloadData()
+							vm.medication = null
+							resetRecord()
+							closeLoading()
+							closeDrawer(true)
+						})
+						.catch(() => {
+							vm.saveInProgress = false
+							vm.checkReqFields()
+							closeLoading()
+						})
+				}
+			})
+		}
+
+		$scope.$emit('open.drawer.event', openDrawer)
+		$scope.$emit('cancel.drawer.event', cancelDrawer)
+		$scope.$emit('save.drawer.event', saveDrawer)
+		resetRecord()
+	})
+
 	medicationModule.filter('pluralize', () => val => {
 		if (!val) return val
 		return val.slice(-1) === 's' ? val : val + 's'
+	})
+
+	medicationModule.filter('medTime12', () => value => {
+		const totalSeconds = Number(value)
+		if (!Number.isFinite(totalSeconds)) return ''
+		let hours = Math.floor(totalSeconds / 3600)
+		const minutes = Math.floor((totalSeconds - hours * 3600) / 60)
+		const meridiem = hours >= 12 ? 'PM' : 'AM'
+		hours = hours % 12
+		hours = hours === 0 ? 12 : hours
+		return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${meridiem}`
 	})
 
 })

@@ -28,8 +28,15 @@
         <field name="transaction_type" type="String" length="50" />
         <field name="quantity_change" type="Double" />
         <field name="event_date" type="Date" />
+        <field name="event_time" type="Integer" />
         <field name="users_dcid" type="Integer" />
         <field name="notes" type="String" length="4000" />
+        <field name="medication_name" type="String" length="250" />
+        <field name="dose_amount" type="Double" />
+        <field name="dose_unit" type="String" length="250" />
+        <field name="inventory_unit" type="String" length="250" />
+        <field name="route" type="String" length="250" />
+        <field name="frequency" type="String" length="250" />
         <field name="reversal_of_transaction_id" type="Integer" />
     </extendedTable>
 </psExtension>

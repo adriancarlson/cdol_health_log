@@ -8,9 +8,16 @@
                     'transaction_type' VALUE u_student_med_inv_txn.transaction_type,
                     'quantity_change' VALUE u_student_med_inv_txn.quantity_change,
                     'event_date' VALUE TO_CHAR(u_student_med_inv_txn.event_date, 'YYYY-MM-DD'),
+                    'event_time' VALUE u_student_med_inv_txn.event_time,
                     'users_dcid' VALUE u_student_med_inv_txn.users_dcid,
                     'user_name' VALUE users.first_name || ' ' || users.last_name,
                     'notes' VALUE u_student_med_inv_txn.notes,
+                    'medication_name' VALUE u_student_med_inv_txn.medication_name,
+                    'dose_amount' VALUE u_student_med_inv_txn.dose_amount,
+                    'dose_unit' VALUE u_student_med_inv_txn.dose_unit,
+                    'inventory_unit' VALUE u_student_med_inv_txn.inventory_unit,
+                    'route' VALUE u_student_med_inv_txn.route,
+                    'frequency' VALUE u_student_med_inv_txn.frequency,
                     'reversal_of_transaction_id' VALUE u_student_med_inv_txn.reversal_of_transaction_id
                     NULL ON NULL
                     RETURNING CLOB

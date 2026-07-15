@@ -1,0 +1,122 @@
+<!--NoLink-->
+<form id="medication-administration-form" name="medicationAdministrationForm"
+    ng-controller="administrationEditController as admin">
+    <style>
+        #medication-administration-form {
+            padding-top: 8px;
+        }
+
+        #administration-medication-summary,
+        #administration-entry-row,
+        #administration-details-row,
+        #administration-notes-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 26px;
+            padding: 10px;
+        }
+
+        #administration-medication-summary,
+        #administration-details-row {
+            background: #eee;
+        }
+
+        #administration-medication-summary > div {
+            min-width: 135px;
+        }
+
+        #medication-administration-form label {
+            display: block;
+            padding-left: 0;
+            margin-bottom: 3px;
+        }
+
+        .administration-summary-value {
+            display: block;
+        }
+
+        #administration-quantity-input {
+            width: 8ch;
+            min-width: 8ch;
+            max-width: 8ch;
+        }
+
+        #administration-notes-row textarea {
+            width: 420px;
+            max-width: 100%;
+        }
+    </style>
+
+    <div class="fluid-form">
+        <div id="administration-medication-summary">
+            <div>
+                <label for="administration-medication-select">Medication <span class="req"><em>*</em></span></label>
+                <select id="administration-medication-select" ng-model="admin.medication"
+                    ng-options="medication as (medication.medication_name + ' - ' + medication.dose_amount + ' ' + medication.dose_unit) for medication in $root.appData.availableMedicationList track by medication.medication_id"
+                    ng-change="admin.medicationChanged()">
+                    <option value="">Select a Medication</option>
+                </select>
+            </div>
+            <div ng-if="admin.medication">
+                <label>Prescribed Dosage</label>
+                <span class="administration-summary-value">{{admin.medication.dose_amount}}
+                    {{admin.medication.dose_unit}}</span>
+            </div>
+            <div ng-if="admin.medication">
+                <label>Route</label>
+                <span class="administration-summary-value">{{admin.medication.route}}</span>
+            </div>
+            <div ng-if="admin.medication">
+                <label>Available Inventory</label>
+                <span class="administration-summary-value">{{admin.medication.inventory_total_remaining}}
+                    {{admin.medication.inventory_unit | pluralize}}</span>
+            </div>
+        </div>
+
+        <div id="administration-entry-row" ng-if="admin.medication">
+            <div>
+                <label for="administration-quantity-input">Quantity Administered <span class="req"><em>*</em></span></label>
+                <input id="administration-quantity-input" type="text" size="10" inputmode="decimal"
+                    ng-model="admin.administrationRecord.quantity" ng-change="admin.checkReqFields()">
+                {{admin.medication.inventory_unit | pluralize}}
+                ({{admin.medication.dose_amount}} {{admin.medication.dose_unit}})
+            </div>
+        </div>
+
+        <div class="feedback-alert" role="alert" aria-live="polite"
+            ng-if="admin.medication && admin.quantityExceedsAvailable()">
+            The quantity entered exceeds the available inventory of {{admin.medication.inventory_total_remaining}}
+            {{admin.medication.inventory_unit | pluralize}}. Enter a smaller quantity.
+        </div>
+
+        <div id="administration-details-row">
+            <div>
+                <label>Date <span class="req"><em>*</em></span></label>
+                <input type="text" ng-model="admin.administrationRecord.event_date" pss-date-widget
+                    ng-change="admin.checkReqFields()" data-auto-translate="true">
+            </div>
+            <div>
+                <label>Time <span class="req"><em>*</em></span></label>
+                <input type="text" class="timeEntry" size="8" ng-model="admin.administrationRecord.event_time"
+                    ng-change="admin.checkReqFields()">
+            </div>
+            <div>
+                <label>Administered By <span class="req"><em>*</em></span></label>
+                <select ng-options="staff.dcid as (staff.first_name + ' ' + staff.last_name) for staff in $root.appData.staffList"
+                    ng-model="admin.administrationRecord.users_dcid" ng-change="admin.checkReqFields()">
+                </select>
+            </div>
+        </div>
+
+        <div id="administration-notes-row">
+            <div>
+                <label>Notes</label>
+                <textarea spellcheck="true" wrap="absolute" rows="4" cols="60"
+                    ng-model="admin.administrationRecord.notes"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="feedback-info" ng-if="admin.medication">Saving this administration will deduct the entered quantity
+        from the oldest inventory lot with medication remaining.</div>
+</form>

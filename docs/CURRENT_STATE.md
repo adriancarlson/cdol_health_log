@@ -17,8 +17,13 @@
 - The main page labels creation as `Add Medication`; the edit drawer uses `Add Inventory` for additional count-in rows on an existing medication.
 - Add/Edit Medication prevents duplicate definitions for the same student when normalized medication name, numeric dosage amount, and dose unit match, while allowing the same name with a different dosage or dose unit.
 - Medication-name spacing is normalized on blur and before save by trimming the ends, collapsing repeated internal spaces, and capitalizing the first character while preserving the remainder of the entered capitalization.
+- Inventory quantities use spaced remaining/original formatting such as `2.75 / 5 Pills` for readability.
 - Add/edit and removal use one PowerSchool drawer with internal modes so medication context is preserved.
 - Reversal is not exposed in the nurse-facing inventory workflow. A future correction workflow must be designed separately from medication physically returning to school.
+- The full inventory workflow has been validated successfully on the PowerSchool test server, including medication creation, required inventory, multiple inventory rows, read-only lots, additions, FIFO deductions, insufficient-inventory blocking, decimal quantities, warning thresholds, duplicate prevention, and medication-name normalization.
+- The initial student-specific Medication Administration page is implemented as one Administer Medication button followed directly by a simple administration-history table. Inventory is not displayed on the page. The drawer limits medication selection to medications with inventory available, records administered date/time, quantity, staff member, and notes, and confirms the medication and dose before saving.
+- When history contains more than one medication definition, the administration table provides a medication filter that distinguishes medication name and prescribed dosage.
+- Each given administration is stored as one `ADMINISTRATION` row in the existing inventory transaction ledger. The row contains medication-detail snapshots and its negative quantity is consumed by the same FIFO calculation used for other deductions.
 - Health-log and active-staff reads are served by SQL-backed JSON pages in this plugin.
 - The application no longer calls the `net.cdolinc.health.healthLog.logs` or `net.cdolinc.health.healthLog.staff` PowerQueries at runtime.
 - The internal schema API permission mappings formerly supplied by `cdol_health_log_pqs` are maintained in this repository. Medication custom-page writes do not require external API field access requests.
@@ -39,19 +44,16 @@ The most recent recovered implementation summary stated:
 
 The available project files do not prove completion of:
 
-- Medication administration table schema
-- Administration UI
+- Live PowerSchool installation and validation of the initial Medication Administration page and `ADMINISTRATION` transaction fields
 - Missed-dose workflow
 - Required missed-dose reasons
-- Live PowerSchool installation validation of FIFO and parent-pickup deductions
-- Live PowerSchool validation of the percentage-based low-inventory thresholds, automatic baseline reset, and status indicators
 - Gap detection
 - Reminder scheduling
 - Controlled-medication reconciliation
 - Authorization enforcement
 - Server-side concurrency protection against simultaneous inventory removals
 - Automated tests
-- Plugin packaging and installation validation
+- Packaging and installation validation of the new Medication Administration version
 
 ## Source files
 

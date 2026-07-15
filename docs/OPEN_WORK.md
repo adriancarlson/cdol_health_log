@@ -2,20 +2,16 @@
 
 ## Highest-priority implementation work
 
-1. Package and install the current repository build on the PowerSchool test server.
-2. Revalidate medication creation, required inventory, refills, and read-only historical lots.
-3. Confirm the final dose-unit, inventory-unit, route, and frequency lists with the nurse.
-4. Install and validate the simplified one-row inventory transaction schema and permissions.
-5. Test derived FIFO balances across one and multiple lots and insufficient inventory handling.
-6. Confirm the supported PowerSchool server-side mechanism for preventing simultaneous removals from exceeding available inventory.
-7. Add controlled-medication reconciliation and returned-to-school workflows after nurse review.
-8. Design and approve the administration record schema.
-9. Build the table-based administration workflow.
-10. Implement required missed-dose reasons and notes.
-11. Install and validate the four-level percentage-based inventory indicator; add missed-administration alerts later with scheduling work.
-12. Complete authorization testing with nurse, ordinary staff, district, and cross-school accounts.
-13. Add automated tests and PowerSchool plugin installation validation.
-14. Design an administrator-supported correction workflow that does not expose reversal terminology to nurses.
+1. Package, install, and test the initial student Medication Administration page and the new `ADMINISTRATION` transaction fields.
+2. Confirm administration saves create exactly one deduction, update FIFO balances, refresh the available-medication list, and appear once in administration history.
+3. Confirm the supported PowerSchool server-side mechanism for preventing simultaneous deductions from exceeding available inventory.
+4. Confirm the final dose-unit, inventory-unit, route, and frequency lists with the nurse.
+5. Implement required missed-dose reasons and notes after the administration workflow is stable.
+6. Add scheduling, PRN handling, gap detection, and reminders in the later scheduling phase.
+7. Complete authorization testing with nurse, ordinary staff, district, and cross-school accounts.
+8. Add controlled-medication reconciliation and returned-to-school workflows after nurse review.
+9. Add automated tests and PowerSchool plugin installation validation.
+10. Design an administrator-supported correction workflow that does not expose reversal terminology to nurses.
 
 ## Deployment cleanup
 

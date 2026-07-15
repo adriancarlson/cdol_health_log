@@ -79,6 +79,7 @@ Rules:
 - Deduct administered medication using FIFO, beginning with the oldest lot that still has quantity remaining.
 - Support inventory deductions when medication is picked up by a parent or otherwise removed.
 - Show total quantity remaining across all open lots.
+- Display remaining/original quantities with spaces around the slash, such as `2.75 / 5 Pills`.
 - Reset the inventory-alert baseline to the total available quantity immediately after inventory is added.
 - Calculate the percentage of inventory remaining by comparing the current total with the replenishment baseline.
 - Display four inventory levels: Normal above 20%, Low Inventory above 10% through 20%, Critical Inventory above 0% through 10%, and Out of Inventory at 0%.
@@ -89,6 +90,8 @@ Rules:
 ## 5. Medication administration
 
 The administration interface must be table-based, not calendar-based.
+
+The student Administration page should remain simple: one Administer Medication button followed by the administration-history table, without an additional section heading or an inventory table. The medication selector in the drawer must include only medications with available inventory. Administration history may contain multiple medications and should be filterable by medication when needed.
 
 Each administration event should capture:
 
