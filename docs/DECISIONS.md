@@ -41,6 +41,7 @@
 37. A given medication administration is stored as one `ADMINISTRATION` row in `u_student_med_inv_txn`. The row holds administration snapshots and its negative quantity is the inventory deduction, avoiding a two-record partial-save risk.
 38. The initial Administration page is student-specific and contains one Administer Medication button followed by one history table with no section heading. Inventory is not displayed on the page; the drawer's medication selector includes only medications whose calculated available inventory is greater than zero.
 39. Administration history can contain mixed medications. When more than one medication is present, a medication-and-dosage filter is available above the table.
+40. The Administer Medication button remains visible when no inventory is available. Opening it shows guidance to add medication through the student's Medication Inventory page instead of hiding or disabling the action.
 
 ## Superseded or rejected approaches
 

@@ -3,7 +3,7 @@
     ng-controller="administrationEditController as admin">
     <style>
         #medication-administration-form {
-            padding-top: 8px;
+            padding-top: 2px;
         }
 
         #administration-medication-summary,
@@ -12,8 +12,9 @@
         #administration-notes-row {
             display: flex;
             align-items: flex-start;
-            gap: 26px;
-            padding: 10px;
+            gap: 14px;
+            margin: 0 !important;
+            padding: 6px 8px;
         }
 
         #administration-medication-summary,
@@ -22,17 +23,18 @@
         }
 
         #administration-medication-summary > div {
-            min-width: 135px;
+            min-width: 120px;
         }
 
         #medication-administration-form label {
             display: block;
             padding-left: 0;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .administration-summary-value {
             display: block;
+            line-height: 1.25;
         }
 
         #administration-quantity-input {
@@ -47,7 +49,12 @@
         }
     </style>
 
-    <div class="fluid-form">
+    <div class="feedback-alert" role="alert" ng-if="!$root.appData.availableMedicationList.length">
+        Medication must be added to the student's inventory using the Medication Inventory page before it can be
+        administered.
+    </div>
+
+    <div class="fluid-form" ng-if="$root.appData.availableMedicationList.length">
         <div id="administration-medication-summary">
             <div>
                 <label for="administration-medication-select">Medication <span class="req"><em>*</em></span></label>
@@ -111,12 +118,12 @@
         <div id="administration-notes-row">
             <div>
                 <label>Notes</label>
-                <textarea spellcheck="true" wrap="absolute" rows="4" cols="60"
+                <textarea spellcheck="true" wrap="absolute" rows="3" cols="60"
                     ng-model="admin.administrationRecord.notes"></textarea>
             </div>
         </div>
     </div>
 
-    <div class="feedback-info" ng-if="admin.medication">Saving this administration will deduct the entered quantity
-        from the oldest inventory lot with medication remaining.</div>
+    <div class="feedback-info" ng-if="$root.appData.availableMedicationList.length && admin.medication">Saving this
+        administration will deduct the entered quantity from the oldest inventory lot with medication remaining.</div>
 </form>
