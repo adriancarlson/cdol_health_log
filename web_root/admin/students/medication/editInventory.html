@@ -28,18 +28,23 @@
             .inv-qty-edit-wrap {
                 display: inline-flex;
                 align-items: center;
-                gap: 4px;
+                gap: 0;
             }
 
             .inv-qty-separator {
                 display: inline-block;
-                min-width: 0.75ch;
+                min-width: 0;
                 text-align: center;
             }
 
             .inv-readonly {
                 display: inline-block;
                 padding: 4px 6px;
+            }
+
+            .inv-qty-edit-wrap .inv-readonly {
+                padding-left: 0;
+                padding-right: 0;
             }
 
             .inv-history-note {
@@ -156,7 +161,7 @@
                 <label id="med-name-label">Medication Name <span id="med-name-req" class="req"><em
                             id="med-name-req-mark">*</em></span></label>
                 <input id="med-name-input" type="text" ng-model="vm.medicationRecord.medication_name"
-                    ng-change="vm.checkReqFields()">
+                    ng-change="vm.checkReqFields()" ng-blur="vm.normalizeMedicationName()">
             </div>
             <div id="date-added-group">
                 <label id="date-added-label">Date Added <span id="date-added-req" class="req"><em
@@ -190,6 +195,11 @@
                 </select>
             </div>
         </div>
+        <div id="duplicate-medication-message" class="feedback-alert" role="alert" aria-live="polite"
+            ng-if="vm.drawerMode === 'edit' && vm.duplicateMedicationExists()">
+            A medication with this name, dosage, and dose unit already exists for this student. Use Add Inventory on
+            the existing medication to record medication received.
+        </div>
         <div id="route-freq-row" ng-show="vm.drawerMode === 'edit'">
             <div id="route-group">
                 <label id="route-label">Route <span id="route-req" class="req"><em id="route-req-mark">*</em></span>
@@ -206,6 +216,13 @@
                     ng-model="vm.medicationRecord.frequency" ng-change="vm.checkReqFields()">
                     <option id="freq-placeholder" value="">Select a Frequency</option>
                 </select>
+            </div>
+        </div>
+        <div id="notes-row" ng-show="vm.drawerMode === 'edit'">
+            <div id="notes-group">
+                <label id="notes-label">Medication Notes:</label>
+                <textarea id="notes-text" spellcheck="true" wrap="absolute" rows="5" cols="60"
+                    ng-model="vm.medicationRecord.notes"></textarea>
             </div>
         </div>
         <div id="inv-table-section" class="inventory-form-table-section" ng-show="vm.drawerMode === 'edit'">
@@ -317,7 +334,7 @@
                         ng-show="vm.inventoryRecord[0].quantity_added && vm.inventoryRecord[0].added_date && vm.inventoryRecord[0].users_dcid">
                         <td id="inv-add-cell" class="center"
                             ng-attr-colspan="{{vm.hasPendingInventoryRows() ? 5 : 4}}">
-                            <button id="inv-add-btn" type="button" ng-click="vm.addInventoryRecord()">Add Additional
+                            <button id="inv-add-btn" type="button" ng-click="vm.addInventoryRecord()">Add
                                 Inventory</button>
                             <button id="inv-remove-btn" type="button" ng-if="vm.hasExistingInventoryLines()"
                                 ng-click="vm.enterRemovalMode()"
@@ -327,20 +344,13 @@
                     </tr>
                 </tbody>
             </table>
-            <div class="feedback-info" ng-if="vm.isEditMode">Existing inventory is read-only. Use Add Additional
+            <div class="feedback-info" ng-if="vm.isEditMode">Existing inventory is read-only. Use Add
                 Inventory to record medication received, or Remove Inventory to record medication leaving the school.
-            </div>
-        </div>
-        <div id="notes-row" ng-show="vm.drawerMode === 'edit'">
-            <div id="notes-group">
-                <label id="notes-label">Medication Notes:</label>
-                <textarea id="notes-text" spellcheck="true" wrap="absolute" rows="5" cols="60"
-                    ng-model="vm.medicationRecord.notes"></textarea>
             </div>
         </div>
         <div id="inventory-transactions-section" class="inventory-form-table-section" ng-if="vm.isEditMode"
             ng-show="vm.drawerMode === 'edit'">
-            <label id="transactions-label">Transactions</label>
+            <label id="transactions-label">Deductions</label>
             <table id="inventory-transactions-table" class="grid inventory-form-grid">
                 <colgroup>
                     <col style="width: 20%;">
@@ -361,14 +371,12 @@
                 <tbody>
                     <tr
                         ng-if="!vm.removalMedication.inventory_transactions || !vm.removalMedication.inventory_transactions.length">
-                        <td colspan="5" class="center">No transactions</td>
+                        <td colspan="5" class="center">No deductions</td>
                     </tr>
                     <tr ng-repeat="transaction in vm.removalMedication.inventory_transactions">
                         <td>
                             <div>{{vm.transactionTypeLabel(transaction.transaction_type)}}</div>
                             <div ng-if="transaction.is_reversed"><em>Reversed</em></div>
-                            <button type="button" ng-if="transaction.can_reverse"
-                                ng-click="vm.enterReversalMode(transaction)">Reverse</button>
                         </td>
                         <td class="center"
                             ng-class="transaction.quantity_change < 0 ? 'inventory-change-negative' : 'inventory-change-positive'">
@@ -418,14 +426,11 @@
                         </select>
                     </div>
                 </div>
-
-                <div id="transaction-reversal-row" ng-if="vm.drawerMode === 'reverse'">
-                    <div>
-                        <label>Transaction Being Reversed</label>
-                        <span>{{vm.transactionTypeLabel(vm.sourceTransaction.transaction_type)}} —
-                            {{vm.sourceTransaction.quantity_change}} {{vm.removalMedication.inventory_unit |
-                            pluralize}}</span>
-                    </div>
+                <div class="feedback-alert" role="alert" aria-live="polite"
+                    ng-if="vm.drawerMode === 'remove' && vm.removalQuantityExceedsAvailable()">
+                    The quantity entered exceeds the available inventory of
+                    {{vm.removalMedication.inventory_total_remaining}}
+                    {{vm.removalMedication.inventory_unit | pluralize}}. Enter a smaller quantity.
                 </div>
 
                 <div id="transaction-details-row">
@@ -445,8 +450,7 @@
 
                 <div id="transaction-notes-row">
                     <div>
-                        <label>{{vm.drawerMode === 'reverse' ? 'Reversal Reason' : 'Notes'}}
-                            <span class="req"><em>*</em></span></label>
+                        <label>Notes <span class="req"><em>*</em></span></label>
                         <textarea spellcheck="true" wrap="absolute" rows="4" cols="60"
                             ng-model="vm.transactionRecord.notes" ng-change="vm.checkReqFields()"></textarea>
                     </div>
@@ -455,8 +459,6 @@
 
             <div class="feedback-info" ng-if="vm.drawerMode === 'remove'">The quantity will be removed automatically
                 from the oldest inventory lot with medication remaining.</div>
-            <p class="transaction-explanation" ng-if="vm.drawerMode === 'reverse'">Reversing creates a new audit record.
-                The original transaction will remain in history.</p>
         </div>
     </div>
 </form>

@@ -27,6 +27,10 @@ Do not use `cc`.
 
 Medication names remain free-form because the list of medications cannot be reliably constrained.
 
+Normalize medication-name spacing before saving by trimming leading and trailing whitespace and replacing repeated internal whitespace with one space. Capitalize the first character, but preserve the remainder of the capitalization entered by the nurse; do not automatically apply full title case because medication names may contain intentional capitalization, abbreviations, numbers, or suffixes.
+
+Do not allow two medication definitions for the same student when the medication name, numeric dosage amount, and dose unit match. Compare names and units without case or extra-space differences, and compare dosage amounts numerically so values such as `10` and `10.0` match. When a duplicate is entered, disable Save and direct the nurse to use Add Inventory on the existing medication. The same medication name remains allowed when either the dosage amount or dose unit differs.
+
 ## 2. Frequency
 
 Frequency must support at least:
@@ -75,7 +79,11 @@ Rules:
 - Deduct administered medication using FIFO, beginning with the oldest lot that still has quantity remaining.
 - Support inventory deductions when medication is picked up by a parent or otherwise removed.
 - Show total quantity remaining across all open lots.
-- Provide a low-inventory warning or visual indicator.
+- Reset the inventory-alert baseline to the total available quantity immediately after inventory is added.
+- Calculate the percentage of inventory remaining by comparing the current total with the replenishment baseline.
+- Display four inventory levels: Normal above 20%, Low Inventory above 10% through 20%, Critical Inventory above 0% through 10%, and Out of Inventory at 0%.
+- Use fixed system thresholds of 20% for Low Inventory and 10% for Critical Inventory; nurses do not configure these percentages.
+- Do not display a percentage or a Normal label to the nurse. For one inventory lot, apply the warning color and left-aligned `Low Inventory`, `Critical Inventory`, or `Out of Inventory` label to that lot row. For multiple lots, apply the warning only to the Total row. Keep the quantity right-aligned, and use a subtle pale-red treatment for Out of Inventory.
 - Support controlled-medication inventory and count auditing.
 
 ## 5. Medication administration
@@ -115,6 +123,8 @@ For administration:
 
 - Inventory should be reduced automatically using FIFO.
 - Each administration creates one auditable inventory transaction; FIFO lot balances are derived when inventory is displayed.
+- The nurse enters the quantity administered in the medication's inventory unit. The form displays the prescribed dosage in parentheses as reference, such as `1 Pill (10 mg)`.
+- The entered inventory quantity, including decimals such as `0.5 Pill`, becomes the actual inventory deduction; the medication definition does not store a fixed inventory quantity per dose.
 - The system should include a spelling and dose double-check step or confirmation prompt before committing sensitive medication details.
 - PRN administrations must be supported without creating false missed-dose alerts.
 

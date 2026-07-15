@@ -93,6 +93,56 @@
                 line-height: 12px;
                 vertical-align: middle;
             }
+
+            .inventory-warning-low td {
+                color: #5f4700;
+                background-color: #fff4ce !important;
+                box-shadow: inset 0 0 0 1px #d6b656 !important;
+            }
+
+            .inventory-warning-critical td {
+                color: #8a3b00;
+                background-color: #ffe3cc !important;
+                box-shadow: inset 0 0 0 1px #d9822b !important;
+            }
+
+            .inventory-warning-out td {
+                color: #a12622;
+                background-color: #faeeee !important;
+                box-shadow: inset 0 0 0 1px #c84a4a !important;
+            }
+
+            .inventory-batches-table.inventory-warning-low {
+                border-color: #d6b656;
+            }
+
+            .inventory-batches-table.inventory-warning-critical {
+                border-color: #d9822b;
+            }
+
+            .inventory-batches-table.inventory-warning-out {
+                border-color: #c84a4a;
+            }
+
+            .inventory-status-text {
+                font-weight: bold;
+                padding-left: 10px;
+                text-align: left;
+            }
+
+            .inventory-row-content {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .inventory-quantity-text {
+                margin-left: auto;
+                text-align: right;
+                white-space: nowrap;
+            }
         </style>
     </head>
 
@@ -114,10 +164,10 @@
                         <!--<strong>DOB:</strong>   ~(dob) <strong>Age:</strong>   ~(age)-->
                     </span>
                     <button id="add-btn" type="button" pss-dialog-drawer width="900"
-                        drawer-title="Add {{vm.appData.contextTitle}}" data-data="{
+                        drawer-title="Add Medication" data-data="{
                     studentsdcid: '~(rn)',
                     id: null
-                }" template-url="editInventory.html">Add {{vm.appData.contextTitle}}</button>
+                }" template-url="editInventory.html">Add Medication</button>
                 </div>
                 <table class="grid">
                     <thead>
@@ -146,27 +196,32 @@
                             <td class="center">{{medication.frequency}}</td>
                             <td class="inventory-cell">
                                 <div class="inventory-cell-content"
-                                    ng-if="medication.inventory_batches && medication.inventory_batches.length === 1">
-                                    {{medication.inventory_batches[0].quantity_remaining}} /
-                                    {{medication.inventory_batches[0].quantity_added}} {{medication.inventory_unit |
-                                    pluralize}}
-                                </div>
-                                <div class="inventory-cell-content"
-                                    ng-if="medication.inventory_batches && medication.inventory_batches.length > 1">
-                                    <table class="inventory-batches-table" style="width: 100%; margin: 0; padding: 0;">
+                                    ng-if="medication.inventory_batches && medication.inventory_batches.length">
+                                    <table class="inventory-batches-table" style="width: 100%; margin: 0; padding: 0;"
+                                        ng-class="medication.inventory_batches.length === 1 ? medication.inventory_status_row_class : ''">
                                         <tbody>
                                             <tr class="inventory-batch-row"
+                                                ng-class="medication.inventory_batches.length === 1 ? medication.inventory_status_row_class : ''"
                                                 ng-repeat="batch in (medication.inventory_batches | orderBy:'added_date')">
                                                 <td style="text-align: right; padding: 2px 4px 2px 0;">
-                                                    {{batch.quantity_remaining}} / {{batch.quantity_added}}
-                                                    {{medication.inventory_unit | pluralize}}</td>
+                                                    <div class="inventory-row-content">
+                                                        <span class="inventory-status-text"
+                                                            ng-if="medication.inventory_batches.length === 1 && medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
+                                                        <span class="inventory-quantity-text">{{batch.quantity_remaining}}/{{batch.quantity_added}}
+                                                            {{medication.inventory_unit | pluralize}}</span>
+                                                    </div>
+                                                </td>
                                             </tr>
-                                            <tr class="inventory-total-row">
+                                            <tr class="inventory-total-row" ng-if="medication.inventory_batches.length > 1"
+                                                ng-class="medication.inventory_status_row_class">
                                                 <td style="text-align: right; padding: 2px 4px 2px 0;">
-                                                    <strong>Total:</strong>
-                                                    {{medication.inventory_total_remaining}} /
-                                                    {{medication.inventory_total_initial}} {{medication.inventory_unit |
-                                                    pluralize}}
+                                                    <div class="inventory-row-content">
+                                                        <span class="inventory-status-text"
+                                                            ng-if="medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
+                                                        <span class="inventory-quantity-text"><strong>Total:</strong>
+                                                            {{medication.inventory_total_remaining}}/{{medication.inventory_total_initial}}
+                                                            {{medication.inventory_unit | pluralize}}</span>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </tbody>

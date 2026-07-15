@@ -25,9 +25,18 @@
 21. Inventory removals use an append-only transaction ledger with one row per real-world event.
 22. FIFO lot balances are derived from immutable received lots and the medication-level transaction history; transactions are not split into per-lot allocation rows.
 23. Existing inventory lots are read-only after creation.
-24. Corrections use one compensating transaction linked to the original transaction ID rather than editing or deleting history.
+24. The nurse-facing inventory workflow does not expose reversal. A separate, clearly labeled correction workflow must be designed before corrections are implemented.
 25. Added-in-error corrections, parent pickup, disposal, lost/damaged medication, and other removal require notes.
-26. Medication editing, inventory removal, and transaction reversal share one drawer; nested PowerSchool drawers are not used.
+26. Medication editing and inventory removal share one drawer; nested PowerSchool drawers are not used.
+27. Nurses do not configure an inventory quantity per dose. During administration they enter the actual quantity used in the inventory unit, while the prescribed dosage is displayed in parentheses as reference.
+28. The entered administration quantity supports decimals and becomes the auditable inventory deduction.
+29. Low inventory is based on the percentage of inventory remaining in the current replenishment cycle, not all inventory historically received.
+30. Adding inventory automatically resets the alert baseline to the total quantity available after the addition; deductions do not reset it.
+31. Inventory status levels use fixed system thresholds: Normal above 20%, Low above 10% through 20%, Critical above 0% through 10%, and Out at 0%. Nurses do not configure these levels.
+32. Normal inventory has no visible status label, and inventory percentages are not displayed. Warning color, border, and the full label `Low Inventory`, `Critical Inventory`, or `Out of Inventory` appear left-aligned on the single lot row or, when multiple lots exist, only on the Total row; the quantity remains right-aligned. Out of Inventory uses a subtle pale-red treatment.
+33. The main inventory page uses `Add Medication` for creating a medication definition and its starting inventory; `Add Inventory` remains the action for adding inventory to an existing medication.
+34. A student cannot have duplicate medication definitions with the same normalized medication name, numeric dosage amount, and dose unit. A different dosage amount or dose unit is allowed. The form disables Save and directs the nurse to add inventory to the existing medication.
+35. Medication names are trimmed, repeated internal spaces are collapsed, and the first character is capitalized before saving. The remainder of the entered capitalization is preserved; full title case is not used.
 
 ## Superseded or rejected approaches
 
@@ -38,3 +47,4 @@
 - Do not use `cc`.
 - Do not place timing or an active flag on each inventory lot merely to represent medication scheduling.
 - Do not create per-lot transaction allocations or event grouping keys for a single inventory event.
+- Do not present medication physically returning to school as a reversal of the earlier removal.

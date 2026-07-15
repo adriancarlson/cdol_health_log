@@ -15,6 +15,7 @@
                     'frequency' VALUE u_student_medication.frequency,
                     'users_dcid' VALUE u_student_medication.users_dcid,
                     'inventory_unit' VALUE u_student_medication.inventory_unit,
+                    'inventory_baseline_quantity' VALUE u_student_medication.inventory_baseline_quantity,
                     'notes' VALUE u_student_medication.notes,
                     'inventory_total_initial' VALUE NVL((
                 SELECT SUM(inv.quantity_added)
