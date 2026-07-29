@@ -18,7 +18,13 @@
                     'inventory_unit' VALUE u_student_med_inv_txn.inventory_unit,
                     'route' VALUE u_student_med_inv_txn.route,
                     'frequency' VALUE u_student_med_inv_txn.frequency,
-                    'reversal_of_transaction_id' VALUE u_student_med_inv_txn.reversal_of_transaction_id
+                    'reversal_of_transaction_id' VALUE u_student_med_inv_txn.reversal_of_transaction_id,
+                    'administration_quantity' VALUE u_student_med_inv_txn.administration_quantity,
+                    'correction_date' VALUE TO_CHAR(u_student_med_inv_txn.correction_date, 'YYYY-MM-DD'),
+                    'correction_time' VALUE u_student_med_inv_txn.correction_time,
+                    'correction_users_dcid' VALUE u_student_med_inv_txn.correction_users_dcid,
+                    'correction_user_name' VALUE correction_users.first_name || ' ' || correction_users.last_name,
+                    'correction_reason' VALUE u_student_med_inv_txn.correction_reason
                     NULL ON NULL
                     RETURNING CLOB
                 )
@@ -33,6 +39,8 @@
         ON u_student_medication.id = u_student_med_inv_txn.u_student_medication_id
     LEFT JOIN users
         ON users.dcid = u_student_med_inv_txn.users_dcid
+    LEFT JOIN users correction_users
+        ON correction_users.dcid = u_student_med_inv_txn.correction_users_dcid
     LEFT JOIN students
         ON students.dcid = u_student_medication.studentsdcid
     WHERE u_student_medication.yearid = ~(gpv.yearID;num)

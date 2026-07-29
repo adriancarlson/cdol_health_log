@@ -3,6 +3,48 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 	const medicationModule = angular.module('medicationModule', ['powerSchoolModule', 'healthLogMod'])
 	const LOW_INVENTORY_PERCENTAGE = 20
 	const CRITICAL_INVENTORY_PERCENTAGE = 10
+	const getInventoryStatus = (quantityRemainingValue, baselineQuantityValue) => {
+		const quantityRemaining = Math.max(0, Number(quantityRemainingValue) || 0)
+		const baselineQuantity = Number(baselineQuantityValue) > 0
+			? Number(baselineQuantityValue)
+			: quantityRemaining
+
+		if (quantityRemaining <= 0) {
+			return {
+				inventory_percentage_remaining: 0,
+				inventory_status: 'OUT',
+				inventory_status_label: 'Out of Inventory',
+				inventory_status_row_class: 'inventory-warning-out'
+			}
+		}
+
+		const percentageRemaining = Math.min(100, Math.max(0, (quantityRemaining / baselineQuantity) * 100))
+
+		if (percentageRemaining <= CRITICAL_INVENTORY_PERCENTAGE) {
+			return {
+				inventory_percentage_remaining: Number(percentageRemaining.toFixed(1)),
+				inventory_status: 'CRITICAL',
+				inventory_status_label: 'Critical Inventory',
+				inventory_status_row_class: 'inventory-warning-critical'
+			}
+		}
+
+		if (percentageRemaining <= LOW_INVENTORY_PERCENTAGE) {
+			return {
+				inventory_percentage_remaining: Number(percentageRemaining.toFixed(1)),
+				inventory_status: 'LOW',
+				inventory_status_label: 'Low Inventory',
+				inventory_status_row_class: 'inventory-warning-low'
+			}
+		}
+
+		return {
+			inventory_percentage_remaining: Number(percentageRemaining.toFixed(1)),
+			inventory_status: 'NORMAL',
+			inventory_status_label: 'Normal',
+			inventory_status_row_class: ''
+		}
+	}
 	const normalizeMedicationNameSpacing = value => {
 		const normalizedName = String(value === undefined || value === null ? '' : value)
 			.trim()
@@ -62,6 +104,24 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 
 		$rootScope.appData = vm.appData
+		let administrationFeedbackTimeout = null
+		const clearAdministrationFeedback = () => {
+			if (administrationFeedbackTimeout !== null) {
+				window.clearTimeout(administrationFeedbackTimeout)
+				administrationFeedbackTimeout = null
+			}
+			vm.appData.administrationFeedback = ''
+		}
+		$rootScope.showAdministrationFeedback = message => {
+			clearAdministrationFeedback()
+			vm.appData.administrationFeedback = message
+			administrationFeedbackTimeout = window.setTimeout(() => {
+				administrationFeedbackTimeout = null
+				$scope.$applyAsync(() => {
+					vm.appData.administrationFeedback = ''
+				})
+			}, 5000)
+		}
 		$rootScope.existingMedicationList = []
 		vm.medicationList = []
 		vm.availableMedicationList = []
@@ -74,9 +134,12 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm.transactionTypeLabel = transactionType => {
 			if (transactionType === 'REVERSAL') return 'Reversal'
 			if (transactionType === 'ADMINISTRATION') return 'Administration'
+			if (transactionType === 'ADMINISTRATION_CORRECTION') return 'Administration Correction'
+			if (transactionType === 'ADMINISTRATION_VOID') return 'Administration Entered in Error'
 			return vm.appData.inventoryTransactionTypeList[transactionType] || transactionType
 		}
 		vm.beginTransactionDrawer = () => loadingDialog()
+		vm.clearAdministrationFeedback = clearAdministrationFeedback
 
 		const parseJsonArray = value => {
 			if (Array.isArray(value)) return value
@@ -96,31 +159,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				? storedBaselineQuantity
 				: (historicalInventoryQuantity > 0 ? historicalInventoryQuantity : quantityRemaining)
 
-			if (quantityRemaining <= 0) {
-				medication.inventory_percentage_remaining = 0
-				medication.inventory_status = 'OUT'
-				medication.inventory_status_label = 'Out of Inventory'
-				medication.inventory_status_row_class = 'inventory-warning-out'
-				return
-			}
-
-			const percentageRemaining = Math.min(100, Math.max(0, (quantityRemaining / baselineQuantity) * 100))
-
-			medication.inventory_percentage_remaining = Number(percentageRemaining.toFixed(1))
-
-			if (percentageRemaining <= CRITICAL_INVENTORY_PERCENTAGE) {
-				medication.inventory_status = 'CRITICAL'
-				medication.inventory_status_label = 'Critical Inventory'
-				medication.inventory_status_row_class = 'inventory-warning-critical'
-			} else if (percentageRemaining <= LOW_INVENTORY_PERCENTAGE) {
-				medication.inventory_status = 'LOW'
-				medication.inventory_status_label = 'Low Inventory'
-				medication.inventory_status_row_class = 'inventory-warning-low'
-			} else {
-				medication.inventory_status = 'NORMAL'
-				medication.inventory_status_label = 'Normal'
-				medication.inventory_status_row_class = ''
-			}
+			Object.assign(medication, getInventoryStatus(quantityRemaining, baselineQuantity))
 		}
 
 		const prepareMedicationData = (medications, transactions) => {
@@ -153,14 +192,25 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				)
 				applyInventoryStatus(medication)
 
-				const reversedTransactionIds = new Set(
-					medication.inventory_transactions
-						.map(transaction => Number(transaction.reversal_of_transaction_id))
-						.filter(transactionId => Number.isFinite(transactionId) && transactionId > 0)
-				)
+				const correctionRowsByOriginal = new Map()
+				medication.inventory_transactions
+					.filter(transaction => ['REVERSAL', 'ADMINISTRATION_CORRECTION', 'ADMINISTRATION_VOID'].includes(transaction.transaction_type))
+					.forEach(transaction => {
+						const originalTransactionId = Number(transaction.reversal_of_transaction_id)
+						if (!Number.isFinite(originalTransactionId) || originalTransactionId <= 0) return
+						if (!correctionRowsByOriginal.has(originalTransactionId)) correctionRowsByOriginal.set(originalTransactionId, [])
+						correctionRowsByOriginal.get(originalTransactionId).push(transaction)
+					})
 
 				medication.inventory_transactions.forEach(transaction => {
-					transaction.is_reversed = reversedTransactionIds.has(Number(transaction.transaction_id))
+					const correctionRows = (correctionRowsByOriginal.get(Number(transaction.transaction_id)) || [])
+						.slice()
+						.sort((left, right) => Number(left.transaction_id) - Number(right.transaction_id))
+					const latestCorrection = correctionRows[correctionRows.length - 1]
+					transaction.is_reversed = Boolean(latestCorrection && latestCorrection.transaction_type === 'REVERSAL')
+					transaction.correction_status_label = latestCorrection && latestCorrection.transaction_type === 'ADMINISTRATION_VOID'
+						? 'Entered in Error'
+						: (latestCorrection && latestCorrection.transaction_type === 'ADMINISTRATION_CORRECTION' ? 'Corrected' : '')
 				})
 
 				return medication
@@ -169,20 +219,81 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 
 		const prepareAdministrationHistory = (medications, transactions) => {
 			const medicationById = new Map((medications || []).map(medication => [Number(medication.medication_id), medication]))
+			const transactionRows = transactions || []
+			const correctionsByOriginal = new Map()
 
-			return (transactions || [])
+			transactionRows
+				.filter(transaction => ['ADMINISTRATION_CORRECTION', 'ADMINISTRATION_VOID'].includes(transaction.transaction_type))
+				.forEach(transaction => {
+					const originalTransactionId = Number(transaction.reversal_of_transaction_id)
+					if (!Number.isFinite(originalTransactionId) || originalTransactionId <= 0) return
+					if (!correctionsByOriginal.has(originalTransactionId)) correctionsByOriginal.set(originalTransactionId, [])
+					correctionsByOriginal.get(originalTransactionId).push(transaction)
+				})
+
+			return transactionRows
 				.filter(transaction => transaction.transaction_type === 'ADMINISTRATION')
 				.map(transaction => {
 					const medication = medicationById.get(Number(transaction.medication_id)) || {}
-					return Object.assign({}, transaction, {
+					const administration = Object.assign({}, transaction, {
+						root_transaction_id: Number(transaction.transaction_id),
 						medication_name: transaction.medication_name || medication.medication_name,
 						dose_amount: transaction.dose_amount || medication.dose_amount,
 						dose_unit: transaction.dose_unit || medication.dose_unit,
 						inventory_unit: transaction.inventory_unit || medication.inventory_unit,
 						route: transaction.route || medication.route,
-						quantity_administered: Math.abs(Number(transaction.quantity_change) || 0)
+						frequency: transaction.frequency || medication.frequency,
+						quantity_administered: Number(transaction.administration_quantity) || Math.abs(Number(transaction.quantity_change) || 0),
+						inventory_total_remaining: Number(medication.inventory_total_remaining) || 0,
+						is_corrected: false,
+						is_entered_in_error: false,
+						correction_status_label: '',
+						correction_history: []
 					})
-			})
+
+					const correctionRows = (correctionsByOriginal.get(administration.root_transaction_id) || [])
+						.slice()
+						.sort((left, right) => Number(left.transaction_id) - Number(right.transaction_id))
+
+					correctionRows.forEach(correction => {
+						administration.correction_history.push({
+							status_label: correction.transaction_type === 'ADMINISTRATION_VOID' ? 'Entered in Error' : 'Corrected',
+							correction_date: correction.correction_date,
+							correction_time: correction.correction_time,
+							correction_user_name: correction.correction_user_name,
+							correction_reason: correction.correction_reason
+						})
+						administration.effective_transaction_id = Number(correction.transaction_id)
+						administration.correction_date = correction.correction_date
+						administration.correction_time = correction.correction_time
+						administration.correction_users_dcid = correction.correction_users_dcid
+						administration.correction_user_name = correction.correction_user_name
+						administration.correction_reason = correction.correction_reason
+
+						if (correction.transaction_type === 'ADMINISTRATION_VOID') {
+							administration.is_entered_in_error = true
+							administration.correction_status_label = 'Entered in Error'
+							return
+						}
+
+						administration.event_date = correction.event_date
+						administration.event_time = correction.event_time
+						administration.users_dcid = correction.users_dcid
+						administration.user_name = correction.user_name
+						administration.notes = correction.notes
+						administration.medication_name = correction.medication_name || administration.medication_name
+						administration.dose_amount = correction.dose_amount || administration.dose_amount
+						administration.dose_unit = correction.dose_unit || administration.dose_unit
+						administration.inventory_unit = correction.inventory_unit || administration.inventory_unit
+						administration.route = correction.route || administration.route
+						administration.frequency = correction.frequency || administration.frequency
+						administration.quantity_administered = Number(correction.administration_quantity) || administration.quantity_administered
+						administration.is_corrected = true
+						administration.correction_status_label = 'Corrected'
+					})
+
+					return administration
+				})
 		}
 
 		const prepareAdministrationMedicationOptions = administrations => {
@@ -274,7 +385,12 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm.transactionTypeLabel = transactionType => {
 			if (transactionType === 'REVERSAL') return 'Reversal'
 			if (transactionType === 'ADMINISTRATION') return 'Administration'
+			if (transactionType === 'ADMINISTRATION_CORRECTION') return 'Administration Correction'
+			if (transactionType === 'ADMINISTRATION_VOID') return 'Administration Entered in Error'
 			return $rootScope.appData.inventoryTransactionTypeList[transactionType] || transactionType
+		}
+		vm.transactionAffectsInventory = transaction => {
+			return Math.abs(Number(transaction && transaction.quantity_change) || 0) > 0.0000000001
 		}
 		const createInventoryRow = () => ({
 			added_date: $rootScope.appData.curDate,
@@ -802,6 +918,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm.medication = null
 		vm.administrationRecord = {}
 		vm.saveInProgress = false
+		vm.projectedInventoryStatus = null
 
 		const resetRecord = () => {
 			vm.administrationRecord = {
@@ -853,7 +970,36 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			)
 		}
 
+		const updateProjectedInventoryStatus = () => {
+			if (!vm.medication) {
+				vm.projectedInventoryStatus = null
+				return
+			}
+
+			const quantityText = String(vm.administrationRecord.quantity === undefined || vm.administrationRecord.quantity === null ? '' : vm.administrationRecord.quantity).trim()
+			const quantity = normalizedQuantity()
+			const availableQuantity = Number(vm.medication.inventory_total_remaining)
+
+			if ((quantityText && quantity === null) || quantity > availableQuantity) {
+				vm.projectedInventoryStatus = null
+				return
+			}
+
+			const storedBaselineQuantity = Number(vm.medication.inventory_baseline_quantity)
+			const historicalInventoryQuantity = Number(vm.medication.inventory_total_initial)
+			const baselineQuantity = storedBaselineQuantity > 0
+				? storedBaselineQuantity
+				: (historicalInventoryQuantity > 0 ? historicalInventoryQuantity : availableQuantity)
+			const projectedQuantity = quantity === null ? availableQuantity : availableQuantity - quantity
+
+			vm.projectedInventoryStatus = getInventoryStatus(projectedQuantity, baselineQuantity)
+			if (quantity !== null && vm.projectedInventoryStatus.inventory_status === 'OUT') {
+				vm.projectedInventoryStatus.inventory_status_label = 'Last of Inventory'
+			}
+		}
+
 		vm.checkReqFields = () => {
+			updateProjectedInventoryStatus()
 			$scope.$emit(vm.isFormValid() ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
 		}
 
@@ -892,6 +1038,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			inventory_unit: vm.medication.inventory_unit,
 			route: vm.medication.route,
 			frequency: vm.medication.frequency,
+			administration_quantity: normalizedQuantity(),
 			dateKeys: ['_date']
 		})
 
@@ -904,40 +1051,242 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				return
 			}
 
-			const quantity = normalizedQuantity()
-			const administeredBy = ($rootScope.appData.staffList || []).find(staff => String(staff.dcid) === String(vm.administrationRecord.users_dcid))
-			const administeredByName = administeredBy ? `${administeredBy.first_name} ${administeredBy.last_name}` : 'the selected staff member'
-
-			psConfirm({
-				title: 'Confirm Medication Administration',
-				message: `Confirm ${quantity} ${vm.medication.inventory_unit} (${vm.medication.dose_amount} ${vm.medication.dose_unit}) of ${vm.medication.medication_name} was administered by ${administeredByName} on ${vm.administrationRecord.event_date} at ${normalizeTime(vm.administrationRecord.event_time)}.`,
-				oktext: 'Administer',
-				canceltext: 'Cancel',
-				ok: () => {
-					vm.saveInProgress = true
+			const medicationName = vm.medication.medication_name
+			vm.saveInProgress = true
+			vm.checkReqFields()
+			loadingDialog()
+			psApiService.psApiCall('u_student_med_inv_txn', 'POST', buildPayload())
+				.then(() => {
+					$rootScope.showAdministrationFeedback(`${medicationName} administration saved.`)
+					$rootScope.reloadData()
+					vm.medication = null
+					resetRecord()
+					closeLoading()
+					closeDrawer(true)
+				})
+				.catch(() => {
+					vm.saveInProgress = false
 					vm.checkReqFields()
-					loadingDialog()
-					psApiService.psApiCall('u_student_med_inv_txn', 'POST', buildPayload())
-						.then(() => {
-							$rootScope.reloadData()
-							vm.medication = null
-							resetRecord()
-							closeLoading()
-							closeDrawer(true)
-						})
-						.catch(() => {
-							vm.saveInProgress = false
-							vm.checkReqFields()
-							closeLoading()
-						})
-				}
-			})
+					closeLoading()
+				})
 		}
 
 		$scope.$emit('open.drawer.event', openDrawer)
 		$scope.$emit('cancel.drawer.event', cancelDrawer)
 		$scope.$emit('save.drawer.event', saveDrawer)
 		resetRecord()
+	})
+
+	medicationModule.controller('administrationCorrectionController', function ($scope, $rootScope, psApiService) {
+		const vm = this
+		vm.mode = 'edit'
+		vm.administration = null
+		vm.correctionRecord = {}
+		vm.saveInProgress = false
+
+		const formatDateForInput = value => {
+			const dateText = String(value || '').trim()
+			const isoMatch = dateText.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+			return isoMatch ? `${isoMatch[2]}/${isoMatch[3]}/${isoMatch[1]}` : dateText
+		}
+
+		const normalizeDateForComparison = value => {
+			if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) {
+				return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`
+			}
+			const dateText = String(value || '').trim()
+			const isoMatch = dateText.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+			if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`
+			const usMatch = dateText.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+			if (usMatch) return `${usMatch[3]}-${usMatch[1].padStart(2, '0')}-${usMatch[2].padStart(2, '0')}`
+			return dateText
+		}
+
+		const normalizeTime = value => {
+			const match = String(value || '').trim().toUpperCase().match(/^(0?[1-9]|1[0-2]):([0-5]\d)\s*(AM|PM)$/)
+			if (!match) return ''
+			return `${match[1].padStart(2, '0')}:${match[2]} ${match[3]}`
+		}
+
+		const secondsToTime12 = value => {
+			const totalSeconds = Number(value)
+			if (!Number.isFinite(totalSeconds)) return ''
+			const hours24 = Math.floor(totalSeconds / 3600) % 24
+			const minutes = Math.floor((totalSeconds % 3600) / 60)
+			const hours12 = hours24 % 12 || 12
+			return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${hours24 >= 12 ? 'PM' : 'AM'}`
+		}
+
+		const timeToSeconds = value => {
+			const normalizedTime = normalizeTime(value)
+			if (!normalizedTime) return null
+			const hours = Number(normalizedTime.slice(0, 2)) % 12 + (normalizedTime.endsWith('PM') ? 12 : 0)
+			const minutes = Number(normalizedTime.slice(3, 5))
+			return hours * 3600 + minutes * 60
+		}
+
+		const normalizedQuantity = () => {
+			const quantityText = String(vm.correctionRecord.quantity === undefined || vm.correctionRecord.quantity === null ? '' : vm.correctionRecord.quantity).trim()
+			if (!/^(?:\d+\.?\d*|\.\d+)$/.test(quantityText)) return null
+			const quantity = Number(quantityText)
+			return Number.isFinite(quantity) && quantity > 0 ? quantity : null
+		}
+
+		const correctionReason = () => String(vm.correctionRecord.correction_reason || '').trim()
+
+		const quantityIncrease = () => {
+			const quantity = normalizedQuantity()
+			if (quantity === null || !vm.administration) return 0
+			return Math.max(0, quantity - Number(vm.administration.quantity_administered))
+		}
+
+		vm.quantityIncreaseExceedsAvailable = () => {
+			if (!vm.administration || vm.mode !== 'edit') return false
+			return quantityIncrease() > Number(vm.administration.inventory_total_remaining)
+		}
+
+		const recordHasChanges = () => {
+			if (!vm.administration || vm.mode !== 'edit') return false
+			const quantity = normalizedQuantity()
+			return Boolean(
+				quantity !== null &&
+				(
+					quantity !== Number(vm.administration.quantity_administered) ||
+					normalizeDateForComparison(vm.correctionRecord.event_date) !== normalizeDateForComparison(vm.administration.event_date) ||
+					normalizeTime(vm.correctionRecord.event_time) !== secondsToTime12(vm.administration.event_time) ||
+					String(vm.correctionRecord.users_dcid) !== String(vm.administration.users_dcid) ||
+					String(vm.correctionRecord.notes || '').trim() !== String(vm.administration.notes || '').trim()
+				)
+			)
+		}
+
+		vm.isFormValid = () => {
+			if (!vm.administration || vm.administration.is_entered_in_error || !correctionReason() || vm.saveInProgress) return false
+			if (vm.mode === 'void') return true
+
+			return Boolean(
+				normalizedQuantity() !== null &&
+				!vm.quantityIncreaseExceedsAvailable() &&
+				vm.correctionRecord.event_date &&
+				normalizeTime(vm.correctionRecord.event_time) &&
+				vm.correctionRecord.users_dcid &&
+				recordHasChanges()
+			)
+		}
+
+		vm.checkReqFields = () => {
+			$scope.$emit(vm.isFormValid() ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
+		}
+
+		const initializeRecord = administration => {
+			vm.correctionRecord = {
+				quantity: administration ? administration.quantity_administered : '',
+				event_date: administration ? formatDateForInput(administration.event_date) : '',
+				event_time: administration ? secondsToTime12(administration.event_time) : '',
+				users_dcid: administration ? administration.users_dcid : '',
+				notes: administration ? administration.notes : '',
+				correction_reason: ''
+			}
+		}
+
+		const openDrawer = (openCallBack, data) => {
+			const drawerData = (data && data.data) || {}
+			vm.mode = drawerData.mode === 'void' ? 'void' : 'edit'
+			vm.administration = drawerData.administration || null
+			vm.saveInProgress = false
+			initializeRecord(vm.administration)
+			vm.checkReqFields()
+			openCallBack()
+		}
+
+		const cancelDrawer = closeDrawer => {
+			vm.administration = null
+			vm.saveInProgress = false
+			vm.correctionRecord = {}
+			closeDrawer(true)
+		}
+
+		const buildCorrectionPayload = () => {
+			const originalQuantity = Number(vm.administration.quantity_administered)
+			const correctedQuantity = vm.mode === 'void' ? originalQuantity : normalizedQuantity()
+			const quantityChange = vm.mode === 'void'
+				? originalQuantity
+				: Number((originalQuantity - correctedQuantity).toFixed(10))
+
+			return {
+				u_student_medication_id: vm.administration.medication_id,
+				transaction_type: vm.mode === 'void' ? 'ADMINISTRATION_VOID' : 'ADMINISTRATION_CORRECTION',
+				quantity_change: quantityChange,
+				event_date: vm.correctionRecord.event_date,
+				event_time: timeToSeconds(vm.correctionRecord.event_time),
+				users_dcid: vm.correctionRecord.users_dcid,
+				notes: String(vm.correctionRecord.notes || '').trim(),
+				medication_name: vm.administration.medication_name,
+				dose_amount: vm.administration.dose_amount,
+				dose_unit: vm.administration.dose_unit,
+				inventory_unit: vm.administration.inventory_unit,
+				route: vm.administration.route,
+				frequency: vm.administration.frequency,
+				reversal_of_transaction_id: vm.administration.root_transaction_id,
+				administration_quantity: correctedQuantity,
+				correction_date: $rootScope.appData.curDate,
+				correction_time: timeToSeconds($rootScope.getCurrentTime()),
+				correction_users_dcid: $rootScope.appData.curUserDcid,
+				correction_reason: correctionReason(),
+				dateKeys: ['_date']
+			}
+		}
+
+		const postCorrection = closeDrawer => {
+			vm.saveInProgress = true
+			vm.checkReqFields()
+			loadingDialog()
+			psApiService.psApiCall('u_student_med_inv_txn', 'POST', buildCorrectionPayload())
+				.then(() => {
+					$rootScope.showAdministrationFeedback(vm.mode === 'void'
+						? `${vm.administration.medication_name} administration marked Entered in Error.`
+						: `${vm.administration.medication_name} administration corrected.`)
+					$rootScope.reloadData()
+					vm.administration = null
+					vm.correctionRecord = {}
+					closeLoading()
+					closeDrawer(true)
+				})
+				.catch(() => {
+					vm.saveInProgress = false
+					vm.checkReqFields()
+					closeLoading()
+				})
+		}
+
+		const saveDrawer = closeDrawer => {
+			if (!vm.isFormValid()) {
+				psAlert({
+					title: vm.mode === 'void' ? 'Invalid Entered-in-Error Correction' : 'Invalid Administration Correction',
+					message: vm.mode === 'void'
+						? 'Enter a reason for marking this administration as entered in error.'
+						: 'Change at least one administration value, enter a correction reason, and make sure any additional quantity does not exceed available inventory.'
+				})
+				return
+			}
+
+			if (vm.mode !== 'void') {
+				postCorrection(closeDrawer)
+				return
+			}
+
+			psConfirm({
+				title: 'Mark Administration as Entered in Error',
+				message: `<div style="padding: 8px 10px 12px;">This will preserve the original record, mark it Entered in Error, and restore ${vm.administration.quantity_administered} ${vm.administration.inventory_unit} to calculated inventory. Continue only if this administration should not count as medication given.</div>`,
+				oktext: 'Mark Entered in Error',
+				canceltext: 'Cancel',
+				ok: () => postCorrection(closeDrawer)
+			})
+		}
+
+		$scope.$emit('open.drawer.event', openDrawer)
+		$scope.$emit('cancel.drawer.event', cancelDrawer)
+		$scope.$emit('save.drawer.event', saveDrawer)
 	})
 
 	medicationModule.filter('pluralize', () => val => {

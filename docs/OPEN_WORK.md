@@ -11,11 +11,11 @@
 7. Complete authorization testing with nurse, ordinary staff, district, and cross-school accounts.
 8. Add controlled-medication reconciliation and returned-to-school workflows after nurse review.
 9. Add automated tests and PowerSchool plugin installation validation.
-10. Design an administrator-supported correction workflow that does not expose reversal terminology to nurses.
+10. Install and validate the append-only Corrected and Entered-in-Error administration workflows, including inventory deltas, audit metadata, repeated corrections, and action locking after void.
 
 ## Deployment cleanup
 
-- After refreshing the test server, install both generated plugins and validate the new `u_student_med_inv_txn` schema with the old `cdol_health_log_pqs` plugin disabled.
+- After refreshing the test server, install both generated plugins and validate the expanded `u_student_med_inv_txn` correction fields with the old `cdol_health_log_pqs` plugin disabled.
 - The permission mappings expose the full schema API action set consistently for all four tables. Confirm during testing that application code still treats historical inventory lots and transaction rows as read-only and never issues PUT or DELETE requests for them.
 - After health-log reads, staff dropdowns, and schema API writes pass that validation, uninstall and archive the separately maintained `cdol_health_log_pqs` repository and plugin.
 

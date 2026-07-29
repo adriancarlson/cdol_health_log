@@ -21,7 +21,7 @@
 17. Medication administration should identify who gave the dose and preserve an auditable record.
 18. Dose values must support whole numbers and decimals.
 19. Frequency must support daily and PRN behavior without treating PRN as a missed daily dose.
-20. Sensitive medication entries should include a double-check or confirmation step.
+20. Routine medication administrations should not use a redundant confirmation modal. Sensitive or high-risk medication double-check behavior remains a later conditional workflow rather than an interruption applied to every administration.
 21. Inventory removals use an append-only transaction ledger with one row per real-world event.
 22. FIFO lot balances are derived from immutable received lots and the medication-level transaction history; transactions are not split into per-lot allocation rows.
 23. Existing inventory lots are read-only after creation.
@@ -42,6 +42,14 @@
 38. The initial Administration page is student-specific and contains one Administer Medication button followed by one history table with no section heading. Inventory is not displayed on the page; the drawer's medication selector includes only medications whose calculated available inventory is greater than zero.
 39. Administration history can contain mixed medications. When more than one medication is present, a medication-and-dosage filter is available above the table.
 40. The Administer Medication button remains visible when no inventory is available. Opening it shows guidance to add medication through the student's Medication Inventory page instead of hiding or disabling the action.
+41. The Inventory and Administration grids use matching low-emphasis, left-arrow links for navigation between the two student-specific pages. Administration displays `← View Medication Inventory`; Inventory displays `← Administer Medication`. Add Medication and the Administration page's Administer Medication button remain the primary actions, and every cross-page link preserves student context with `?frn=~(studentfrn)`. The no-inventory administration drawer guidance also links directly to that student's inventory.
+42. The administration drawer reuses the Inventory page's warning colors as compact pills. Available Inventory represents the current status; Quantity Administered recalculates against the projected remaining inventory as the nurse types and can move through Low Inventory, Critical Inventory, and Last of Inventory before save. Last of Inventory uses the Out styling only for a valid quantity that consumes the remaining balance. Invalid or excessive quantities have no projected pill, Out of Inventory appears in the no-available-medication message, and Normal has no pill.
+43. Administration history uses the same pencil and minus visual pattern as Health Logs, but it does not copy Health Log's direct PUT and DELETE behavior. The original administration transaction remains immutable.
+44. A pencil correction creates one `ADMINISTRATION_CORRECTION` transaction linked to the original. It stores the complete corrected administration snapshot and an inventory delta equal to old effective quantity minus corrected quantity, allowing a correction to remain one atomic POST.
+45. The minus action is labeled Mark Administration as Entered in Error. It requires a reason and a confirmation modal explaining that the effective administered quantity will be restored to inventory. The append-only `ADMINISTRATION_VOID` row captures the correction user and timestamp; the original remains visible and marked, and no further actions are offered for that entry.
+46. Successful administration actions use the PowerSchool `feedback-confirm` treatment inside the rounded administration table container and disappear automatically after five seconds so confirmation is visible without becoming persistent page clutter.
+47. The Edit Inventory transaction table is titled `Inventory Activity` rather than `Deductions` because append-only corrections may increase inventory. Documentation-only administration corrections with a zero inventory delta remain in administration audit history but are omitted from Inventory Activity. Correction rows use the correction date, correcting user, and reason.
+48. Corrected and Entered-in-Error labels in Inventory Activity use the same compact pill treatment as Administration history, with the red warning treatment reserved for Entered in Error.
 
 ## Superseded or rejected approaches
 

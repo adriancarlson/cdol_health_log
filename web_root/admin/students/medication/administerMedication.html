@@ -37,6 +37,36 @@
             line-height: 1.25;
         }
 
+        .administration-inventory-status-pill {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 7px;
+            border: 1px solid;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+
+        .administration-inventory-status-pill.inventory-warning-low {
+            color: #5f4700;
+            background-color: #fff4ce;
+            border-color: #d6b656;
+        }
+
+        .administration-inventory-status-pill.inventory-warning-critical {
+            color: #8a3b00;
+            background-color: #ffe3cc;
+            border-color: #d9822b;
+        }
+
+        .administration-inventory-status-pill.inventory-warning-out {
+            color: #a12622;
+            background-color: #faeeee;
+            border-color: #c84a4a;
+        }
+
         #administration-quantity-input {
             width: 8ch;
             min-width: 8ch;
@@ -50,8 +80,11 @@
     </style>
 
     <div class="feedback-alert" role="alert" ng-if="!$root.appData.availableMedicationList.length">
-        Medication must be added to the student's inventory using the Medication Inventory page before it can be
-        administered.
+        <span class="administration-inventory-status-pill inventory-warning-out">Out of Inventory</span>
+        No medication is available to administer. Add medication using
+        <a href="/admin/students/medication/inventory.html?frn=~(studentfrn)"
+            aria-label="Open ~(first_name)'s Medication Inventory">Medication Inventory</a>
+        first.
     </div>
 
     <div class="fluid-form" ng-if="$root.appData.availableMedicationList.length">
@@ -76,7 +109,13 @@
             <div ng-if="admin.medication">
                 <label>Available Inventory</label>
                 <span class="administration-summary-value">{{admin.medication.inventory_total_remaining}}
-                    {{admin.medication.inventory_unit | pluralize}}</span>
+                    {{admin.medication.inventory_unit | pluralize}}
+                    <span class="administration-inventory-status-pill"
+                        ng-if="admin.medication.inventory_status !== 'NORMAL'"
+                        ng-class="admin.medication.inventory_status_row_class">
+                        {{admin.medication.inventory_status_label}}
+                    </span>
+                </span>
             </div>
         </div>
 
@@ -87,6 +126,11 @@
                     ng-model="admin.administrationRecord.quantity" ng-change="admin.checkReqFields()">
                 {{admin.medication.inventory_unit | pluralize}}
                 ({{admin.medication.dose_amount}} {{admin.medication.dose_unit}})
+                <span class="administration-inventory-status-pill"
+                    ng-if="admin.projectedInventoryStatus && admin.projectedInventoryStatus.inventory_status !== 'NORMAL'"
+                    ng-class="admin.projectedInventoryStatus.inventory_status_row_class">
+                    {{admin.projectedInventoryStatus.inventory_status_label}}
+                </span>
             </div>
         </div>
 

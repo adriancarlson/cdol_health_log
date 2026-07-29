@@ -155,6 +155,25 @@
             .transaction-explanation {
                 margin: 8px 10px;
             }
+
+            .inventory-activity-status-pill {
+                display: inline-block;
+                margin-top: 3px;
+                padding: 1px 6px;
+                border: 1px solid #8a8a8a;
+                border-radius: 999px;
+                color: #555;
+                background: #f3f3f3;
+                font-size: 11px;
+                font-weight: bold;
+                white-space: nowrap;
+            }
+
+            .inventory-activity-status-pill.inventory-activity-status-error {
+                color: #a12622;
+                background-color: #faeeee;
+                border-color: #c84a4a;
+            }
         </style>
         <div id="med-date-row" ng-show="vm.drawerMode === 'edit'">
             <div id="med-name-group">
@@ -350,7 +369,7 @@
         </div>
         <div id="inventory-transactions-section" class="inventory-form-table-section" ng-if="vm.isEditMode"
             ng-show="vm.drawerMode === 'edit'">
-            <label id="transactions-label">Deductions</label>
+            <label id="transactions-label">Inventory Activity</label>
             <table id="inventory-transactions-table" class="grid inventory-form-grid">
                 <colgroup>
                     <col style="width: 20%;">
@@ -370,22 +389,34 @@
                 </thead>
                 <tbody>
                     <tr
-                        ng-if="!vm.removalMedication.inventory_transactions || !vm.removalMedication.inventory_transactions.length">
-                        <td colspan="5" class="center">No deductions</td>
+                        ng-if="!vm.removalMedication.inventory_transactions || !(vm.removalMedication.inventory_transactions | filter:vm.transactionAffectsInventory).length">
+                        <td colspan="5" class="center">No inventory activity</td>
                     </tr>
-                    <tr ng-repeat="transaction in vm.removalMedication.inventory_transactions">
+                    <tr
+                        ng-repeat="transaction in (vm.removalMedication.inventory_transactions | filter:vm.transactionAffectsInventory)">
                         <td>
                             <div>{{vm.transactionTypeLabel(transaction.transaction_type)}}</div>
                             <div ng-if="transaction.is_reversed"><em>Reversed</em></div>
+                            <span class="inventory-activity-status-pill"
+                                ng-if="transaction.correction_status_label"
+                                ng-class="{ 'inventory-activity-status-error': transaction.correction_status_label === 'Entered in Error' }">
+                                {{transaction.correction_status_label}}
+                            </span>
                         </td>
                         <td class="center"
                             ng-class="transaction.quantity_change < 0 ? 'inventory-change-negative' : 'inventory-change-positive'">
                             {{transaction.quantity_change > 0 ? '+' : ''}}{{transaction.quantity_change}}
                             {{vm.removalMedication.inventory_unit | pluralize}}
                         </td>
-                        <td>{{transaction.event_date | date}}</td>
-                        <td>{{transaction.user_name || transaction.users_dcid}}</td>
-                        <td>{{transaction.notes}}</td>
+                        <td>{{(transaction.correction_date || transaction.event_date) | date}}</td>
+                        <td>{{transaction.correction_user_name || transaction.user_name ||
+                            transaction.correction_users_dcid || transaction.users_dcid}}</td>
+                        <td>
+                            <div ng-if="!transaction.correction_reason">{{transaction.notes}}</div>
+                            <div ng-if="transaction.correction_reason">
+                                <strong>Correction reason:</strong> {{transaction.correction_reason}}
+                            </div>
+                        </td>
                     </tr>
                 </tbody>
             </table>

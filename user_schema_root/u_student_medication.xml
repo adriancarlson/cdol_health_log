@@ -38,5 +38,10 @@
         <field name="route" type="String" length="250" />
         <field name="frequency" type="String" length="250" />
         <field name="reversal_of_transaction_id" type="Integer" />
+        <field name="administration_quantity" type="Double" />
+        <field name="correction_date" type="Date" />
+        <field name="correction_time" type="Integer" />
+        <field name="correction_users_dcid" type="Integer" />
+        <field name="correction_reason" type="String" length="4000" />
     </extendedTable>
 </psExtension>

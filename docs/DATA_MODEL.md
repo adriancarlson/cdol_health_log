@@ -60,9 +60,21 @@ Append-only standalone inventory transaction table. Each real-world removal crea
 | `inventory_unit` | String(250) | Inventory-unit snapshot for an administration |
 | `route` | String(250) | Route snapshot for an administration |
 | `frequency` | String(250) | Frequency snapshot for an administration |
-| `reversal_of_transaction_id` | Integer | Reserved for historical data and a future correction workflow; not used by the nurse-facing removal form |
+| `reversal_of_transaction_id` | Integer | Links an administration correction or entered-in-error transaction to the immutable original administration |
+| `administration_quantity` | Double | Full administered quantity snapshot; correction rows use this while `quantity_change` stores only the inventory delta |
+| `correction_date` | Date | Date a correction or entered-in-error action was recorded |
+| `correction_time` | Integer | Time the correction was recorded in PowerSchool seconds-from-midnight format |
+| `correction_users_dcid` | Integer | User who recorded the correction |
+| `correction_reason` | String(4000) | Required explanation for the correction |
 
 Removal rows use the common transaction fields. A given dose uses `transaction_type = ADMINISTRATION`, stores the administration details in the snapshot fields, and records the administered inventory quantity as a negative `quantity_change`. One row therefore serves as both the administration audit record and the inventory deduction, avoiding a partial two-record save.
+
+Administration corrections remain append-only:
+
+- `ADMINISTRATION_CORRECTION` references the original administration with `reversal_of_transaction_id`, stores the corrected administration snapshot, and applies only the inventory difference in `quantity_change`.
+- `ADMINISTRATION_VOID` references the original administration, restores the current effective administered quantity with a positive `quantity_change`, and marks the original history entry Entered in Error.
+- The original `ADMINISTRATION` row is never updated or deleted.
+- Multiple corrections reference the original row and are applied in transaction-ID order. History presents the latest effective values once while preserving every underlying transaction.
 
 ## Required relationship behavior
 
@@ -72,12 +84,12 @@ Removal rows use the common transaction fields. A given dose uses `transaction_t
 - Inventory consumption is applied to lots oldest-first when remaining quantities are derived.
 - Quantity history must not be overwritten.
 - Each inventory removal creates one transaction row rather than updating an original lot.
-- Saved removal transactions remain append-only. The nurse-facing workflow does not currently provide correction or reversal controls.
+- Saved inventory and administration transactions remain append-only. The nurse-facing workflow calls administration corrections `Corrected` or `Entered in Error`; it does not expose reversal terminology.
 
 ## Initial administration model
 
-The initial implementation records only doses that were actually administered. The administration page filters the shared ledger to `ADMINISTRATION` rows and shows those rows as administration history. Student and school-year context are derived through the linked medication definition.
+The initial implementation records only doses that were actually administered. The administration page resolves original `ADMINISTRATION` rows together with any linked correction rows and shows one effective history row. Entered-in-error rows remain visible and clearly marked. Student and school-year context are derived through the linked medication definition.
 
 The administration form collects the actual quantity used in the medication's inventory unit and shows the prescribed dose amount and unit in parentheses for reference. That entered quantity becomes the transaction's negative `quantity_change`.
 
-Expected schedules, missed-dose statuses and reasons, and correction metadata remain later phases and may require additional schema after those workflows are approved.
+Expected schedules and missed-dose statuses and reasons remain later phases and may require additional schema after those workflows are approved.
