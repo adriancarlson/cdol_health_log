@@ -77,16 +77,18 @@
             <div>
                 <label>Prescribed Dosage</label>
                 <span class="administration-correction-value">{{correction.administration.dose_amount}}
-                    {{correction.administration.dose_unit}}</span>
+                    {{$root.medicationOptionDisplayValue('dose_unit', correction.administration.dose_unit)}}</span>
             </div>
             <div>
                 <label>Route</label>
-                <span class="administration-correction-value">{{correction.administration.route}}</span>
+                <span class="administration-correction-value">{{$root.medicationOptionDisplayValue('route',
+                    correction.administration.route)}}</span>
             </div>
             <div>
                 <label>Recorded Quantity</label>
                 <span class="administration-correction-value">{{correction.administration.quantity_administered}}
-                    {{correction.administration.inventory_unit | pluralize}}</span>
+                    {{$root.medicationOptionDisplayValue('inventory_unit', correction.administration.inventory_unit) |
+                    pluralize}}</span>
             </div>
         </div>
 
@@ -96,13 +98,15 @@
                     <span class="req"><em>*</em></span></label>
                 <input id="administration-correction-quantity" type="text" size="10" inputmode="decimal"
                     ng-model="correction.correctionRecord.quantity" ng-change="correction.checkReqFields()">
-                {{correction.administration.inventory_unit | pluralize}}
-                ({{correction.administration.dose_amount}} {{correction.administration.dose_unit}})
+                {{$root.medicationOptionDisplayValue('inventory_unit', correction.administration.inventory_unit) | pluralize}}
+                ({{correction.administration.dose_amount}} {{$root.medicationOptionDisplayValue('dose_unit',
+                correction.administration.dose_unit)}})
             </div>
             <div>
                 <label>Available Inventory</label>
                 <span class="administration-correction-value">{{correction.administration.inventory_total_remaining}}
-                    {{correction.administration.inventory_unit | pluralize}}</span>
+                    {{$root.medicationOptionDisplayValue('inventory_unit', correction.administration.inventory_unit) |
+                    pluralize}}</span>
             </div>
         </div>
 

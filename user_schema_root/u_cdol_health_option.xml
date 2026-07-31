@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<psExtension xmlns="http://www.powerschool.com"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.powerschool.com psextension.xsd">
+    <extensionname>u_cdol_health_option</extensionname>
+    <extendedTable type="standalone" dbTableName="u_cdol_health_option" childName="u_cdol_health_option" comment="Shared selectable options for CDOL Health workflows">
+        <field name="codetype" type="String" length="20" />
+        <field name="code" type="String" length="40" />
+        <field name="displayvalue" type="String" length="100" />
+        <field name="description" type="String" length="1000" />
+        <field name="isvisible" type="Integer" />
+        <field name="ismodifiable" type="Integer" />
+        <field name="isdeletable" type="Integer" />
+        <field name="uidisplayorder" type="Integer" />
+    </extendedTable>
+</psExtension>

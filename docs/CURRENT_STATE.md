@@ -6,17 +6,25 @@
 - The XML defines:
   - `u_student_medication`, a student child table for medication definitions.
   - `u_student_medication_inventory`, a standalone table for inventory lots.
+  - `u_student_med_inv_txn`, a standalone append-only inventory and administration activity table.
+  - `u_cdol_health_option`, a shared standalone table for categorized Health workflow options.
 - The schema includes medication name, dose, dose unit, inventory unit, frequency, route, audit user/date, notes, and immutable quantities received. Remaining quantities are derived rather than stored.
 - The data model direction of one medication to many inventory lots has been established.
 - The repository schema defines the append-only `u_student_med_inv_txn` inventory transaction table.
 - Existing inventory lots are read-only in the drawer; refills create new lots.
-- Parent pickup and other approved removals create one medication-level transaction and display in the Deductions table at the bottom of Edit Inventory.
+- Parent pickup and other approved removals create one medication-level transaction and display in the Inventory Activity table at the bottom of Edit Inventory.
 - Lot balances and total available inventory are derived by applying the net transaction quantity to immutable received lots in FIFO order.
 - The medication definition includes an automatically maintained replenishment baseline. Nurses do not configure per-dose inventory quantities or alert percentages.
 - The inventory page calculates Normal, Low, Critical, and Out states from fixed 20% and 10% thresholds. Normal has no visible indicator and percentages are not displayed. The full warning label is left-aligned and the quantity is right-aligned on the single inventory row or on the Total row when multiple lots exist; Out of Inventory uses a subtle pale-red treatment. Adding inventory resets the baseline; deductions do not.
 - The main page labels creation as `Add Medication`; the edit drawer uses `Add Inventory` for additional count-in rows on an existing medication.
 - Add/Edit Medication prevents duplicate definitions for the same student when normalized medication name, numeric dosage amount, and dose unit match, while allowing the same name with a different dosage or dose unit.
 - Medication-name spacing is normalized on blur and before save by trimming the ends, collapsing repeated internal spaces, and capitalizing the first character while preserving the remainder of the entered capitalization.
+- Medication dose unit, inventory unit, route, and frequency dropdowns load Active values from `u_cdol_health_option` categories `MED_DOSE_UNIT`, `MED_INVENTORY_UNIT`, `MED_ROUTE`, and `MED_FREQUENCY`. A fresh table remains empty until a district administrator adds values.
+- Each dropdown's italicized `Other` action temporarily replaces that dropdown with a text field, plus button, and Cancel button. A successful plus action restores the dropdown with the new value selected; Cancel restores it without creating a value. The plus action trims and normalizes the value, stores the same first-letter-capitalized text as Display Value and Description, and generates a lowercase Code with all whitespace removed. Display Value/Description are limited to 100 characters, Code is limited to 40, and duplicates select the existing option.
+- Add/Edit Medication accepts only Active values from the four medication option categories. All four medication fields store stable option codes while the UI resolves their current display labels.
+- `/admin/district/healthsetup/cdolhealthoptions.html` provides the district CDOL Health Code Sets manager. It follows the native Code Set pattern with a category selector, conditional Show Inactive checkbox and count immediately before Add Code, value table, and edit drawer. Administrators can add codes, change display labels, mark values Active or Inactive, and reorder the main grid with Move up and Move down buttons. Inactive values are hidden by default; when shown, they remain below all Active values and reorder only within the Inactive group. The drawer places Display Value, Code, and Active on one aligned row, with the Active checkbox centered below its label. Display order is assigned automatically and is not typed in the drawer. Codes are immutable after creation and rows are not deleted.
+- PowerSchool supplies the shared option table's ID and standard created/modified audit columns. The application does not submit those fields.
+- Enhanced Navigation catalogs the manager under **District Management → Health**, after native Health Code Sets, using `districtLevelContext = 2`. The page also displays a District Office-only warning instead of the manager when rendered outside District Office context.
 - Inventory quantities use spaced remaining/original formatting such as `2.75 / 5 Pills` for readability.
 - Add/edit and removal use one PowerSchool drawer with internal modes so medication context is preserved.
 - Reversal is not exposed in the nurse-facing inventory workflow. A future correction workflow must be designed separately from medication physically returning to school.
@@ -37,6 +45,8 @@
 - The application no longer calls the `net.cdolinc.health.healthLog.logs` or `net.cdolinc.health.healthLog.staff` PowerQueries at runtime.
 - The internal schema API permission mappings formerly supplied by `cdol_health_log_pqs` are maintained in this repository. Medication custom-page writes do not require external API field access requests.
 - The default VS Code build creates two installable plugins from the one repository and source `plugin.xml`: the main plugin without `permissions_root`, and a `CDOL Health Log - Data Access` plugin containing the permission mappings without `user_schema_root` or application files.
+- PowerSchool rejects `/ws/district/codeset` as a target in a plugin permission-mapping file because that file cannot grant access to core-resource routes. Medication option reads and additions now use the internal schema API for `u_cdol_health_option`, whose permission mappings are included for the Medication Inventory and Medication Administration pages.
+- The shared table is ready for future Health Log categories, but Complaint, Destination, Conversation Type, and Sport still use their current controls. Health Log permissions have not been extended to `u_cdol_health_option` pending review of shared-table authorization.
 
 ## Prior implementation status reported in ChatGPT
 

@@ -50,6 +50,18 @@
 46. Successful administration actions use the PowerSchool `feedback-confirm` treatment inside the rounded administration table container and disappear automatically after five seconds so confirmation is visible without becoming persistent page clutter.
 47. The Edit Inventory transaction table is titled `Inventory Activity` rather than `Deductions` because append-only corrections may increase inventory. Documentation-only administration corrections with a zero inventory delta remain in administration audit history but are omitted from Inventory Activity. Correction rows use the correction date, correcting user, and reason.
 48. Corrected and Entered-in-Error labels in Inventory Activity use the same compact pill treatment as Administration history, with the red warning treatment reserved for Entered in Error.
+49. Dose unit, inventory unit, route, and frequency dropdowns are populated from the shared `u_cdol_health_option` extended table using the categories `MED_DOSE_UNIT`, `MED_INVENTORY_UNIT`, `MED_ROUTE`, and `MED_FREQUENCY`.
+50. Every user authorized for the Medication Inventory page may use the dropdown's italicized `Other` action to add a value to its associated option category. Selecting it replaces that dropdown with the add-value controls until the value is successfully added or Cancel is clicked. `Other` is not stored as a medication value.
+51. New option display values are normalized like medication names: trim the ends, collapse repeated internal whitespace, capitalize the first character, and preserve the remaining capitalization. The same normalized value is stored as both Display Value and Description.
+52. A newly generated option Code is the normalized value lowercased with all whitespace removed. Display Value and Description are limited to 100 characters, Code is limited to 40, and overlong codes are rejected rather than truncated to avoid ambiguous collisions.
+53. A fresh `u_cdol_health_option` table starts empty. Initial values are entered deliberately through the district CDOL Health Code Sets page rather than being seeded when a nurse opens Medication Inventory.
+54. The shared option table is designed for later Health Log categories, beginning with Complaint, Destination, Conversation Type, and Sport. Health Log controls and permissions are not changed during the medication phase.
+55. Medication removal types remain fixed audit-workflow values and are not stored in the shared option table. Treatment remains free text unless a later requirement explicitly converts it to a controlled dropdown.
+56. Health Log write access to a shared table must be reviewed before migration because PowerSchool schema permission mappings authorize a table route, not individual `codetype` rows.
+57. The CDOL Health Code Sets page is cataloged under `navDistrictManagementHealth` with `districtLevelContext = 2`, a main navigation context, and a sort order immediately after the native Health Code Sets page. Its page content also refuses management outside District Office context.
+58. Health option codes are generated from the normalized display value and become immutable after creation. Administrators may change display text and Active status. Display order is assigned automatically and changed only with Move up and Move down controls on the main grid, matching the native Health Code Sets page. Inactive status is used instead of deletion so historical medication and Health Log records retain a resolvable code.
+59. PowerSchool automatically supplies the option table's record ID and standard created/modified user and timestamp fields. The extension XML and application payloads must not redeclare or submit those fields.
+60. The district Health Code Sets grid hides Inactive values by default. A Show Inactive checkbox displays the inactive count and, when selected, appends Inactive values after all Active values. Move controls do not allow a row to cross the Active/Inactive boundary.
 
 ## Superseded or rejected approaches
 
@@ -61,3 +73,5 @@
 - Do not place timing or an active flag on each inventory lot merely to represent medication scheduling.
 - Do not create per-lot transaction allocations or event grouping keys for a single inventory event.
 - Do not present medication physically returning to school as a reversal of the earlier removal.
+- Do not depend on `/ws/district/codeset` for medication options because the internal custom page cannot be granted that core-resource permission through plugin permission mappings.
+- Do not persist `Other` as a medication option or silently truncate an overlong generated option Code.

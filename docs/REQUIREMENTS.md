@@ -41,6 +41,30 @@ Frequency must support at least:
 
 Frequency and scheduling details belong with the medication or administration schedule, not with each inventory lot.
 
+Dose unit, inventory unit, route, and frequency options must come from the shared `u_cdol_health_option` extended table using these option categories:
+
+- `MED_DOSE_UNIT`
+- `MED_INVENTORY_UNIT`
+- `MED_ROUTE`
+- `MED_FREQUENCY`
+
+The table is shared so Health Log complaints, destinations, conversation types, sports, and other approved extensible lists can use separate categories later. Medication removal reasons and other fixed audit-workflow values must not become user-extensible options.
+
+Do not automatically seed initial values. District administrators populate and maintain each category from `/admin/district/healthsetup/cdolhealthoptions.html`. The page must appear only in District Office navigation under **District Management → Health**, immediately after the native Health Code Sets link. It must allow an administrator to select a CDOL Health Code Set, add codes, edit the display value, mark a value Active or Inactive, and change display order with Move up and Move down controls on the main grid. Display order is assigned automatically and is not typed in the Add/Edit drawer. Inactive values must remain stored so historical references are not deleted. The main grid hides Inactive values by default. When the selected set contains inactive values, a Show Inactive checkbox with the inactive count appears immediately before Add Code. When selected, Inactive values appear after all Active values and can only be reordered within the Inactive group.
+
+Each medication dropdown includes an italicized `Other` action for authorized Medication Inventory users. Selecting it temporarily replaces that dropdown with a text field, plus button, and Cancel button. A successful plus action creates the value in the associated option category, restores the dropdown, adds the new value, and selects it for the current medication. Cancel restores the unselected dropdown without creating a value. `Other` itself is a UI action and must never be saved as the medication value.
+
+For a newly added option:
+
+- Trim leading and trailing whitespace.
+- Replace repeated internal whitespace with one space.
+- Capitalize the first character while preserving the remainder of the user's capitalization.
+- Store that normalized text identically in `displayValue` and `description`.
+- Generate `code` by lowercasing the normalized text and removing all whitespace.
+- Limit `displayValue` and `description` to 100 characters because `displayValue` is the tighter database field.
+- Reject a generated `code` longer than 40 characters rather than silently truncating it.
+- If the normalized display value or generated code already exists in that category, select the existing value instead of creating a duplicate.
+
 ## 3. Route
 
 Route must use a controlled dropdown rather than unrestricted free text.
@@ -54,7 +78,7 @@ Routes discussed during planning included:
 - Subcutaneous
 - Rectal
 
-The final production route list must be confirmed. If an `Other` choice is retained, the additional explanation should be captured in notes rather than replacing the controlled route value with arbitrary text.
+The initial production values must be entered and confirmed through the district CDOL Health Code Sets page. Later additions must use the controlled shared-option workflow above rather than unrestricted route text.
 
 ## 4. Inventory
 

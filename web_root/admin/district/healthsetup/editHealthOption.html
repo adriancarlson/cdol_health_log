@@ -1,0 +1,79 @@
+<form data-ng-controller="healthOptionEditController as vm">
+    <style>
+        .health-option-form-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            padding: 12px 14px;
+        }
+
+        .health-option-form-row:nth-of-type(odd) {
+            background-color: #eee;
+        }
+
+        .health-option-form-field label {
+            display: block;
+            margin-bottom: 3px;
+            margin-left: 0 !important;
+            padding-left: 0 !important;
+            text-align: left;
+        }
+
+        .health-option-active-checkbox {
+            text-align: center;
+        }
+
+        .health-option-active-checkbox input {
+            margin: 0;
+        }
+
+        .health-option-display-input {
+            width: 260px;
+        }
+
+        .health-option-code-input {
+            width: 200px;
+        }
+
+        .health-option-drawer-message {
+            margin: 10px 14px;
+        }
+    </style>
+
+    <div class="health-option-form-row">
+        <div class="health-option-form-field">
+            <label>Code Set</label>
+            <span>{{vm.codeSetName()}}</span>
+        </div>
+    </div>
+
+    <div class="health-option-form-row">
+        <div class="health-option-form-field">
+            <label for="health-option-display-value">Display Value <span class="req"><em>*</em></span></label>
+            <input id="health-option-display-value" class="health-option-display-input" type="text" maxlength="100"
+                data-ng-model="vm.optionRecord.displayValue" data-ng-change="vm.updateGeneratedCode()"
+                data-ng-blur="vm.normalizeDisplayValue()">
+        </div>
+        <div class="health-option-form-field">
+            <label for="health-option-code">Code <span class="req"><em>*</em></span></label>
+            <input id="health-option-code" class="health-option-code-input" type="text" maxlength="40"
+                data-ng-model="vm.optionRecord.code" readonly>
+        </div>
+        <div class="health-option-form-field">
+            <label for="health-option-visible">Active</label>
+            <div class="health-option-active-checkbox">
+                <input id="health-option-visible" type="checkbox" data-ng-model="vm.optionRecord.isVisible"
+                    data-ng-change="vm.checkReqFields()">
+            </div>
+        </div>
+    </div>
+
+    <div class="feedback-alert health-option-drawer-message" role="alert" data-ng-if="vm.duplicateOptionExists()">
+        This code or display value already exists in {{vm.codeSetName()}}.
+    </div>
+    <div class="feedback-info health-option-drawer-message">
+        The code is generated automatically from the display value. Existing codes cannot be changed because saved
+        health records may reference them. Clear Active to stop offering a value without deleting its history. Use
+        the arrows on the main page to change display order.
+    </div>
+</form>

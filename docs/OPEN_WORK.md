@@ -5,7 +5,7 @@
 1. Package, install, and test the initial student Medication Administration page and the new `ADMINISTRATION` transaction fields.
 2. Confirm administration saves create exactly one deduction, update FIFO balances, refresh the available-medication list, and appear once in administration history.
 3. Confirm the supported PowerSchool server-side mechanism for preventing simultaneous deductions from exceeding available inventory.
-4. Confirm the final dose-unit, inventory-unit, route, and frequency lists with the nurse.
+4. Install and test district Health Code Set creation plus in-context medication-option creation with both administrator and non-administrator users who are authorized for Medication Inventory.
 5. Implement required missed-dose reasons and notes after the administration workflow is stable.
 6. Add scheduling, PRN handling, gap detection, and reminders in the later scheduling phase.
 7. Complete authorization testing with nurse, ordinary staff, district, and cross-school accounts.
@@ -16,22 +16,23 @@
 ## Deployment cleanup
 
 - After refreshing the test server, install both generated plugins and validate the expanded `u_student_med_inv_txn` correction fields with the old `cdol_health_log_pqs` plugin disabled.
-- The permission mappings expose the full schema API action set consistently for all four tables. Confirm during testing that application code still treats historical inventory lots and transaction rows as read-only and never issues PUT or DELETE requests for them.
+- The permission mappings expose the full schema API action set consistently for the medication tables and `u_cdol_health_option`. Confirm during testing that application code still treats historical inventory lots and transaction rows as read-only and never issues PUT or DELETE requests for them.
+- Populate and approve the initial medication values from the district CDOL Health Code Sets page before Medication Inventory is released to nurses. Confirm an empty table remains empty when Medication Inventory is opened.
+- The UI suppresses duplicate values, but the PowerSchool extension table does not currently enforce a database uniqueness constraint; simultaneous identical additions remain a concurrency risk to test.
 - After health-log reads, staff dropdowns, and schema API writes pass that validation, uninstall and archive the separately maintained `cdol_health_log_pqs` repository and plugin.
 
 ## Open design questions
 
 These should be resolved explicitly before Codex hard-codes behavior:
 
-- What is the final approved route list?
-- Should `Other` route exist as a controlled value, and where is its explanation stored?
-- What are the final dose and inventory unit lists?
+- Who owns ongoing review, deactivation, and cleanup of values added to the shared Health option table?
+- Before Health Log migration, do Health Log users and Medication Inventory users have the same authorization boundary? PowerSchool schema permission mappings grant access to the whole shared table and cannot restrict writes by `codetype`.
+- Which current Health Log lists should migrate after medication is stable? Current candidates are Complaint, Destination, Conversation Type, and Sport. Treatment remains free text and fixed medication removal reasons should not migrate.
 - Where is the expected administration schedule stored?
 - How are school days, weekends, holidays, absences, and non-school days handled?
 - How is PRN excluded from false missed-dose alerts?
 - Is the reminder configured per user, school, medication, or district?
 - Which PowerSchool security groups or roles have access?
-- Can an administration record be edited, or must it be reversed and recreated?
 - How are controlled-medication counts reconciled?
 - Does each administration need a second-person verification option?
 - Should medication returned after parent pickup create a newly counted lot? Current recommendation: yes.

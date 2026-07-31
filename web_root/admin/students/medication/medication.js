@@ -1,4 +1,12 @@
-define(['angular', 'components/shared/powerschoolModule', 'components/health_log/module', 'components/health_log/services/formatService', 'components/health_log/services/jsonDataService', 'components/health_log/services/psApiService'], angular => {
+define([
+	'angular',
+	'components/health_log/config/healthOptions',
+	'components/shared/powerschoolModule',
+	'components/health_log/module',
+	'components/health_log/services/formatService',
+	'components/health_log/services/jsonDataService',
+	'components/health_log/services/psApiService'
+], (angular, healthOptionConfig) => {
 	'use strict'
 	const medicationModule = angular.module('medicationModule', ['powerSchoolModule', 'healthLogMod'])
 	const LOW_INVENTORY_PERCENTAGE = 20
@@ -52,6 +60,27 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		return normalizedName.charAt(0).toUpperCase() + normalizedName.slice(1)
 	}
 	const normalizeMedicationIdentityText = value => normalizeMedicationNameSpacing(value).toLowerCase()
+	const ADD_HEALTH_OPTION_VALUE = '__ADD_HEALTH_OPTION_VALUE__'
+	const HEALTH_OPTION_DISPLAY_VALUE_MAX_LENGTH = healthOptionConfig.displayValueMaxLength
+	const HEALTH_OPTION_CODE_MAX_LENGTH = healthOptionConfig.codeMaxLength
+	const MEDICATION_OPTION_TYPES = healthOptionConfig.medicationTypes
+	const normalizeHealthOptionDisplayValue = healthOptionConfig.normalizeDisplayValue
+	const buildHealthOptionCode = healthOptionConfig.buildCode
+	const normalizeHealthOptionRecord = healthOptionConfig.normalizeRecord
+	const isActiveHealthOption = record => {
+		if (record.isVisible === false || record.isVisible === 0 || record.isVisible === '0') return false
+		return true
+	}
+	const buildHealthOptionPayload = (fieldName, option, displayOrder) => ({
+		codetype: MEDICATION_OPTION_TYPES[fieldName].codeType,
+		code: option.code,
+		displayvalue: option.displayValue,
+		description: option.displayValue,
+		isvisible: 1,
+		ismodifiable: 1,
+		isdeletable: 1,
+		uidisplayorder: displayOrder
+	})
 
 	medicationModule.controller('medicationController', function ($scope, $rootScope, $attrs, $http, $q, jsonDataService, psApiService) {
 		const vm = this
@@ -82,18 +111,15 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			curTime: $rootScope.getCurrentTime(),
 			districtUser: $attrs.ngCurUserSecurityRoles && ($attrs.ngCurUserSecurityRoles.split(',').includes('9') || $attrs.ngCurUserSecurityRoles.split(',').includes('6')),
 			isTestServer: $attrs.ngServerName && $attrs.ngServerName.indexOf('.test.') !== -1,
-			unitList: { mg: '(MG) Milligrams ', ml: '(ML) Milliliters', units: 'Units', pills: 'Pills', other: 'Other' },
-			inventoryUnitList: {
-				Pill: 'Pill',
-				Tablet: 'Tablet',
-				Capsule: 'Capsule',
-				'(ML) Milliliters': '(ML) Milliliters',
-				'(MG) Milligrams': '(MG) Milligrams',
-				Units: 'Units',
-				Other: 'Other'
+			medicationOptions: {
+				dose_unit: [],
+				inventory_unit: [],
+				route: [],
+				frequency: []
 			},
-			routeList: { oral: 'Oral', nasal: 'Nasal', sublingual: 'Sublingual', subcutaneous: 'Subcutaneous', rectal: 'Rectal', other: 'Other' },
-			frequencyList: { daily: 'Daily', other: 'Other' },
+			medicationOptionsLoaded: false,
+			medicationOptionsLoading: false,
+			medicationOptionLoadError: '',
 			inventoryTransactionTypeList: {
 				ADDED_IN_ERROR: 'Added in Error',
 				PARENT_PICKUP: 'Parent Pickup',
@@ -104,6 +130,101 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		}
 
 		$rootScope.appData = vm.appData
+		const addHealthOptionSentinel = options => options.concat([{
+			modelValue: ADD_HEALTH_OPTION_VALUE,
+			code: ADD_HEALTH_OPTION_VALUE,
+			displayValue: 'Other',
+			isAddNew: true
+		}])
+		const sortHealthOptions = options => options.sort((left, right) => {
+			const leftOrder = Number(left.uiDisplayOrder)
+			const rightOrder = Number(right.uiDisplayOrder)
+			if (Number.isFinite(leftOrder) && Number.isFinite(rightOrder) && leftOrder !== rightOrder) {
+				return leftOrder - rightOrder
+			}
+			if (Number.isFinite(leftOrder) && !Number.isFinite(rightOrder)) return -1
+			if (!Number.isFinite(leftOrder) && Number.isFinite(rightOrder)) return 1
+			return left.displayValue.localeCompare(right.displayValue)
+		})
+		const buildMedicationHealthOption = (fieldName, record) => {
+			const definition = MEDICATION_OPTION_TYPES[fieldName]
+			const displayValue = String(record.displayValue || record.code || '').trim()
+			const code = String(record.code || '').trim()
+			return {
+				id: record.id,
+				code,
+				displayValue,
+				description: record.description,
+				uiDisplayOrder: record.uiDisplayOrder,
+				modelValue: definition.modelValueField === 'displayValue' ? displayValue : code
+			}
+		}
+		const replaceMedicationOptions = (fieldName, options) => {
+			const uniqueOptions = []
+			const seenValues = new Set()
+			sortHealthOptions(options).forEach(option => {
+				const identity = String(option.modelValue || '').toLowerCase()
+				if (!identity || seenValues.has(identity)) return
+				seenValues.add(identity)
+				uniqueOptions.push(option)
+			})
+			vm.appData.medicationOptions[fieldName] = addHealthOptionSentinel(uniqueOptions)
+		}
+		$rootScope.addMedicationHealthOption = (fieldName, record) => {
+			const existingOptions = (vm.appData.medicationOptions[fieldName] || []).filter(option => !option.isAddNew)
+			const newOption = buildMedicationHealthOption(fieldName, normalizeHealthOptionRecord(record))
+			const existingOption = existingOptions.find(option =>
+				String(option.code).toLowerCase() === String(newOption.code).toLowerCase() ||
+				String(option.displayValue).toLowerCase() === String(newOption.displayValue).toLowerCase()
+			)
+			if (!existingOption) existingOptions.push(newOption)
+			replaceMedicationOptions(fieldName, existingOptions)
+			return existingOption || newOption
+		}
+		$rootScope.medicationOptionDisplayValue = (fieldName, value) => {
+			const normalizedValue = String(value === undefined || value === null ? '' : value).trim().toLowerCase()
+			const option = (vm.appData.medicationOptions[fieldName] || []).find(candidate =>
+				!candidate.isAddNew && (
+					String(candidate.modelValue).toLowerCase() === normalizedValue ||
+					String(candidate.code).toLowerCase() === normalizedValue ||
+					String(candidate.displayValue).toLowerCase() === normalizedValue
+				)
+			)
+			return option ? option.displayValue : value
+		}
+		const loadMedicationOptions = () => {
+			if (vm.appData.medicationOptionsLoaded) return $q.when()
+			vm.appData.medicationOptionsLoading = true
+			vm.appData.medicationOptionLoadError = ''
+
+			return psApiService.psApiCall('u_cdol_health_option', 'GET', {})
+				.then(records => (Array.isArray(records) ? records : (records ? [records] : []))
+					.map(normalizeHealthOptionRecord))
+				.then(records => {
+					Object.keys(MEDICATION_OPTION_TYPES).forEach(fieldName => {
+						const definition = MEDICATION_OPTION_TYPES[fieldName]
+						const options = records
+							.filter(record =>
+								String(record.codeType).toLowerCase() === definition.codeType.toLowerCase() &&
+								record.code &&
+								isActiveHealthOption(record)
+							)
+							.map(record => buildMedicationHealthOption(fieldName, record))
+						replaceMedicationOptions(fieldName, options)
+					})
+					vm.appData.medicationOptionsLoaded = true
+				})
+				.catch(error => {
+					vm.appData.medicationOptionLoadError = (error.data && error.data.message) ||
+						'Medication options could not be loaded. Try again or contact an administrator.'
+					Object.keys(MEDICATION_OPTION_TYPES).forEach(fieldName => {
+						vm.appData.medicationOptions[fieldName] = []
+					})
+				})
+				.finally(() => {
+					vm.appData.medicationOptionsLoading = false
+				})
+		}
 		let administrationFeedbackTimeout = null
 		const clearAdministrationFeedback = () => {
 			if (administrationFeedbackTimeout !== null) {
@@ -337,7 +458,9 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				params: paramValues
 			}).then(res => Array.isArray(res?.data) ? psUtils.htmlEntitiesToCharCode(res.data) : [])
 
-			const dataPromise = $q.all([medicationPromise, transactionPromise]).then(results => {
+			const medicationOptionsPromise = loadMedicationOptions()
+
+			const dataPromise = $q.all([medicationPromise, transactionPromise, medicationOptionsPromise]).then(results => {
 				const medicationList = prepareMedicationData(results[0], results[1])
 				vm.medicationList = medicationList
 				vm.availableMedicationList = medicationList.filter(medication => Number(medication.inventory_total_remaining) > 0)
@@ -382,6 +505,15 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm.drawerMode = 'edit'
 		vm.transactionOpenedFromEdit = false
 		vm.transactionRecord = {}
+		vm.optionEditors = Object.keys(MEDICATION_OPTION_TYPES).reduce((editors, fieldName) => {
+			editors[fieldName] = {
+				visible: false,
+				value: '',
+				error: '',
+				saving: false
+			}
+			return editors
+		}, {})
 		vm.transactionTypeLabel = transactionType => {
 			if (transactionType === 'REVERSAL') return 'Reversal'
 			if (transactionType === 'ADMINISTRATION') return 'Administration'
@@ -483,6 +615,120 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			record.medication_name = normalizeMedicationNameSpacing(record.medication_name)
 			vm.checkReqFields()
 		}
+		const resetOptionEditor = fieldName => {
+			vm.optionEditors[fieldName] = {
+				visible: false,
+				value: '',
+				error: '',
+				saving: false
+			}
+		}
+		const resetOptionEditors = () => {
+			Object.keys(MEDICATION_OPTION_TYPES).forEach(resetOptionEditor)
+		}
+		const findMedicationOption = (fieldName, value) => {
+			const identity = String(value === undefined || value === null ? '' : value).trim().toLowerCase()
+			return ($rootScope.appData.medicationOptions[fieldName] || []).find(option =>
+				!option.isAddNew && (
+					String(option.modelValue).toLowerCase() === identity ||
+					String(option.code).toLowerCase() === identity ||
+					String(option.displayValue).toLowerCase() === identity
+				)
+			)
+		}
+		const enforceMedicationOptionSelections = record => {
+			Object.keys(MEDICATION_OPTION_TYPES).forEach(fieldName => {
+				const currentValue = record[fieldName]
+				if (!hasValue(currentValue)) return
+				const existingOption = findMedicationOption(fieldName, currentValue)
+				if (existingOption) {
+					record[fieldName] = existingOption.modelValue
+					return
+				}
+				record[fieldName] = ''
+			})
+		}
+		vm.onMedicationOptionSelectionChanged = fieldName => {
+			const record = vm.medicationRecord || vm[recordKey] || {}
+			if (record[fieldName] === ADD_HEALTH_OPTION_VALUE) {
+				record[fieldName] = ''
+				resetOptionEditor(fieldName)
+				vm.optionEditors[fieldName].visible = true
+			} else {
+				resetOptionEditor(fieldName)
+			}
+			vm.checkReqFields()
+		}
+		vm.normalizeMedicationOptionInput = fieldName => {
+			const editor = vm.optionEditors[fieldName]
+			editor.value = normalizeHealthOptionDisplayValue(editor.value)
+		}
+		vm.cancelMedicationOptionValue = fieldName => {
+			const record = vm.medicationRecord || vm[recordKey] || {}
+			record[fieldName] = ''
+			resetOptionEditor(fieldName)
+			vm.checkReqFields()
+		}
+		vm.addMedicationOptionValue = fieldName => {
+			const editor = vm.optionEditors[fieldName]
+			const record = vm.medicationRecord || vm[recordKey] || {}
+			const displayValue = normalizeHealthOptionDisplayValue(editor.value)
+			const code = buildHealthOptionCode(displayValue)
+			editor.value = displayValue
+			editor.error = ''
+
+			if (!displayValue) {
+				editor.error = 'Enter a value to add.'
+				return
+			}
+			if (displayValue.length > HEALTH_OPTION_DISPLAY_VALUE_MAX_LENGTH) {
+				editor.error = `The value must be ${HEALTH_OPTION_DISPLAY_VALUE_MAX_LENGTH} characters or fewer.`
+				return
+			}
+			if (!code) {
+				editor.error = 'The value must contain at least one non-space character.'
+				return
+			}
+			if (code.length > HEALTH_OPTION_CODE_MAX_LENGTH) {
+				editor.error = `The lowercase code is ${code.length} characters. Shorten the value so its code is ${HEALTH_OPTION_CODE_MAX_LENGTH} characters or fewer.`
+				return
+			}
+
+			const existingOptions = ($rootScope.appData.medicationOptions[fieldName] || []).filter(option => !option.isAddNew)
+			const existingOption = existingOptions.find(option =>
+				(
+					String(option.code).toLowerCase() === code ||
+					String(option.displayValue).toLowerCase() === displayValue.toLowerCase()
+				)
+			)
+			if (existingOption) {
+				record[fieldName] = existingOption.modelValue
+				resetOptionEditor(fieldName)
+				vm.checkReqFields()
+				return
+			}
+
+			const displayOrder = existingOptions.reduce((highestOrder, option) => {
+				const optionOrder = Number(option.uiDisplayOrder)
+				return Number.isFinite(optionOrder) ? Math.max(highestOrder, optionOrder) : highestOrder
+			}, 0) + 10
+			const payload = buildHealthOptionPayload(fieldName, { code, displayValue }, displayOrder)
+
+			editor.saving = true
+			vm.checkReqFields()
+			return psApiService.psApiCall('u_cdol_health_option', 'POST', payload)
+				.then(() => {
+					const option = $rootScope.addMedicationHealthOption(fieldName, payload)
+					record[fieldName] = option.modelValue
+					resetOptionEditor(fieldName)
+				})
+				.catch(error => {
+					editor.error = (error.data && error.data.message) ||
+						'PowerSchool could not add this medication option. Try again or contact an administrator.'
+					editor.saving = false
+				})
+				.finally(() => vm.checkReqFields())
+		}
 		vm.duplicateMedicationExists = () => {
 			const record = vm.medicationRecord || vm[recordKey] || {}
 			const medicationName = normalizeMedicationIdentityText(record.medication_name)
@@ -509,10 +755,12 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 		vm.isFormValid = () => {
 			const record = vm.medicationRecord || vm[recordKey] || {}
 			const inventoryRows = [vm.inventoryRecord && vm.inventoryRecord[0]].concat(vm.additionalInventoryRows || [])
+			const medicationOptionsAreAvailable = $rootScope.appData.medicationOptionsLoaded &&
+				!$rootScope.appData.medicationOptionLoadError
 			const medicationIsValid = normalizeMedicationNameSpacing(record.medication_name) && record.created_date && isPositiveNumber(record.dose_amount) &&
 				record.dose_unit && record.inventory_unit && record.route && record.frequency
 
-			return Boolean(medicationIsValid && !vm.duplicateMedicationExists() && inventoryRows.length && inventoryRows.every(isInventoryRowValid))
+			return Boolean(medicationOptionsAreAvailable && medicationIsValid && !vm.duplicateMedicationExists() && inventoryRows.length && inventoryRows.every(isInventoryRowValid))
 		}
 
 		const resetTransactionRecord = () => {
@@ -640,6 +888,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			vm.removalMedication = null
 			vm.drawerMode = 'edit'
 			vm.transactionOpenedFromEdit = false
+			resetOptionEditors()
 			resetInventoryRows()
 			$rootScope.reloadData()
 			closeLoading()
@@ -654,6 +903,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			vm.drawerMode = requestedMode
 			vm.transactionOpenedFromEdit = false
 			resetTransactionRecord()
+			resetOptionEditors()
 
 			if (medicationData.medication_id == null) {
 				vm.currentMedicationId = null
@@ -687,6 +937,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 				delete sourceRecord.inventory_transactions
 				vm[recordKey] = sourceRecord
 				vm.medicationRecord = vm[recordKey]
+				enforceMedicationOptionSelections(vm.medicationRecord)
 
 				vm._lastOpenedInventoryBatches = inventoryBatches
 			}
@@ -883,6 +1134,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 					vm.isEditMode = false
 					vm.removalMedication = null
 					vm.drawerMode = 'edit'
+					resetOptionEditors()
 					resetInventoryRows()
 					$rootScope.reloadData()
 					closeLoading()
@@ -905,6 +1157,7 @@ define(['angular', 'components/shared/powerschoolModule', 'components/health_log
 			vm.isEditMode = false
 			vm.removalMedication = null
 			vm.drawerMode = 'edit'
+			resetOptionEditors()
 			resetInventoryRows()
 			$rootScope.reloadData()
 			closeLoading()

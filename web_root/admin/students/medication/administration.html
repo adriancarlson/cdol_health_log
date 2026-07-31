@@ -151,10 +151,12 @@
                                     {{administration.correction_status_label}}
                                 </span>
                             </td>
-                            <td class="center">{{administration.dose_amount}} {{administration.dose_unit}}</td>
+                            <td class="center">{{administration.dose_amount}}
+                                {{$root.medicationOptionDisplayValue('dose_unit', administration.dose_unit)}}</td>
                             <td class="center administration-quantity">{{administration.quantity_administered}}
-                                {{administration.inventory_unit | pluralize}}</td>
-                            <td class="center">{{administration.route}}</td>
+                                {{$root.medicationOptionDisplayValue('inventory_unit', administration.inventory_unit) |
+                                pluralize}}</td>
+                            <td class="center">{{$root.medicationOptionDisplayValue('route', administration.route)}}</td>
                             <td class="center">{{administration.user_name}}</td>
                             <td>
                                 <div>{{administration.notes}}</div>

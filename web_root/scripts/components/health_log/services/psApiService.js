@@ -6,6 +6,26 @@ define(function (require) {
 		'$q',
 		'formatService',
 		function ($http, $q, formatService) {
+			let resData
+			const unwrapSchemaGetResponse = (responseData, tableName) => {
+				if (!responseData) return []
+				if (responseData.tables && responseData.tables[tableName] !== undefined) {
+					const tableRecords = responseData.tables[tableName]
+					return tableRecords === null ? [] : tableRecords
+				}
+
+				const responseRecords = responseData.record || responseData.result || []
+				const recordList = Array.isArray(responseRecords) ? responseRecords : [responseRecords]
+				return recordList
+					.map(record => {
+						if (!record) return null
+						const tableRecord = record.tables && record.tables[tableName]
+						if (!tableRecord) return null
+						if (tableRecord.id !== undefined || record.id === undefined) return tableRecord
+						return Object.assign({}, tableRecord, { id: record.id })
+					})
+					.filter(record => record !== null)
+			}
 			const castPayloadValuesToString = value => {
 				if (value === null || value === undefined) return undefined
 				if (Array.isArray(value)) {
@@ -106,7 +126,7 @@ define(function (require) {
 									break
 								}
 								case 'GET':
-									resData = res.data.tables[tableName]
+									resData = unwrapSchemaGetResponse(res.data, tableName)
 									if (apiPayload.dateKeys) {
 										resData = formatService.objIterator(resData, apiPayload.dateKeys, 'formatDateFromApi')
 									}

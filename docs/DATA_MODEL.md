@@ -2,7 +2,7 @@
 
 ## Repository schema
 
-The repository XML defines three medication-related tables. Installation in PowerSchool must be validated after packaging.
+The repository XML defines three medication-related tables plus one shared Health option table. Installation in PowerSchool must be validated after packaging.
 
 ### `u_student_medication`
 
@@ -24,6 +24,31 @@ PowerSchool child extension of `students`.
 | `yearid` | Integer | School-year context captured when the definition was created |
 
 PowerSchool supplies the child-table relationship to the student. Prior discussion indicated `studentdcid` is handled automatically for this child table.
+
+The application resolves `dose_unit`, `inventory_unit`, `route`, and `frequency` against active records in `u_cdol_health_option`. The existing medication fields remain strings and all four store the selected option's stable code.
+
+### `u_cdol_health_option`
+
+PowerSchool standalone table for shared, categorized choices used by CDOL Health workflows. Its field names intentionally resemble the useful subset of PowerSchool Code Set fields without depending on the restricted `/ws/district/codeset` core resource.
+
+| Field | Type | Purpose |
+|---|---|---|
+| `codetype` | String(20) | Category key, such as `MED_DOSE_UNIT` or a future Health Log category |
+| `code` | String(40) | Stable lowercase, whitespace-free value identity |
+| `displayvalue` | String(100) | Nurse-facing dropdown label |
+| `description` | String(1000) | Description; currently matches the display value for user additions |
+| `isvisible` | Integer | `1` when the option appears in the dropdown |
+| `ismodifiable` | Integer | Marks whether a future management workflow may edit the option |
+| `isdeletable` | Integer | Marks whether a future management workflow may remove the option |
+| `uidisplayorder` | Integer | Sort order within one category |
+
+PowerSchool supplies the record ID plus its standard created/modified user and timestamp columns automatically. Those audit fields are not declared in the extension XML and are not included in application POST or PUT payloads.
+
+Medication currently uses `MED_DOSE_UNIT`, `MED_INVENTORY_UNIT`, `MED_ROUTE`, and `MED_FREQUENCY`. The table begins empty; no initial option rows are created during installation or medication-page loading. District administrators populate the categories through the district CDOL Health Code Sets page. Admin-page and medication plus-button additions are marked modifiable and deletable, although the current management workflow marks values Inactive instead of deleting them. The client suppresses duplicate code or display values within a category. New rows receive display order automatically; administrators reorder rows with Move up and Move down controls on the main grid.
+
+All four medication fields store the stable option `code`. Display pages resolve that code to the current `displayvalue`, allowing an administrator to improve a label later without changing saved medication identities.
+
+The same table is reserved for future Health Log categories including complaint, destination, conversation type, and sport. Those pages and permissions are not migrated in the medication phase. Fixed audit choices such as medication removal types remain application-controlled and do not use this table.
 
 ### `u_student_medication_inventory`
 

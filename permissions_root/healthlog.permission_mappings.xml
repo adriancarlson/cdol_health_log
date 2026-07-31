@@ -26,6 +26,12 @@
 		<implies allow="post">/ws/schema/table/u_student_med_inv_txn</implies>
 		<implies allow="put">/ws/schema/table/u_student_med_inv_txn/#</implies>
 		<implies allow="delete">/ws/schema/table/u_student_med_inv_txn/#</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_health_option</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_health_option/#</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_health_option/count</implies>
+		<implies allow="post">/ws/schema/table/u_cdol_health_option</implies>
+		<implies allow="put">/ws/schema/table/u_cdol_health_option/#</implies>
+		<implies allow="delete">/ws/schema/table/u_cdol_health_option/#</implies>
 	</permission>
 	<permission name="/admin/students/medication/administration.html">
 		<implies allow="get">/ws/schema/table/u_student_medication</implies>
@@ -46,5 +52,19 @@
 		<implies allow="post">/ws/schema/table/u_student_med_inv_txn</implies>
 		<implies allow="put">/ws/schema/table/u_student_med_inv_txn/#</implies>
 		<implies allow="delete">/ws/schema/table/u_student_med_inv_txn/#</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_health_option</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_health_option/#</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_health_option/count</implies>
+		<implies allow="post">/ws/schema/table/u_cdol_health_option</implies>
+		<implies allow="put">/ws/schema/table/u_cdol_health_option/#</implies>
+		<implies allow="delete">/ws/schema/table/u_cdol_health_option/#</implies>
+	</permission>
+	<permission name="/admin/district/healthsetup/cdolhealthoptions.html">
+		<implies allow="get">/ws/schema/table/u_cdol_health_option</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_health_option/#</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_health_option/count</implies>
+		<implies allow="post">/ws/schema/table/u_cdol_health_option</implies>
+		<implies allow="put">/ws/schema/table/u_cdol_health_option/#</implies>
+		<implies allow="delete">/ws/schema/table/u_cdol_health_option/#</implies>
 	</permission>
 </permission_mappings>

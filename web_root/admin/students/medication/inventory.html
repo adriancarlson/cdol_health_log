@@ -192,10 +192,12 @@
                         </tr>
                         <tr ng-repeat="medication in vm.filteredInventoryList" data-id="{{medication.medication_id}}">
                             <td class="center">{{medication.medication_name}}</td>
-                            <td class="center">{{medication.dose_amount}} {{medication.dose_unit}}</td>
-                            <td class="center">{{medication.inventory_unit}}</td>
-                            <td class="center">{{medication.route}}</td>
-                            <td class="center">{{medication.frequency}}</td>
+                            <td class="center">{{medication.dose_amount}}
+                                {{$root.medicationOptionDisplayValue('dose_unit', medication.dose_unit)}}</td>
+                            <td class="center">{{$root.medicationOptionDisplayValue('inventory_unit',
+                                medication.inventory_unit)}}</td>
+                            <td class="center">{{$root.medicationOptionDisplayValue('route', medication.route)}}</td>
+                            <td class="center">{{$root.medicationOptionDisplayValue('frequency', medication.frequency)}}</td>
                             <td class="inventory-cell">
                                 <div class="inventory-cell-content"
                                     ng-if="medication.inventory_batches && medication.inventory_batches.length">
@@ -212,7 +214,8 @@
                                                         <span
                                                             class="inventory-quantity-text">{{batch.quantity_remaining}}
                                                             / {{batch.quantity_added}}
-                                                            {{medication.inventory_unit | pluralize}}</span>
+                                                            {{$root.medicationOptionDisplayValue('inventory_unit',
+                                                            medication.inventory_unit) | pluralize}}</span>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -226,7 +229,8 @@
                                                         <span class="inventory-quantity-text"><strong>Total:</strong>
                                                             {{medication.inventory_total_remaining}} /
                                                             {{medication.inventory_total_initial}}
-                                                            {{medication.inventory_unit | pluralize}}</span>
+                                                            {{$root.medicationOptionDisplayValue('inventory_unit',
+                                                            medication.inventory_unit) | pluralize}}</span>
                                                     </div>
                                                 </td>
                                             </tr>
