@@ -6,12 +6,13 @@
 2. Confirm administration saves create exactly one deduction, update FIFO balances, refresh the available-medication list, and appear once in administration history.
 3. Confirm the supported PowerSchool server-side mechanism for preventing simultaneous deductions from exceeding available inventory.
 4. Install and test district Health Code Set creation plus in-context medication-option creation with both administrator and non-administrator users who are authorized for Medication Inventory.
-5. Implement required missed-dose reasons and notes after the administration workflow is stable.
-6. Add scheduling, PRN handling, gap detection, and reminders in the later scheduling phase.
-7. Complete authorization testing with nurse, ordinary staff, district, and cross-school accounts.
-8. Add controlled-medication reconciliation and returned-to-school workflows after nurse review.
-9. Add automated tests and PowerSchool plugin installation validation.
-10. Install and validate the append-only Corrected and Entered-in-Error administration workflows, including inventory deltas, audit metadata, repeated corrections, and action locking after void.
+5. Import and test the approved Health Log defaults, controlled dropdowns, Communication Methods checkbox combinations and comma-separated storage, historical-value fallbacks, and in-context additions.
+6. Implement required missed-dose reasons and notes after the administration workflow is stable.
+7. Add scheduling, PRN handling, gap detection, and reminders in the later scheduling phase.
+8. Complete authorization testing with nurse, ordinary staff, district, and cross-school accounts.
+9. Add controlled-medication reconciliation and returned-to-school workflows after nurse review.
+10. Add automated tests and PowerSchool plugin installation validation.
+11. Install and validate the append-only Corrected and Entered-in-Error administration workflows, including inventory deltas, audit metadata, repeated corrections, and action locking after void.
 
 ## Deployment cleanup
 
@@ -19,6 +20,7 @@
 - The permission mappings expose the full schema API action set consistently for the medication tables and `u_cdol_health_option`. Confirm during testing that application code still treats historical inventory lots and transaction rows as read-only and never issues PUT or DELETE requests for them.
 - Populate and approve the initial medication values from the district CDOL Health Code Sets page before Medication Inventory is released to nurses. Confirm an empty table remains empty when Medication Inventory is opened.
 - The UI suppresses duplicate values, but the PowerSchool extension table does not currently enforce a database uniqueness constraint; simultaneous identical additions remain a concurrency risk to test.
+- Health Log permission mappings grant GET and POST to the full shared `u_cdol_health_option` route; PowerSchool cannot restrict that POST permission by `codetype`. Verify the intended nurse role can add options and that unauthorized users cannot access the Health Log page.
 - After health-log reads, staff dropdowns, and schema API writes pass that validation, uninstall and archive the separately maintained `cdol_health_log_pqs` repository and plugin.
 
 ## Open design questions
@@ -26,8 +28,6 @@
 These should be resolved explicitly before Codex hard-codes behavior:
 
 - Who owns ongoing review, deactivation, and cleanup of values added to the shared Health option table?
-- Before Health Log migration, do Health Log users and Medication Inventory users have the same authorization boundary? PowerSchool schema permission mappings grant access to the whole shared table and cannot restrict writes by `codetype`.
-- Which current Health Log lists should migrate after medication is stable? Current candidates are Complaint, Destination, Conversation Type, and Sport. Treatment remains free text and fixed medication removal reasons should not migrate.
 - Where is the expected administration schedule stored?
 - How are school days, weekends, holidays, absences, and non-school days handled?
 - How is PRN excluded from false missed-dose alerts?

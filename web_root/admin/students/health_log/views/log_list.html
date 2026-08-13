@@ -15,7 +15,7 @@
                         Log Date/Time</th>
                     <th data-ng-if="appData.curContext =='Concussion' || appData.curContext =='Eval'"
                         data-pss-sort-fields="injury_date">Date of Injury</th>
-                    <th data-ng-if="appData.curContext =='Daily'" data-pss-sort-fields="complaint|text">Complaint</th>
+                    <th data-ng-if="appData.curContext =='Daily'" data-pss-sort-fields="_complaint_display|text">Complaint</th>
                     <th data-ng-if="appData.curContext =='Athletic'" data-pss-sort-fields="sport|text">Sport</th>
                     <th data-ng-if="appData.curContext =='Athletic' || appData.curContext =='Eval'"
                         data-pss-sort-fields="injury_site|text">Injury Site</th>
@@ -23,7 +23,7 @@
                     </th>
                     <th data-ng-if="appData.curContext =='Daily' || appData.curContext =='Athletic'"
                         data-pss-sort-fields="treatment|text">Treatment</th>
-                    <th data-ng-if="appData.curContext =='Daily'" data-pss-sort-fields="destination|number">Destination
+                    <th data-ng-if="appData.curContext =='Daily'" data-pss-sort-fields="_destination_display|text">Destination
                     </th>
                     <th data-ng-if="appData.curContext =='Daily'" data-pss-sort-fields="time_left|number">Time Left</th>
                     <th data-ng-if="appData.curContext =='Concussion'"
@@ -32,8 +32,8 @@
                     <th data-ng-if="appData.curContext =='Concussion'" data-pss-sort-fields="systems_score|number">
                         System Score
                     </th>
-                    <th data-ng-if="appData.curContext =='Conversation'" data-pss-sort-fields="conversation_type|text">
-                        Conversation Type
+                    <th data-ng-if="appData.curContext =='Conversation'" data-pss-sort-fields="_conversation_type_display|text">
+                        Communication Methods
                     </th>
                     <th data-ng-if="appData.curContext =='Conversation'" data-pss-sort-fields="contact|text">
                         Conversation With
@@ -59,14 +59,14 @@
                     <td class="center" data-ng-if="appData.curContext =='Concussion' || appData.curContext =='Eval'">
                         {{healthLog.injury_date | date :
                         'MM/dd/yyyy'}}</td>
-                    <td data-ng-if="appData.curContext =='Daily'">{{healthLog.complaint}}</td>
+                    <td data-ng-if="appData.curContext =='Daily'">{{healthLog._complaint_display}}</td>
                     <td data-ng-if="appData.curContext =='Athletic'">{{healthLog.sport}}</td>
                     <td data-ng-if="appData.curContext =='Athletic' || appData.curContext =='Eval'">
                         {{healthLog.injury_site}}</td>
                     <td data-ng-if="appData.curContext =='Eval'">{{healthLog.injury_type}}</td>
                     <td data-ng-if="appData.curContext =='Daily' || appData.curContext =='Athletic'">
                         {{healthLog.treatment}}</td>
-                    <td data-ng-if="appData.curContext =='Daily'">{{healthLog.destination}}</td>
+                    <td data-ng-if="appData.curContext =='Daily'">{{healthLog._destination_display}}</td>
                     <td class="center" data-ng-if="appData.curContext =='Daily'">{{healthLog.left_time |
                         convSecondsToTime12 }}</td>
                     <td class="center" data-ng-if="appData.curContext =='Concussion'">
@@ -75,7 +75,8 @@
                     <td class="center" data-ng-if="appData.curContext =='Concussion'">{{healthLog.systems_score}}/126
                         Symptoms Score
                     </td>
-                    <td class="center" data-ng-if="appData.curContext =='Conversation'">{{healthLog.conversation_type}}
+                    <td class="center" data-ng-if="appData.curContext =='Conversation'">
+                        {{healthLog._conversation_type_display}}
                     </td>
                     <td class="center" data-ng-if="appData.curContext =='Conversation'">{{healthLog.contact}}</td>
                     <td class="center">{{healthLog.first_name}} {{healthLog.last_name}}</td>

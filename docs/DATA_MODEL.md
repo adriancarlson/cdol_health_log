@@ -33,22 +33,20 @@ PowerSchool standalone table for shared, categorized choices used by CDOL Health
 
 | Field | Type | Purpose |
 |---|---|---|
-| `codetype` | String(20) | Category key, such as `MED_DOSE_UNIT` or a future Health Log category |
+| `codetype` | String(20) | Category key, such as `MED_DOSE_UNIT` or `HEALTH_COMPLAINT` |
 | `code` | String(40) | Stable lowercase, whitespace-free value identity |
 | `displayvalue` | String(100) | Nurse-facing dropdown label |
 | `description` | String(1000) | Description; currently matches the display value for user additions |
 | `isvisible` | Integer | `1` when the option appears in the dropdown |
-| `ismodifiable` | Integer | Marks whether a future management workflow may edit the option |
-| `isdeletable` | Integer | Marks whether a future management workflow may remove the option |
 | `uidisplayorder` | Integer | Sort order within one category |
 
 PowerSchool supplies the record ID plus its standard created/modified user and timestamp columns automatically. Those audit fields are not declared in the extension XML and are not included in application POST or PUT payloads.
 
-Medication currently uses `MED_DOSE_UNIT`, `MED_INVENTORY_UNIT`, `MED_ROUTE`, and `MED_FREQUENCY`. The table begins empty; no initial option rows are created during installation or medication-page loading. District administrators populate the categories through the district CDOL Health Code Sets page. Admin-page and medication plus-button additions are marked modifiable and deletable, although the current management workflow marks values Inactive instead of deleting them. The client suppresses duplicate code or display values within a category. New rows receive display order automatically; administrators reorder rows with Move up and Move down controls on the main grid.
+Medication uses `MED_DOSE_UNIT`, `MED_INVENTORY_UNIT`, `MED_ROUTE`, and `MED_FREQUENCY`. Health Logs use `HEALTH_COMPLAINT`, `HEALTH_DESTINATION`, and `HEALTH_CONVERSATION`. Sport remains connected to PowerSchool's native `Sports` Code Set; there is no custom `HEALTH_SPORT` category. The table begins empty; no initial option rows are created during installation or page loading. District administrators can import the approved CSV defaults and maintain the categories through the district CDOL Health Code Sets page. The workflow marks values Inactive instead of deleting them, so separate modifiable and deletable flags are not stored. The client suppresses duplicate code or display values within a category. New rows receive display order automatically; administrators reorder rows with Move up and Move down controls on the main grid.
 
-All four medication fields store the stable option `code`. Display pages resolve that code to the current `displayvalue`, allowing an administrator to improve a label later without changing saved medication identities.
+Medication option fields and new Health Log complaint and destination fields store one stable option `code`. New Health Log communication methods store one or more stable codes in the existing `conversation_type` field, separated by commas, such as `email,phone`. Display pages resolve known codes to the current `displayvalue`, allowing an administrator to improve a label later without changing saved identities.
 
-The same table is reserved for future Health Log categories including complaint, destination, conversation type, and sport. Those pages and permissions are not migrated in the medication phase. Fixed audit choices such as medication removal types remain application-controlled and do not use this table.
+Existing Health Log rows are not migrated. When an existing stored value matches Active options by code or case-insensitive display value, the edit drawer shows the controlled dropdown or checkboxes but preserves the original stored value unless the user deliberately changes it. For `conversation_type`, the application attempts an exact single-option match before splitting on commas and accepts a multi-value interpretation only when every segment resolves. This prevents historical narrative text containing commas from being partially converted. Inactive matches and unmatched historical values are shown read-only and are preserved when unrelated fields are saved. List pages resolve known values and otherwise display the original text. Fixed audit choices such as medication removal types remain application-controlled and do not use this table.
 
 ### `u_student_medication_inventory`
 

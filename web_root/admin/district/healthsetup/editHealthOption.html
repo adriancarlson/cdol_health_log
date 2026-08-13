@@ -71,6 +71,9 @@
     <div class="feedback-alert health-option-drawer-message" role="alert" data-ng-if="vm.duplicateOptionExists()">
         This code or display value already exists in {{vm.codeSetName()}}.
     </div>
+    <div class="feedback-alert health-option-drawer-message" role="alert" data-ng-if="vm.conversationCodeHasComma()">
+        Conversation method codes cannot contain commas because commas separate multiple saved methods.
+    </div>
     <div class="feedback-info health-option-drawer-message">
         The code is generated automatically from the display value. Existing codes cannot be changed because saved
         health records may reference them. Clear Active to stop offering a value without deleting its history. Use

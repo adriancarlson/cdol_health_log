@@ -141,9 +141,16 @@ define([
 			return optionType ? optionType.displayName : vm.optionRecord.codeType
 		}
 		vm.updateGeneratedCode = () => {
-			if (!vm.isEditMode) vm.optionRecord.code = healthOptionConfig.buildCode(vm.optionRecord.displayValue)
+			if (!vm.isEditMode) {
+				vm.optionRecord.code = healthOptionConfig.buildCodeForType(
+					vm.optionRecord.codeType,
+					vm.optionRecord.displayValue
+				)
+			}
 			vm.checkReqFields()
 		}
+		vm.conversationCodeHasComma = () => vm.optionRecord.codeType === 'HEALTH_CONVERSATION' &&
+			String(vm.optionRecord.code || '').indexOf(',') !== -1
 		vm.normalizeDisplayValue = () => {
 			vm.optionRecord.displayValue = healthOptionConfig.normalizeDisplayValue(vm.optionRecord.displayValue)
 			vm.optionRecord.description = vm.optionRecord.displayValue
@@ -177,6 +184,7 @@ define([
 				displayValue.length <= healthOptionConfig.displayValueMaxLength &&
 				code &&
 				code.length <= healthOptionConfig.codeMaxLength &&
+				!vm.conversationCodeHasComma() &&
 				!vm.duplicateOptionExists()
 			)
 		}
@@ -218,8 +226,6 @@ define([
 				displayvalue: vm.optionRecord.displayValue,
 				description: vm.optionRecord.displayValue,
 				isvisible: vm.optionRecord.isVisible ? 1 : 0,
-				ismodifiable: 1,
-				isdeletable: 1,
 				uidisplayorder: Number(vm.optionRecord.uiDisplayOrder)
 			}
 			let savePromise

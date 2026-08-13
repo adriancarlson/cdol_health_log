@@ -8,8 +8,6 @@
         <field name="displayvalue" type="String" length="100" />
         <field name="description" type="String" length="1000" />
         <field name="isvisible" type="Integer" />
-        <field name="ismodifiable" type="Integer" />
-        <field name="isdeletable" type="Integer" />
         <field name="uidisplayorder" type="Integer" />
     </extendedTable>
 </psExtension>

@@ -48,7 +48,7 @@ Dose unit, inventory unit, route, and frequency options must come from the share
 - `MED_ROUTE`
 - `MED_FREQUENCY`
 
-The table is shared so Health Log complaints, destinations, conversation types, sports, and other approved extensible lists can use separate categories later. Medication removal reasons and other fixed audit-workflow values must not become user-extensible options.
+The table is shared with the Health Log complaint, destination, and conversation-type lists. Sport continues to use PowerSchool's native `Sports` Code Set. Medication removal reasons and other fixed audit-workflow values must not become user-extensible options.
 
 Do not automatically seed initial values. District administrators populate and maintain each category from `/admin/district/healthsetup/cdolhealthoptions.html`. The page must appear only in District Office navigation under **District Management → Health**, immediately after the native Health Code Sets link. It must allow an administrator to select a CDOL Health Code Set, add codes, edit the display value, mark a value Active or Inactive, and change display order with Move up and Move down controls on the main grid. Display order is assigned automatically and is not typed in the Add/Edit drawer. Inactive values must remain stored so historical references are not deleted. The main grid hides Inactive values by default. When the selected set contains inactive values, a Show Inactive checkbox with the inactive count appears immediately before Add Code. When selected, Inactive values appear after all Active values and can only be reordered within the Inactive group.
 
@@ -80,7 +80,32 @@ Routes discussed during planning included:
 
 The initial production values must be entered and confirmed through the district CDOL Health Code Sets page. Later additions must use the controlled shared-option workflow above rather than unrestricted route text.
 
-## 4. Inventory
+## 4. Health Log controlled options
+
+New Health Log records must use controlled options for Complaint, Destination, and Conversation Type from these `u_cdol_health_option` categories:
+
+- `HEALTH_COMPLAINT`
+- `HEALTH_DESTINATION`
+- `HEALTH_CONVERSATION`
+
+New records store the selected Complaint and Destination option `code`; tables and drawers resolve those codes to their current display labels. Communication Methods allow one or more Active `HEALTH_CONVERSATION` options and store their codes as one comma-separated string in `conversation_type`, such as `email,phone`. History displays the corresponding labels separated by a comma and space, such as `Email, Phone`. Sport must remain connected to PowerSchool's native `Sports` Code Set, and Treatment remains free text. `HEALTH_SPORT` must not appear in the custom CDOL Health Code Sets manager.
+
+Complaint and Destination include the same italicized `Other` add-new action used by Medication Inventory. Communication Methods use visible checkboxes rather than a browser multi-select and provide a `+ Add communication method` action below the choices. At least one method is required. A successfully added method becomes checked immediately. Save must remain disabled while an add-new control is open, while its POST is in progress, and after a failed POST until the nurse either succeeds or cancels. New records must never save arbitrary unmatched text; visit-specific details belong in Notes.
+
+Existing Health Log records must preserve their stored values without migration or silent conversion:
+
+- Match stored values against all custom options by code and by case-insensitive display value. For Communication Methods, first attempt an exact single-option match; otherwise treat commas as separators only when every segment resolves to a known option.
+- If the value matches Active options, show the dropdown or communication-method checkboxes selected. Saving an unrelated change preserves the original stored value unless the nurse deliberately changes a selection.
+- If the value matches an Inactive option, hide the dropdown and display the option label as read-only text.
+- If the value matches no option, hide the dropdown and display the complete original value as read-only text.
+- A read-only historical value cannot be replaced or added to the option table from that historical record.
+- Tables and filters resolve known codes to display labels and otherwise fall back to the original stored value.
+
+The Health Log page receives GET and POST access to `u_cdol_health_option`; option editing, activation, inactivation, and reordering remain district-admin functions. PowerSchool permission mappings authorize access to the shared table route and cannot restrict POST access to individual `codetype` categories.
+
+The approved import defaults are maintained in `docs/u_cdol_health_option_defaults.csv`. They contain no stored `Other` records.
+
+## 5. Inventory
 
 Inventory must support multiple count-in or refill lots for one medication.
 
@@ -111,7 +136,7 @@ Rules:
 - Do not display a percentage or a Normal label to the nurse. For one inventory lot, apply the warning color and left-aligned `Low Inventory`, `Critical Inventory`, or `Out of Inventory` label to that lot row. For multiple lots, apply the warning only to the Total row. Keep the quantity right-aligned, and use a subtle pale-red treatment for Out of Inventory.
 - Support controlled-medication inventory and count auditing.
 
-## 5. Medication administration
+## 6. Medication administration
 
 The administration interface must be table-based, not calendar-based.
 
@@ -155,7 +180,7 @@ For administration:
 - The system should include a spelling and dose double-check step or confirmation prompt before committing sensitive medication details.
 - PRN administrations must be supported without creating false missed-dose alerts.
 
-## 6. Alerts and reminders
+## 7. Alerts and reminders
 
 The project should support:
 
@@ -166,7 +191,7 @@ The project should support:
 
 The storage level for reminder settings, such as per user, school, or medication, remains an open design decision.
 
-## 7. Auditability
+## 8. Auditability
 
 The system must retain who, what, and when information for:
 
@@ -180,7 +205,7 @@ The system must retain who, what, and when information for:
 
 Historical transactions must not be silently overwritten.
 
-## 8. Authorization
+## 9. Authorization
 
 Only authorized staff should be able to view or modify medication inventory and administration data.
 

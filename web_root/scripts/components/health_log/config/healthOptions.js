@@ -7,8 +7,7 @@ define(() => {
 		{ codeType: 'MED_FREQUENCY', displayName: 'Medication Frequencies', section: 'Medication', medicationField: 'frequency' },
 		{ codeType: 'HEALTH_COMPLAINT', displayName: 'Health Log Complaints', section: 'Health Log' },
 		{ codeType: 'HEALTH_DESTINATION', displayName: 'Health Log Destinations', section: 'Health Log' },
-		{ codeType: 'HEALTH_CONVERSATION', displayName: 'Health Log Conversation Types', section: 'Health Log' },
-		{ codeType: 'HEALTH_SPORT', displayName: 'Health Log Sports', section: 'Health Log' }
+		{ codeType: 'HEALTH_CONVERSATION', displayName: 'Health Log Communication Methods', section: 'Health Log' }
 	]
 	const medicationTypes = optionTypes.reduce((types, optionType) => {
 		if (!optionType.medicationField) return types
@@ -18,6 +17,11 @@ define(() => {
 		}
 		return types
 	}, {})
+	const healthLogTypes = {
+		complaint: { codeType: 'HEALTH_COMPLAINT' },
+		destination: { codeType: 'HEALTH_DESTINATION' },
+		conversation_type: { codeType: 'HEALTH_CONVERSATION' }
+	}
 	const fieldValue = (record, camelCaseKey, lowercaseKey) => {
 		if (!record) return undefined
 		if (record[camelCaseKey] !== undefined) return record[camelCaseKey]
@@ -32,6 +36,10 @@ define(() => {
 	const buildCode = value => normalizeDisplayValue(value)
 		.toLowerCase()
 		.replace(/\s+/g, '')
+	const buildCodeForType = (codeType, value) => {
+		const code = buildCode(value)
+		return codeType === 'HEALTH_CONVERSATION' ? code.replace(/,/g, '') : code
+	}
 	const normalizeRecord = record => ({
 		id: fieldValue(record, 'id', 'id'),
 		codeType: fieldValue(record, 'codeType', 'codetype'),
@@ -39,8 +47,6 @@ define(() => {
 		description: fieldValue(record, 'description', 'description'),
 		displayValue: fieldValue(record, 'displayValue', 'displayvalue'),
 		isVisible: fieldValue(record, 'isVisible', 'isvisible'),
-		isModifiable: fieldValue(record, 'isModifiable', 'ismodifiable'),
-		isDeletable: fieldValue(record, 'isDeletable', 'isdeletable'),
 		uiDisplayOrder: fieldValue(record, 'uiDisplayOrder', 'uidisplayorder')
 	})
 
@@ -49,8 +55,10 @@ define(() => {
 		displayValueMaxLength: 100,
 		optionTypes,
 		medicationTypes,
+		healthLogTypes,
 		normalizeDisplayValue,
 		buildCode,
+		buildCodeForType,
 		normalizeRecord
 	}
 })

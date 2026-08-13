@@ -77,8 +77,6 @@ define([
 		displayvalue: option.displayValue,
 		description: option.displayValue,
 		isvisible: 1,
-		ismodifiable: 1,
-		isdeletable: 1,
 		uidisplayorder: displayOrder
 	})
 
