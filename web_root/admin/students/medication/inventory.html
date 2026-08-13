@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Medication Inventory</title>
+        ~[wc:commonscripts]
+        <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+        <link href="/images/css/cdol.css" rel="stylesheet" media="screen">
+        <link href="/images/css/cdol_health_drawers.css" rel="stylesheet" media="screen">
+        <link href="/images/css/print.css" rel="stylesheet" media="print">
+        <style>
+            .med-top-of-table {
+                display: flex;
+                justify-content: space-between;
+                /* pushes left/right */
+                align-items: center;
+                /* vertical alignment */
+                margin: 0 10px 0 !important;
+            }
+
+            #medication-grid {
+                margin: 0 !important;
+            }
+
+            .inventory-cell {
+                text-align: right;
+                padding-right: 6px;
+            }
+
+            .inventory-cell-content {
+                padding-right: 2px;
+            }
+
+            .inventory-total-row {
+                border-top: 1px solid rgba(0, 0, 0, 0.12);
+                font-weight: bold;
+                background-color: #C2E2FF !important;
+            }
+
+            .inventory-total-row td {
+                background-color: #C2E2FF !important;
+            }
+
+            .inventory-batches-table {
+                border-collapse: separate;
+                border-spacing: 0;
+                border: 1px solid rgba(0, 0, 0, 0.12);
+                border-radius: 6px;
+                overflow: hidden;
+            }
+
+            .inventory-batches-table tr,
+            .inventory-batches-table td {
+                border: none !important;
+            }
+
+            .inventory-batches-table .inventory-batch-row td {
+                box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+            }
+
+            .inventory-history {
+                min-width: 260px;
+            }
+
+            .inventory-history summary {
+                cursor: pointer;
+            }
+
+            .inventory-history-entry {
+                border-top: 1px solid rgba(0, 0, 0, 0.12);
+                padding: 6px 0;
+            }
+
+            .inventory-history-entry:first-of-type {
+                border-top: 0;
+            }
+
+            .inventory-change-negative {
+                color: #a12622;
+                font-weight: bold;
+            }
+
+            .inventory-change-positive {
+                color: #237804;
+                font-weight: bold;
+            }
+
+            .inventory-minus-symbol {
+                display: inline-block;
+                font-size: 20px;
+                font-weight: bold;
+                line-height: 12px;
+                vertical-align: middle;
+            }
+
+            .inventory-warning-low td {
+                color: #5f4700;
+                background-color: #fff4ce !important;
+                box-shadow: inset 0 0 0 1px #d6b656 !important;
+            }
+
+            .inventory-warning-critical td {
+                color: #8a3b00;
+                background-color: #ffe3cc !important;
+                box-shadow: inset 0 0 0 1px #d9822b !important;
+            }
+
+            .inventory-warning-out td {
+                color: #a12622;
+                background-color: #faeeee !important;
+                box-shadow: inset 0 0 0 1px #c84a4a !important;
+            }
+
+            .inventory-batches-table.inventory-warning-low {
+                border-color: #d6b656;
+            }
+
+            .inventory-batches-table.inventory-warning-critical {
+                border-color: #d9822b;
+            }
+
+            .inventory-batches-table.inventory-warning-out {
+                border-color: #c84a4a;
+            }
+
+            .inventory-status-text {
+                font-weight: bold;
+                padding-left: 10px;
+                text-align: left;
+            }
+
+            .inventory-row-content {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .inventory-quantity-text {
+                margin-left: auto;
+                text-align: right;
+                white-space: nowrap;
+            }
+        </style>
+    </head>
+
+    <body>
+        ~[wc:admin_header_frame_css]
+        ~[wc:admin_navigation_frame_css]
+        ~[wc:title_student_begin_css]~(first_name)'s Medication Inventory~[wc:title_student_end_css]
+        <div data-require-path="./medication.js" data-module-name="medicationModule"
+            ng-controller="medicationController as vm" data-bootstrap-local="true" ng-cur-student-dcid="~(rn)"
+            ng-cur-student-name="~(studentname)" ng-cur-user-dcid="~[x:users_dcid]" ng-cur-school-id="~(curschoolid)"
+            ng-cur-year-id="~(curyearid)" ng-cur-date="~[date]" ng-cur-time="~[time]"
+            ng-server-name="~[x:WEB_GetServerInfo;name=HostName]" ng-cur-user-security-roles="~[x:usersroles]"
+            ng-context="inventory" ng-cloak>
+            <div id="medication-grid" data-pss-grid-widget data-data="vm.inventoryList"
+                data-filtered-data="vm.filteredInventoryList" data-client-side-pagination="false"
+                data-filter-constraint="no-filters">
+                <div class="med-top-of-table">
+                    <a id="student-medication-administration-link"
+                        href="/admin/students/medication/administration.html?frn=~(studentfrn)"
+                        aria-label="Administer Medication for ~(first_name)">
+                        <span aria-hidden="true">&larr;</span> Administer Medication
+                    </a>
+                    <button id="add-btn" type="button" pss-dialog-drawer width="900" drawer-title="Add Medication"
+                        data-data="{
+                    studentsdcid: '~(rn)',
+                    id: null
+                }" template-url="editInventory.html">Add Medication</button>
+                </div>
+                <table class="grid">
+                    <thead>
+                        <tr>
+                            <th data-pss-sort-fields="medication_name">Medication</th>
+                            <th data-pss-sort-fields="dose_amount">Dosage</th>
+                            <th data-pss-sort-fields="inventory_unit">Unit</th>
+                            <th data-pss-sort-fields="route">Route</th>
+                            <th data-pss-sort-fields="frequency">Frequency</th>
+                            <th>Inventory</th>
+                            <th data-pss-sort-fields="created_date" data-primary-sort="ascending">Date Added</th>
+                            <th>Notes</th>
+                            <th style="width: 145px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-show="!vm.inventoryList.length">
+                            <td colspan="100%">~(first_name) ~(last_name) has no medications in inventory</span>
+                            </td>
+                        </tr>
+                        <tr ng-repeat="medication in vm.filteredInventoryList" data-id="{{medication.medication_id}}">
+                            <td class="center">{{medication.medication_name}}</td>
+                            <td class="center">{{medication.dose_amount}}
+                                {{$root.medicationOptionDisplayValue('dose_unit', medication.dose_unit)}}</td>
+                            <td class="center">{{$root.medicationOptionDisplayValue('inventory_unit',
+                                medication.inventory_unit)}}</td>
+                            <td class="center">{{$root.medicationOptionDisplayValue('route', medication.route)}}</td>
+                            <td class="center">{{$root.medicationOptionDisplayValue('frequency', medication.frequency)}}</td>
+                            <td class="inventory-cell">
+                                <div class="inventory-cell-content"
+                                    ng-if="medication.inventory_batches && medication.inventory_batches.length">
+                                    <table class="inventory-batches-table" style="width: 100%; margin: 0; padding: 0;"
+                                        ng-class="medication.inventory_batches.length === 1 ? medication.inventory_status_row_class : ''">
+                                        <tbody>
+                                            <tr class="inventory-batch-row"
+                                                ng-class="medication.inventory_batches.length === 1 ? medication.inventory_status_row_class : ''"
+                                                ng-repeat="batch in (medication.inventory_batches | orderBy:'added_date')">
+                                                <td style="text-align: right; padding: 2px 4px 2px 0;">
+                                                    <div class="inventory-row-content">
+                                                        <span class="inventory-status-text"
+                                                            ng-if="medication.inventory_batches.length === 1 && medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
+                                                        <span
+                                                            class="inventory-quantity-text">{{batch.quantity_remaining}}
+                                                            / {{batch.quantity_added}}
+                                                            {{$root.medicationOptionDisplayValue('inventory_unit',
+                                                            medication.inventory_unit) | pluralize}}</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr class="inventory-total-row"
+                                                ng-if="medication.inventory_batches.length > 1"
+                                                ng-class="medication.inventory_status_row_class">
+                                                <td style="text-align: right; padding: 2px 4px 2px 0;">
+                                                    <div class="inventory-row-content">
+                                                        <span class="inventory-status-text"
+                                                            ng-if="medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
+                                                        <span class="inventory-quantity-text"><strong>Total:</strong>
+                                                            {{medication.inventory_total_remaining}} /
+                                                            {{medication.inventory_total_initial}}
+                                                            {{$root.medicationOptionDisplayValue('inventory_unit',
+                                                            medication.inventory_unit) | pluralize}}</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div ng-if="!medication.inventory_batches || medication.inventory_batches.length === 0">
+                                    -
+                                </div>
+                            </td>
+                            <td class="center">{{medication.created_date | date}}</td>
+                            <td class="center">{{medication.notes}}</td>
+                            <td class="actions center">
+                                <button type="button" id="mod-btn-{{medication.medication_id}}" pss-dialog-drawer
+                                    width="900" edit-button-icon="true" drawer-title="Edit {{vm.appData.contextTitle}}"
+                                    template-url="editInventory.html" data-data="medication"></button>
+                                <button type="button" id="remove-inventory-btn-{{medication.medication_id}}"
+                                    pss-dialog-drawer width="900" drawer-title="Remove Inventory"
+                                    data-data="{ mode: 'remove', medication: medication }"
+                                    template-url="editInventory.html" ng-click="vm.beginTransactionDrawer()"
+                                    ng-disabled="medication.inventory_total_remaining <= 0"
+                                    aria-label="Remove Inventory" title="Remove Inventory"><span
+                                        class="inventory-minus-symbol" aria-hidden="true">&minus;</span></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="box-round" ng-if=" $root.appData.districtUser && $root.appData.isTestServer">
+                <strong>appData:</strong>
+                <pre>{{$root.appData | json}}</pre>
+            </div>
+        </div>
+        ~[wc:admin_footer_frame_css]
+    </body>
+
+</html>

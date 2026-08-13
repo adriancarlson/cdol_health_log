@@ -1,14 +1,27 @@
 'use strict'
 define(function (require) {
 	var module = require('components/health_log/module')
+	var healthOptionConfig = require('components/health_log/config/healthOptions')
+	var HEALTH_LOG_OPTION_TYPES = healthOptionConfig.healthLogTypes
+	var ADD_HEALTH_OPTION_VALUE = '__ADD_HEALTH_OPTION_VALUE__'
+	var isActiveHealthOption = record => !(record.isVisible === false || record.isVisible === 0 || record.isVisible === '0')
+	var sortHealthOptions = options =>
+		options.sort((left, right) => {
+			const leftOrder = Number(left.uiDisplayOrder)
+			const rightOrder = Number(right.uiDisplayOrder)
+			if (Number.isFinite(leftOrder) && Number.isFinite(rightOrder) && leftOrder !== rightOrder) return leftOrder - rightOrder
+			if (Number.isFinite(leftOrder) && !Number.isFinite(rightOrder)) return -1
+			if (!Number.isFinite(leftOrder) && Number.isFinite(rightOrder)) return 1
+			return left.displayValue.localeCompare(right.displayValue)
+		})
 
 	module.controller('healthLogCtrl', [
 		'$scope',
 		'$rootScope',
 		'$attrs',
-		'pqService',
+		'jsonDataService',
 		'psApiService',
-		function ($scope, $rootScope, $attrs, pqService, psApiService) {
+		function ($scope, $rootScope, $attrs, jsonDataService, psApiService) {
 			$j(document).dblclick(() => console.log($scope))
 
 			$rootScope.getCurrentTime = () => {
@@ -35,43 +48,130 @@ define(function (require) {
 				curDate: $attrs.ngCurDate,
 				curTime: $rootScope.getCurrentTime(),
 				curContext: $attrs.ngCurContext,
-				complaintList: {
-					B: 'Bloody Nose',
-					BB: 'Brain Break',
-					BP: 'Braces Pain',
-					CS: 'Cold Symptoms',
-					C: 'Cramps',
-					D: 'Dizziness',
-					H: 'Headache',
-					I: 'Injury ',
-					N: 'Nausea',
-					T: 'Sore Throat',
-					S: 'Stomachache',
-					VS: 'Vital Sign Check',
-					V: 'Vomiting',
-					O: 'Other'
+				healthOptions: {
+					complaint: [],
+					destination: [],
+					conversation_type: []
 				},
+				healthOptionsAll: {
+					complaint: [],
+					destination: [],
+					conversation_type: []
+				},
+				healthOptionsLoaded: false,
+				healthOptionLoadError: '',
 				treatmentList: {
 					B: 'Controlled Bleeding',
 					I: 'Ice Applied',
 					M: 'Med Administration',
 					W: 'Water/Snack',
 					O: 'Other'
-				},
-				destinationList: {
-					B: 'Back to Class',
-					C: 'Counselor',
-					H: 'Home',
-					F: 'Office',
-					O: 'Other'
-				},
-				conversationTypeList: {
-					E: 'Email',
-					P: 'Phone',
-					I: 'In Person',
-					O: 'Other'
 				}
 			}
+			const buildHealthLogOption = record => ({
+				id: record.id,
+				code: String(record.code || '').trim(),
+				displayValue: String(record.displayValue || record.code || '').trim(),
+				description: record.description,
+				isActive: isActiveHealthOption(record),
+				uiDisplayOrder: record.uiDisplayOrder
+			})
+			const addOtherOption = options =>
+				options.concat([
+					{
+						code: ADD_HEALTH_OPTION_VALUE,
+						displayValue: 'Other',
+						isAddNew: true,
+						isActive: true
+					}
+				])
+			const replaceHealthLogOptions = (fieldName, records) => {
+				const uniqueOptions = []
+				const seenCodes = new Set()
+				sortHealthOptions(records.map(buildHealthLogOption)).forEach(option => {
+					const identity = option.code.toLowerCase()
+					if (!identity || seenCodes.has(identity)) return
+					seenCodes.add(identity)
+					uniqueOptions.push(option)
+				})
+				$rootScope.appData.healthOptionsAll[fieldName] = uniqueOptions
+				$rootScope.appData.healthOptions[fieldName] = addOtherOption(uniqueOptions.filter(option => option.isActive))
+			}
+			$rootScope.findHealthLogOption = (fieldName, value, activeOnly) => {
+				const identity = String(value === undefined || value === null ? '' : value)
+					.trim()
+					.toLowerCase()
+				if (!identity) return null
+				return ($rootScope.appData.healthOptionsAll[fieldName] || []).find(option => (!activeOnly || option.isActive) && (option.code.toLowerCase() === identity || option.displayValue.toLowerCase() === identity)) || null
+			}
+			$rootScope.resolveHealthLogOptionValues = (fieldName, value, activeOnly) => {
+				const originalValue = String(value === undefined || value === null ? '' : value).trim()
+				if (!originalValue) return []
+
+				const exactOption = $rootScope.findHealthLogOption(fieldName, originalValue, activeOnly)
+				if (exactOption) return [exactOption]
+				if (fieldName !== 'conversation_type' || originalValue.indexOf(',') === -1) return null
+
+				const storedCodes = originalValue
+					.split(',')
+					.map(code => code.trim())
+					.filter(Boolean)
+				if (storedCodes.length < 2) return null
+				const resolvedOptions = storedCodes.map(code => $rootScope.findHealthLogOption(fieldName, code, activeOnly))
+				return resolvedOptions.every(Boolean) ? resolvedOptions : null
+			}
+			$rootScope.healthOptionDisplayValue = (fieldName, value) => {
+				const options = $rootScope.resolveHealthLogOptionValues(fieldName, value, false)
+				return options && options.length ? options.map(option => option.displayValue).join(', ') : value
+			}
+			const decorateHealthLogOptionLabels = records =>
+				records.forEach(record => {
+					record._complaint_display = $rootScope.healthOptionDisplayValue('complaint', record.complaint)
+					record._destination_display = $rootScope.healthOptionDisplayValue('destination', record.destination)
+					record._conversation_type_display = $rootScope.healthOptionDisplayValue('conversation_type', record.conversation_type)
+				})
+			$rootScope.addHealthLogOption = (fieldName, record) => {
+				const normalizedRecord = healthOptionConfig.normalizeRecord(record)
+				const existing = $rootScope.findHealthLogOption(fieldName, normalizedRecord.code, false) || $rootScope.findHealthLogOption(fieldName, normalizedRecord.displayValue, false)
+				if (existing) return existing
+				const records = ($rootScope.appData.healthOptionsAll[fieldName] || []).concat([buildHealthLogOption(normalizedRecord)])
+				replaceHealthLogOptionsFromBuilt(fieldName, records)
+				return $rootScope.findHealthLogOption(fieldName, normalizedRecord.code, false)
+			}
+			const replaceHealthLogOptionsFromBuilt = (fieldName, options) => {
+				const uniqueOptions = []
+				const seenCodes = new Set()
+				sortHealthOptions(options).forEach(option => {
+					const identity = String(option.code || '').toLowerCase()
+					if (!identity || seenCodes.has(identity)) return
+					seenCodes.add(identity)
+					uniqueOptions.push(option)
+				})
+				$rootScope.appData.healthOptionsAll[fieldName] = uniqueOptions
+				$rootScope.appData.healthOptions[fieldName] = addOtherOption(uniqueOptions.filter(option => option.isActive))
+			}
+			const loadHealthOptions = () =>
+				psApiService
+					.psApiCall('u_cdol_health_option', 'GET', {})
+					.then(records => {
+						$rootScope.appData.healthOptionLoadError = ''
+						return records
+					})
+					.then(records => (Array.isArray(records) ? records : records ? [records] : []).map(healthOptionConfig.normalizeRecord))
+					.then(records => {
+						Object.keys(HEALTH_LOG_OPTION_TYPES).forEach(fieldName => {
+							const definition = HEALTH_LOG_OPTION_TYPES[fieldName]
+							replaceHealthLogOptions(
+								fieldName,
+								records.filter(record => String(record.codeType || '').toLowerCase() === definition.codeType.toLowerCase() && record.code)
+							)
+						})
+						$rootScope.appData.healthOptionsLoaded = true
+					})
+					.catch(error => {
+						$rootScope.appData.healthOptionLoadError = (error.data && error.data.message) || 'Health Log options could not be loaded. Try again or contact an administrator.'
+						$rootScope.appData.healthOptionsLoaded = false
+					})
 			$scope.setfullContext = () => {
 				const contextMap = {
 					Daily: 'Daily Health Log',
@@ -86,9 +186,17 @@ define(function (require) {
 
 			$rootScope.loadLogData = async logData => {
 				loadingDialog()
-				const pqData = { curSchoolID: $rootScope.appData.curSchoolId, yearID: $rootScope.appData.curYearId, curStudentDCID: $rootScope.appData.curStudentDCID, logType: logData }
-				$scope.healthLogList = await pqService.getPQResults('net.cdolinc.health.healthLog.logs', pqData)
-				$rootScope.appData.staffList = await pqService.getPQResults('net.cdolinc.health.healthLog.staff', { curSchoolID: $rootScope.appData.curSchoolId })
+				const requestParams = { curSchoolID: $rootScope.appData.curSchoolId, yearID: $rootScope.appData.curYearId, curStudentDCID: $rootScope.appData.curStudentDCID, logType: logData }
+				await Promise.all([
+					jsonDataService.getData('healthLogs', requestParams).then(records => {
+						$scope.healthLogList = records
+					}),
+					jsonDataService.getData('staff', { curSchoolID: $rootScope.appData.curSchoolId }).then(records => {
+						$rootScope.appData.staffList = records
+					}),
+					loadHealthOptions()
+				])
+				decorateHealthLogOptionLabels($scope.healthLogList)
 				$scope.setfullContext()
 				$scope.$digest()
 				closeLoading()

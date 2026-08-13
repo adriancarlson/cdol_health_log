@@ -1,0 +1,68 @@
+~[tlist_sql;
+    SELECT
+    COALESCE(
+        JSON_ARRAYAGG(
+            JSON_OBJECT(
+                    'studentsdcid' VALUE u_student_medication.studentsdcid,
+                    'schoolid' VALUE u_student_medication.schoolid,
+                    'yearid' VALUE u_student_medication.yearid,
+                    'medication_id' VALUE u_student_medication.id,
+                    'medication_name' VALUE u_student_medication.medication_name,
+                    'created_date' VALUE TO_CHAR(u_student_medication.created_date, 'YYYY-MM-DD'),
+                    'dose_amount' VALUE u_student_medication.dose_amount,
+                    'dose_unit' VALUE u_student_medication.dose_unit,
+                    'route' VALUE u_student_medication.route,
+                    'frequency' VALUE u_student_medication.frequency,
+                    'users_dcid' VALUE u_student_medication.users_dcid,
+                    'inventory_unit' VALUE u_student_medication.inventory_unit,
+                    'inventory_baseline_quantity' VALUE u_student_medication.inventory_baseline_quantity,
+                    'notes' VALUE u_student_medication.notes,
+                    'inventory_total_initial' VALUE NVL((
+                SELECT SUM(inv.quantity_added)
+                FROM u_student_medication_inventory inv
+                WHERE inv.u_student_medication_id = u_student_medication.id
+            ), 0),
+
+            'inventory_batches' VALUE COALESCE((
+                SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'inventory_id' VALUE inv.id,
+                        'added_date' VALUE TO_CHAR(inv.added_date, 'YYYY-MM-DD'),
+                        'quantity_added' VALUE inv.quantity_added,
+                        'users_dcid' VALUE inv.users_dcid,
+                        'added_by_name' VALUE (
+                            SELECT users.first_name || ' ' || users.last_name
+                            FROM users
+                            WHERE users.dcid = inv.users_dcid
+                        ),
+                        'notes' VALUE inv.notes
+                        NULL ON NULL
+                        RETURNING CLOB
+                    )
+                    ORDER BY inv.added_date ASC
+                    RETURNING CLOB
+                )
+                FROM u_student_medication_inventory inv
+                WHERE inv.u_student_medication_id = u_student_medication.id
+            ), TO_CLOB('[]')) FORMAT JSON
+
+            NULL ON NULL
+            RETURNING CLOB
+        )
+        ORDER BY students.last_name DESC
+        RETURNING CLOB
+    ),
+    TO_CLOB(CHR(91) || CHR(93))
+) AS json_result
+FROM
+    u_student_medication
+    LEFT JOIN students
+        ON u_student_medication.studentsdcid = students.dcid
+WHERE
+    u_student_medication.yearid = ~(gpv.yearID;num)
+    AND ~(gpv.curSchoolID;num) IN (0, u_student_medication.schoolid)
+    AND (
+        students.dcid = ~(gpv.curStudentDCID)
+        OR ~(gpv.curStudentDCID) = 0
+    )
+;]~(data)[/tlist_sql]

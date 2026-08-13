@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Medication Administration</title>
+        ~[wc:commonscripts]
+        <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+        <link href="/images/css/cdol.css" rel="stylesheet" media="screen">
+        <link href="/images/css/cdol_health_drawers.css" rel="stylesheet" media="screen">
+        <link href="/images/css/print.css" rel="stylesheet" media="print">
+        <style>
+            .administration-quantity {
+                white-space: nowrap;
+            }
+
+            .administration-toolbar {
+                display: grid;
+                grid-template-columns: 1fr auto 1fr;
+                align-items: center;
+                margin: 0 10px !important;
+            }
+
+            #student-medication-inventory-link {
+                grid-column: 1;
+                justify-self: start;
+            }
+
+            .administration-filter {
+                grid-column: 2;
+                justify-self: center;
+            }
+
+            .administration-filter label {
+                display: inline;
+                padding-left: 0;
+                margin-right: 4px;
+            }
+
+            #administer-medication-btn {
+                grid-column: 3;
+                justify-self: end;
+            }
+
+            .administration-history-status {
+                display: inline-block;
+                margin-top: 3px;
+                padding: 1px 6px;
+                border: 1px solid #8a8a8a;
+                border-radius: 999px;
+                color: #555;
+                background: #f3f3f3;
+                font-size: 11px;
+                font-weight: bold;
+                white-space: nowrap;
+            }
+
+            .administration-entered-in-error td {
+                color: #6b2623;
+                background-color: #faeeee !important;
+            }
+
+            .administration-entered-in-error .administration-history-status {
+                color: #a12622;
+                background-color: #faeeee;
+                border-color: #c84a4a;
+            }
+
+            .administration-correction-audit {
+                margin-top: 3px;
+                font-size: 12px;
+            }
+
+            .administration-minus-symbol {
+                display: inline-block;
+                font-size: 20px;
+                font-weight: bold;
+                line-height: 12px;
+                vertical-align: middle;
+            }
+        </style>
+    </head>
+
+    <body>
+        ~[wc:admin_header_frame_css]
+        ~[wc:admin_navigation_frame_css]
+        ~[wc:title_student_begin_css]~(first_name)'s Medication Administration~[wc:title_student_end_css]
+
+        <div data-require-path="./medication.js" data-module-name="medicationModule"
+            ng-controller="medicationController as vm" data-bootstrap-local="true" ng-cur-student-dcid="~(rn)"
+            ng-cur-student-name="~(studentname)" ng-cur-user-dcid="~[x:users_dcid]" ng-cur-school-id="~(curschoolid)"
+            ng-cur-year-id="~(curyearid)" ng-cur-date="~[date]" ng-cur-time="~[time]"
+            ng-server-name="~[x:WEB_GetServerInfo;name=HostName]" ng-cur-user-security-roles="~[x:usersroles]"
+            ng-context="administration" ng-cloak>
+
+            <div id="administration-history-grid" data-pss-grid-widget data-data="vm.administrationList"
+                data-filtered-data="vm.filteredAdministrationList" data-client-side-pagination="false"
+                data-filter-constraint="no-filters">
+                <div class="feedback-confirm" role="status" aria-live="polite"
+                    ng-if="vm.appData.administrationFeedback">
+                    {{vm.appData.administrationFeedback}}
+                </div>
+                <div class="administration-toolbar">
+                    <a id="student-medication-inventory-link"
+                        href="/admin/students/medication/inventory.html?frn=~(studentfrn)"
+                        aria-label="View ~(first_name)'s Medication Inventory">
+                        <span aria-hidden="true">&larr;</span> View Medication Inventory
+                    </a>
+                    <div class="administration-filter" ng-if="vm.administrationMedicationOptions.length > 1">
+                        <label for="administration-medication-filter">Filter Medication</label>
+                        <select id="administration-medication-filter" ng-model="vm.historyMedicationId"
+                            ng-options="option.medication_id as option.label for option in vm.administrationMedicationOptions">
+                            <option value="">All Medications</option>
+                        </select>
+                    </div>
+                    <button id="administer-medication-btn" type="button" pss-dialog-drawer width="900"
+                        drawer-title="Administer Medication" data-data="{ id: null }"
+                        template-url="administerMedication.html" ng-click="vm.clearAdministrationFeedback()">
+                        Administer Medication
+                    </button>
+                </div>
+                <table class="grid">
+                    <thead>
+                        <tr>
+                            <th style="width: 150px;" data-pss-sort-fields="event_date,event_time"
+                                data-primary-sort="descending">Date/Time</th>
+                            <th data-pss-sort-fields="medication_name">Medication</th>
+                            <th data-pss-sort-fields="dose_amount">Prescribed Dosage</th>
+                            <th data-pss-sort-fields="quantity_administered">Quantity Administered</th>
+                            <th data-pss-sort-fields="route">Route</th>
+                            <th data-pss-sort-fields="user_name">Administered By</th>
+                            <th>Notes</th>
+                            <th style="width: 65px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            ng-show="!(vm.filteredAdministrationList | filter:vm.filterAdministrationByMedication).length">
+                            <td colspan="8">No matching medication administrations have been recorded for this student.
+                            </td>
+                        </tr>
+                        <tr ng-repeat="administration in (vm.filteredAdministrationList | filter:vm.filterAdministrationByMedication)"
+                            data-id="{{administration.root_transaction_id}}"
+                            ng-class="{ 'administration-entered-in-error': administration.is_entered_in_error }">
+                            <td class="center">{{administration.event_date | date:'MM/dd/yyyy'}}
+                                {{administration.event_time | medTime12}}</td>
+                            <td>
+                                <div>{{administration.medication_name}}</div>
+                                <span class="administration-history-status"
+                                    ng-if="administration.correction_status_label">
+                                    {{administration.correction_status_label}}
+                                </span>
+                            </td>
+                            <td class="center">{{administration.dose_amount}}
+                                {{$root.medicationOptionDisplayValue('dose_unit', administration.dose_unit)}}</td>
+                            <td class="center administration-quantity">{{administration.quantity_administered}}
+                                {{$root.medicationOptionDisplayValue('inventory_unit', administration.inventory_unit) |
+                                pluralize}}</td>
+                            <td class="center">{{$root.medicationOptionDisplayValue('route', administration.route)}}</td>
+                            <td class="center">{{administration.user_name}}</td>
+                            <td>
+                                <div>{{administration.notes}}</div>
+                                <div class="administration-correction-audit"
+                                    ng-repeat="audit in administration.correction_history">
+                                    <strong>{{audit.status_label}}:</strong>
+                                    {{audit.correction_reason}}
+                                    <span ng-if="audit.correction_user_name">
+                                        — {{audit.correction_user_name}}
+                                    </span>
+                                    <span ng-if="audit.correction_date">
+                                        on {{audit.correction_date | date:'MM/dd/yyyy'}}
+                                        {{audit.correction_time | medTime12}}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="actions center">
+                                <span ng-if="!administration.is_entered_in_error">
+                                    <button type="button"
+                                        id="correct-administration-btn-{{administration.root_transaction_id}}"
+                                        pss-dialog-drawer width="900" edit-button-icon="true"
+                                        drawer-title="Correct Administration"
+                                        data-data="{ mode: 'edit', administration: administration }"
+                                        template-url="correctAdministration.html"
+                                        ng-click="vm.clearAdministrationFeedback()" aria-label="Correct Administration"
+                                        title="Correct Administration"></button>
+                                    <button type="button"
+                                        id="void-administration-btn-{{administration.root_transaction_id}}"
+                                        pss-dialog-drawer width="900"
+                                        drawer-title="Mark Administration as Entered in Error"
+                                        data-data="{ mode: 'void', administration: administration }"
+                                        template-url="correctAdministration.html"
+                                        ng-click="vm.clearAdministrationFeedback()"
+                                        aria-label="Mark Administration as Entered in Error"
+                                        title="Mark Administration as Entered in Error">
+                                        <span class="administration-minus-symbol" aria-hidden="true">&minus;</span>
+                                    </button>
+                                </span>
+                                <span ng-if="administration.is_entered_in_error"
+                                    aria-label="No actions available">—</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="box-round" ng-if="$root.appData.districtUser && $root.appData.isTestServer">
+                <strong>appData:</strong>
+                <pre>{{$root.appData | json}}</pre>
+            </div>
+        </div>
+
+        ~[wc:admin_footer_frame_css]
+    </body>
+
+</html>

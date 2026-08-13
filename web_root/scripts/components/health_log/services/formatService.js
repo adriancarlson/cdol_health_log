@@ -30,6 +30,17 @@ define(function (require) {
 				//return date string (yyyy-mm-dd)
 				formatDateForApi: function (dt) {
 					if (!dt) return ''
+					if (Object.prototype.toString.call(dt) === '[object Date]') {
+						if (isNaN(dt.getTime())) return ''
+						let m = dt.getMonth() + 1
+						let d = dt.getDate()
+						let y = dt.getFullYear()
+						if (d < 10) d = '0' + d
+						if (m < 10) m = '0' + m
+						return y + '-' + m + '-' + d
+					}
+					dt = this.stripTimeFromIsoDate(dt)
+					if (typeof dt !== 'string') return ''
 					let dateParts = dt.split(dateSvc.delimiter)
 					if (dateParts.length != 3) return ''
 					let m = dateParts[dateSvc.monthIndex]
@@ -48,6 +59,13 @@ define(function (require) {
 					let m = dateParts[1]
 					let d = dateParts[2]
 					return this.getPsDateString(m, d, y)
+				},
+
+				//dt - date string that may include time (yyyy-mm-ddTHH:mm:ss)
+				//return date string (yyyy-mm-dd)
+				stripTimeFromIsoDate: function (dt) {
+					if (!dt || typeof dt !== 'string') return dt || ''
+					return dt.indexOf('T') > -1 ? dt.split('T')[0] : dt
 				},
 
 				//dt - javascript date object

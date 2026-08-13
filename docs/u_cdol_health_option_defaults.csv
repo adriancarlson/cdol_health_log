@@ -1,0 +1,68 @@
+u_cdol_health_option.codetype,u_cdol_health_option.code,u_cdol_health_option.displayvalue,u_cdol_health_option.description,u_cdol_health_option.isvisible,u_cdol_health_option.uidisplayorder
+MED_DOSE_UNIT,mg,(MG) Milligrams,(MG) Milligrams,1,10
+MED_DOSE_UNIT,ml,(ML) Milliliters,(ML) Milliliters,1,20
+MED_DOSE_UNIT,units,Units,Units,1,30
+MED_DOSE_UNIT,pills,Pills,Pills,1,40
+MED_INVENTORY_UNIT,pill,Pill,Pill,1,10
+MED_INVENTORY_UNIT,tablet,Tablet,Tablet,1,20
+MED_INVENTORY_UNIT,capsule,Capsule,Capsule,1,30
+MED_INVENTORY_UNIT,ml,(ML) Milliliters,(ML) Milliliters,1,40
+MED_INVENTORY_UNIT,mg,(MG) Milligrams,(MG) Milligrams,1,50
+MED_INVENTORY_UNIT,units,Units,Units,1,60
+MED_ROUTE,oral,Oral,Oral,1,10
+MED_ROUTE,nasal,Nasal,Nasal,1,20
+MED_ROUTE,sublingual,Sublingual,Sublingual,1,30
+MED_ROUTE,buccal,Buccal,Buccal,1,40
+MED_ROUTE,subcutaneous,Subcutaneous,Subcutaneous,1,50
+MED_ROUTE,rectal,Rectal,Rectal,1,60
+MED_FREQUENCY,daily,Daily,Daily,1,10
+MED_FREQUENCY,prn,As Needed (PRN),As Needed (PRN),1,20
+HEALTH_COMPLAINT,abrasionorscrape,Abrasion or Scrape,Abrasion or Scrape,1,10
+HEALTH_COMPLAINT,allergysymptoms,Allergy Symptoms,Allergy Symptoms,1,20
+HEALTH_COMPLAINT,anklepain,Ankle Pain,Ankle Pain,1,30
+HEALTH_COMPLAINT,anxiety,Anxiety,Anxiety,1,40
+HEALTH_COMPLAINT,armpain,Arm Pain,Arm Pain,1,50
+HEALTH_COMPLAINT,backpain,Back Pain,Back Pain,1,60
+HEALTH_COMPLAINT,bloodsugarcheckorconcern,Blood Sugar Check or Concern,Blood Sugar Check or Concern,1,70
+HEALTH_COMPLAINT,bloodynose,Bloody Nose,Bloody Nose,1,80
+HEALTH_COMPLAINT,brainbreak,Brain Break,Brain Break,1,90
+HEALTH_COMPLAINT,bruiseorcontusion,Bruise or Contusion,Bruise or Contusion,1,100
+HEALTH_COMPLAINT,chestpain,Chest Pain,Chest Pain,1,110
+HEALTH_COMPLAINT,coldsymptoms,Cold Symptoms,Cold Symptoms,1,120
+HEALTH_COMPLAINT,concussionrehabilitation,Concussion Rehabilitation,Concussion Rehabilitation,1,130
+HEALTH_COMPLAINT,cough,Cough,Cough,1,140
+HEALTH_COMPLAINT,cramps,Cramps,Cramps,1,150
+HEALTH_COMPLAINT,dentalororalpain,Dental or Oral Pain,Dental or Oral Pain,1,160
+HEALTH_COMPLAINT,dizziness,Dizziness,Dizziness,1,170
+HEALTH_COMPLAINT,earpain,Ear Pain,Ear Pain,1,180
+HEALTH_COMPLAINT,eyeconcern,Eye Concern,Eye Concern,1,190
+HEALTH_COMPLAINT,feverorfeelsfeverish,Fever or Feels Feverish,Fever or Feels Feverish,1,200
+HEALTH_COMPLAINT,footpain,Foot Pain,Foot Pain,1,210
+HEALTH_COMPLAINT,generalmalaiseornotfeelingwell,General Malaise or Not Feeling Well,General Malaise or Not Feeling Well,1,220
+HEALTH_COMPLAINT,headache,Headache,Headache,1,230
+HEALTH_COMPLAINT,hippain,Hip Pain,Hip Pain,1,240
+HEALTH_COMPLAINT,injury,Injury,Injury,1,250
+HEALTH_COMPLAINT,insectbiteortick,Insect Bite or Tick,Insect Bite or Tick,1,260
+HEALTH_COMPLAINT,kneepain,Knee Pain,Knee Pain,1,270
+HEALTH_COMPLAINT,legpain,Leg Pain,Leg Pain,1,280
+HEALTH_COMPLAINT,medicationadministration,Medication Administration,Medication Administration,1,290
+HEALTH_COMPLAINT,migraine,Migraine,Migraine,1,300
+HEALTH_COMPLAINT,musclepain,Muscle Pain,Muscle Pain,1,310
+HEALTH_COMPLAINT,nausea,Nausea,Nausea,1,320
+HEALTH_COMPLAINT,neckpain,Neck Pain,Neck Pain,1,330
+HEALTH_COMPLAINT,rashorskinconcern,Rash or Skin Concern,Rash or Skin Concern,1,340
+HEALTH_COMPLAINT,shortnessofbreath,Shortness of Breath,Shortness of Breath,1,350
+HEALTH_COMPLAINT,shoulderpain,Shoulder Pain,Shoulder Pain,1,360
+HEALTH_COMPLAINT,sorethroat,Sore Throat,Sore Throat,1,370
+HEALTH_COMPLAINT,stomachache,Stomachache,Stomachache,1,380
+HEALTH_COMPLAINT,vitalsigncheck,Vital Sign Check,Vital Sign Check,1,390
+HEALTH_COMPLAINT,vomiting,Vomiting,Vomiting,1,400
+HEALTH_COMPLAINT,wristorhandpain,Wrist or Hand Pain,Wrist or Hand Pain,1,410
+HEALTH_DESTINATION,backtoclass,Back to Class,Back to Class,1,10
+HEALTH_DESTINATION,home,Home,Home,1,20
+HEALTH_DESTINATION,office,Office,Office,1,30
+HEALTH_DESTINATION,counselor,Counselor,Counselor,1,40
+HEALTH_DESTINATION,recess,Recess,Recess,1,50
+HEALTH_CONVERSATION,email,Email,Email,1,10
+HEALTH_CONVERSATION,phone,Phone,Phone,1,20
+HEALTH_CONVERSATION,inperson,In Person,In Person,1,30

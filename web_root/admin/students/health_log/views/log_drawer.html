@@ -1,7 +1,136 @@
 <!--NoLink-->
-<form name="healthLogForm" data-ng-controller="healthLogEditCtrl">
+<form id="health-log-form" name="healthLogForm" data-ng-controller="healthLogEditCtrl">
     <div id="noTimer" pss-feedback-widget data-error="getErrorMessages()"></div>
-    <div class="fluid-form">
+    <style>
+        .health-option-select option:last-child {
+            font-style: italic;
+        }
+
+        .health-option-add-control {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .health-option-add-input {
+            width: 220px;
+            max-width: 100%;
+        }
+
+        .health-option-add-button {
+            min-width: 30px;
+            font-weight: bold;
+        }
+
+        .health-option-add-error {
+            margin: 4px 0 0;
+            max-width: 500px;
+        }
+
+        .health-option-feedback-note {
+            margin: 4px 0 0 !important;
+        }
+
+        #health-log-form {
+            padding-top: 2px;
+        }
+
+        #health-log-fields > div {
+            margin: 0 !important;
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+
+        #health-log-form label {
+            margin-left: 0 !important;
+            padding-left: 0 !important;
+        }
+
+        #health-log-notes-row > div {
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+
+        #health-log-notes-row > div > textarea,
+        .health-log-notes-table textarea {
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+        }
+
+        .health-log-notes-table {
+            width: 100%;
+            margin: 0 !important;
+            box-sizing: border-box;
+        }
+
+        .health-log-notes-table td:last-child {
+            width: 100%;
+        }
+
+        .health-option-legacy-value {
+            display: inline-block;
+            max-width: 600px;
+            overflow-wrap: anywhere;
+            padding: 3px 0;
+        }
+
+        .health-conversation-methods {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 18px;
+            margin: 2px 0 5px;
+        }
+
+        .health-conversation-method {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin: 0 !important;
+            padding: 0 !important;
+            white-space: nowrap;
+        }
+
+        .health-conversation-method input {
+            margin: 0;
+        }
+
+        .health-conversation-add-button {
+            margin: 0;
+        }
+
+        #health-conversation-row > div {
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+
+        .health-conversation-selection-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .health-conversation-options-column {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .health-conversation-button-row {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: flex-end;
+            align-self: stretch;
+            margin-left: auto;
+        }
+    </style>
+    <div class="feedback-alert" role="alert" data-ng-if="$root.appData.healthOptionLoadError">
+        {{$root.appData.healthOptionLoadError}}
+    </div>
+    <div id="health-log-fields" class="fluid-form">
         <div>
             <div>
                 <label>Log Date</label>
@@ -21,14 +150,33 @@
         <div data-ng-if="logRecord.log_type =='Daily'">
             <div>
                 <label>Complaint <span class="req"><em>*</em></span> </label>
-                <select data-ng-options="val as val for (key,val) in $root.appData.complaintList"
-                    data-ng-model="logRecord.complaint"
-                    data-ng-change="handleFieldChange('complaint'); checkReqFields()">
-                    <option value="">Select an Complaint</option>
+                <span class="health-option-legacy-value" data-ng-if="healthOptionStates.complaint.readOnly">
+                    {{healthOptionStates.complaint.displayValue}}
+                </span>
+                <select class="health-option-select" data-ng-if="!healthOptionStates.complaint.readOnly && !healthOptionEditors.complaint.visible"
+                    data-ng-options="option.code as option.displayValue for option in $root.appData.healthOptions.complaint"
+                    data-ng-model="healthOptionSelections.complaint"
+                    data-ng-change="onHealthOptionSelectionChanged('complaint')">
+                    <option value="">Select a Complaint</option>
                 </select>
-                <input data-ng-show="displayComplaintOther || logRecord.complaint== 'Other'" type="text"
-                    data-ng-model="logRecord.complaint_other"><span class="req"
-                    data-ng-if="!logRecord.complaint"><em>Required</em></span>
+                <div class="health-option-add-control" data-ng-if="healthOptionEditors.complaint.visible">
+                    <input class="health-option-add-input" type="text" maxlength="100"
+                        data-ng-model="healthOptionEditors.complaint.value"
+                        data-ng-blur="normalizeHealthOptionInput('complaint')"
+                        placeholder="Enter a reusable complaint" aria-label="New complaint">
+                    <button class="health-option-add-button" type="button"
+                        data-ng-click="addHealthOptionValue('complaint')"
+                        data-ng-disabled="healthOptionEditors.complaint.saving"
+                        aria-label="Add complaint" title="Add complaint">+</button>
+                    <button type="button" data-ng-click="cancelHealthOptionValue('complaint')"
+                        data-ng-disabled="healthOptionEditors.complaint.saving">Cancel</button>
+                </div>
+                <span class="req" data-ng-if="!healthOptionStates.complaint.readOnly && !healthOptionSelections.complaint && !healthOptionEditors.complaint.visible"><em>Required</em></span>
+                <div class="feedback-alert health-option-add-error" role="alert"
+                    data-ng-if="healthOptionEditors.complaint.error">{{healthOptionEditors.complaint.error}}</div>
+                <div class="feedback-note health-option-feedback-note" data-ng-if="healthOptionEditors.complaint.visible">
+                    This adds a complaint choice in the dropdown for future health logs. Put visit and student specific details in Notes.
+                </div>
             </div>
         </div>
         <div data-ng-if="logRecord.log_type =='Athletic'">
@@ -62,12 +210,32 @@
         <div data-ng-show="logRecord.log_type =='Daily'">
             <div>
                 <label>Destination</label>
-                <select data-ng-options="val as val for (key,val) in $root.appData.destinationList"
-                    data-ng-model="logRecord.destination" data-ng-change="handleFieldChange('destination')">
+                <span class="health-option-legacy-value" data-ng-if="healthOptionStates.destination.readOnly">
+                    {{healthOptionStates.destination.displayValue}}
+                </span>
+                <select class="health-option-select" data-ng-if="!healthOptionStates.destination.readOnly && !healthOptionEditors.destination.visible"
+                    data-ng-options="option.code as option.displayValue for option in $root.appData.healthOptions.destination"
+                    data-ng-model="healthOptionSelections.destination"
+                    data-ng-change="onHealthOptionSelectionChanged('destination')">
                     <option value="">Select a Destination</option>
                 </select>
-                <input data-ng-show="displayDestinationOther || logRecord.destination== 'Other'" type="text"
-                    data-ng-model="logRecord.destination_other">
+                <div class="health-option-add-control" data-ng-if="healthOptionEditors.destination.visible">
+                    <input class="health-option-add-input" type="text" maxlength="100"
+                        data-ng-model="healthOptionEditors.destination.value"
+                        data-ng-blur="normalizeHealthOptionInput('destination')"
+                        placeholder="Enter a reusable destination" aria-label="New destination">
+                    <button class="health-option-add-button" type="button"
+                        data-ng-click="addHealthOptionValue('destination')"
+                        data-ng-disabled="healthOptionEditors.destination.saving"
+                        aria-label="Add destination" title="Add destination">+</button>
+                    <button type="button" data-ng-click="cancelHealthOptionValue('destination')"
+                        data-ng-disabled="healthOptionEditors.destination.saving">Cancel</button>
+                </div>
+                <div class="feedback-alert health-option-add-error" role="alert"
+                    data-ng-if="healthOptionEditors.destination.error">{{healthOptionEditors.destination.error}}</div>
+                <div class="feedback-note health-option-feedback-note" data-ng-if="healthOptionEditors.destination.visible">
+                    This adds a destination choice in the dropdown for future health logs. Put visit and student specific details in Notes.
+                </div>
             </div>
             <div>
                 <label>Time Left</label>
@@ -87,22 +255,56 @@
                     style="width: 4ch; text-align: right;"> /126 Symptoms Score
             </div>
         </div>
-        <div data-ng-if="logRecord.log_type =='Conversation'">
+        <div id="health-conversation-row" data-ng-if="logRecord.log_type =='Conversation'">
             <div>
-                <label>Conversation Type <span class="req"><em>*</em></span> </label>
-                <select data-ng-options="val as val for (key,val) in $root.appData.conversationTypeList"
-                    data-ng-model="logRecord.conversation_type"
-                    data-ng-change="handleFieldChange('conversation_type'); checkReqFields()">
-                    <option value="">Select a Conversation Type</option>
-                </select>
-                <input data-ng-show="displayConversationTypeOther || logRecord.conversation_type== 'Other'" type="text"
-                    data-ng-model="logRecord.conversation_type_other"><span class="req"
-                    data-ng-if="!logRecord.conversation_type"><em>Required</em></span>
+                <label>Communication Methods <span class="req"><em>*</em></span>
+                    <span class="req"
+                        data-ng-if="!healthOptionStates.conversation_type.readOnly && !healthOptionSelections.conversation_type.length && !healthOptionEditors.conversation_type.visible"><em>Required</em></span>
+                </label>
+                <span class="health-option-legacy-value" data-ng-if="healthOptionStates.conversation_type.readOnly">
+                    {{healthOptionStates.conversation_type.displayValue}}
+                </span>
+                <div class="health-conversation-selection-row"
+                    data-ng-if="!healthOptionStates.conversation_type.readOnly && !healthOptionEditors.conversation_type.visible">
+                    <div class="health-conversation-options-column">
+                        <div class="health-conversation-methods">
+                            <label class="health-conversation-method"
+                                data-ng-repeat="option in activeConversationOptions() track by option.code"
+                                for="health-conversation-method-{{$index}}">
+                                <input id="health-conversation-method-{{$index}}" type="checkbox"
+                                    data-ng-checked="isConversationMethodSelected(option.code)"
+                                    data-ng-click="toggleConversationMethod(option.code)">
+                                {{option.displayValue}}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="health-conversation-button-row">
+                        <button class="health-conversation-add-button" type="button"
+                            data-ng-click="openHealthOptionValue('conversation_type')">+ Add New Communication Method</button>
+                    </div>
+                </div>
+                <div class="health-option-add-control" data-ng-if="healthOptionEditors.conversation_type.visible">
+                    <input class="health-option-add-input" type="text" maxlength="100"
+                        data-ng-model="healthOptionEditors.conversation_type.value"
+                        data-ng-blur="normalizeHealthOptionInput('conversation_type')"
+                        placeholder="Enter a reusable communication method" aria-label="New communication method">
+                    <button class="health-option-add-button" type="button"
+                        data-ng-click="addHealthOptionValue('conversation_type')"
+                        data-ng-disabled="healthOptionEditors.conversation_type.saving"
+                        aria-label="Add communication method" title="Add communication method">+</button>
+                    <button type="button" data-ng-click="cancelHealthOptionValue('conversation_type')"
+                        data-ng-disabled="healthOptionEditors.conversation_type.saving">Cancel</button>
+                </div>
+                <div class="feedback-alert health-option-add-error" role="alert"
+                    data-ng-if="healthOptionEditors.conversation_type.error">{{healthOptionEditors.conversation_type.error}}</div>
+                <div class="feedback-note health-option-feedback-note" data-ng-if="healthOptionEditors.conversation_type.visible">
+                    This adds a communication method checkbox for future health logs. Put conversation and student specific details in Notes.
+                </div>
             </div>
         </div>
         <div data-ng-if="logRecord.log_type =='Conversation'">
             <div>
-                <label>Name of Person Conversation was With<span class="req"><em>*</em></span></label>
+                <label>Name of Person Conversation was with <span class="req"><em>*</em></span></label>
                 <input type="text" data-ng-model="logRecord.contact" data-ng-model="logRecord.contact"
                     data-ng-change="checkReqFields()"> <span class="req" data-ng-if="!logRecord.contact"><em>
                         Required</em></span>
@@ -165,10 +367,13 @@
                 </div>
             </div>
         </div>
-        <div>
+        <div id="health-log-notes-row">
             <div>
                 <label for="log-notes">Notes:</label>
-                <table class="grid">
+                <textarea id="log-notes" data-ng-if="logRecord.log_type !='Concussion' && logRecord.log_type !='Eval'"
+                    spellcheck="true" wrap="absolute" rows="5" data-ng-model="logRecord.notes"></textarea>
+                <table class="grid health-log-notes-table"
+                    data-ng-if="logRecord.log_type =='Concussion' || logRecord.log_type =='Eval'">
                     <tbody>
                         <tr data-ng-if="logRecord.log_type =='Concussion'">
                             <td style="vertical-align:top" for="log-notes-memory"><strong>Memory</strong>:</td>
@@ -223,7 +428,7 @@
                             <td data-ng-if="logRecord.log_type =='Concussion'" for="log-notes"
                                 style="vertical-align:top"><strong>Other</strong>: </span></td>
                             <td data-ng-if="logRecord.log_type !='Eval'">
-                                <textarea id="log-notes" spellcheck="true" wrap="absolute" rows="5" cols="60"
+                                <textarea id="log-notes" spellcheck="true" wrap="absolute" rows="5"
                                     data-ng-model="logRecord.notes"></textarea>
                             </td>
                         </tr>

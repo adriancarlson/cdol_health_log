@@ -1,6 +1,9 @@
 'use strict'
 define(function (require) {
 	let module = require('components/health_log/module')
+	let healthOptionConfig = require('components/health_log/config/healthOptions')
+	const HEALTH_LOG_OPTION_TYPES = healthOptionConfig.healthLogTypes
+	const ADD_HEALTH_OPTION_VALUE = '__ADD_HEALTH_OPTION_VALUE__'
 
 	module.controller('healthLogEditCtrl', [
 		'$scope',
@@ -22,6 +25,101 @@ define(function (require) {
 			}
 
 			$scope.logRecord = {}
+			$scope.healthOptionSelections = {}
+			$scope.healthOptionStates = {}
+			$scope.healthOptionEditors = {}
+			const resetHealthOptionEditor = fieldName => {
+				$scope.healthOptionEditors[fieldName] = {
+					visible: false,
+					value: '',
+					error: '',
+					saving: false
+				}
+			}
+			const resetHealthOptionFields = () => {
+				Object.keys(HEALTH_LOG_OPTION_TYPES).forEach(fieldName => {
+					$scope.healthOptionSelections[fieldName] = fieldName === 'conversation_type' ? [] : ''
+					$scope.healthOptionStates[fieldName] = {
+						isExisting: false,
+						readOnly: false,
+						displayValue: '',
+						originalValue: '',
+						changed: false,
+						lastSelection: ''
+					}
+					resetHealthOptionEditor(fieldName)
+				})
+			}
+			const prepareHealthOptionField = (fieldName, isExisting) => {
+				const originalValue = $scope.logRecord[fieldName]
+				const state = $scope.healthOptionStates[fieldName]
+				state.isExisting = isExisting
+				state.originalValue = originalValue === undefined || originalValue === null ? '' : originalValue
+				state.changed = false
+				state.readOnly = false
+				state.displayValue = ''
+				state.lastSelection = ''
+				$scope.healthOptionSelections[fieldName] = fieldName === 'conversation_type' ? [] : ''
+
+				if (!state.originalValue) return
+
+				const matchingOptions = typeof $rootScope.resolveHealthLogOptionValues === 'function'
+					? $rootScope.resolveHealthLogOptionValues(fieldName, state.originalValue, false)
+					: null
+				if (isExisting && (!matchingOptions || matchingOptions.some(option => !option.isActive))) {
+					state.readOnly = true
+					state.displayValue = matchingOptions && matchingOptions.length
+						? matchingOptions.map(option => option.displayValue).join(', ')
+						: state.originalValue
+					return
+				}
+				if (matchingOptions && matchingOptions.length && matchingOptions.every(option => option.isActive)) {
+					if (fieldName === 'conversation_type') {
+						$scope.healthOptionSelections[fieldName] = matchingOptions.map(option => option.code)
+					} else {
+						$scope.healthOptionSelections[fieldName] = matchingOptions[0].code
+						state.lastSelection = matchingOptions[0].code
+					}
+					return
+				}
+
+				// New records cannot retain an arbitrary value that is not an Active option.
+				$scope.logRecord[fieldName] = ''
+			}
+			const prepareHealthOptionFields = isExisting => {
+				resetHealthOptionFields()
+				Object.keys(HEALTH_LOG_OPTION_TYPES).forEach(fieldName => prepareHealthOptionField(fieldName, isExisting))
+			}
+			const selectedHealthOptionValue = fieldName => {
+				const state = $scope.healthOptionStates[fieldName]
+				if (!state) return ''
+				if (state.readOnly || (state.isExisting && !state.changed)) return state.originalValue
+				if (fieldName === 'conversation_type') {
+					const selections = $scope.healthOptionSelections[fieldName] || []
+					return ($rootScope.appData.healthOptionsAll[fieldName] || [])
+						.filter(option => option.isActive && selections.indexOf(option.code) !== -1)
+						.map(option => option.code)
+						.join(',')
+				}
+				return $scope.healthOptionSelections[fieldName]
+			}
+			const healthOptionFieldIsValid = fieldName => {
+				const state = $scope.healthOptionStates[fieldName]
+				const editor = $scope.healthOptionEditors[fieldName]
+				if (editor && (editor.visible || editor.saving)) return false
+				if (state && state.readOnly) return Boolean(state.originalValue)
+				if (!$rootScope.appData.healthOptionsLoaded) return false
+				const value = selectedHealthOptionValue(fieldName)
+				const matchingOptions = $rootScope.resolveHealthLogOptionValues(fieldName, value, true)
+				return Boolean(value && matchingOptions && matchingOptions.length)
+			}
+			const applyHealthOptionSelections = () => {
+				Object.keys(HEALTH_LOG_OPTION_TYPES).forEach(fieldName => {
+					const value = selectedHealthOptionValue(fieldName)
+					if (value) $scope.logRecord[fieldName] = value
+					else delete $scope.logRecord[fieldName]
+				})
+			}
 			const commonPayload = {
 				schoolid: $rootScope.appData.curSchoolId,
 				yearid: $rootScope.appData.curYearId,
@@ -30,7 +128,7 @@ define(function (require) {
 			const formatKeys = {
 				dateKeys: ['_date'],
 				timeKeys: ['_time'],
-				deleteKeys: ['_title', '_name']
+				deleteKeys: ['_title', '_name', '_display']
 			}
 
 			let init = () => {
@@ -50,6 +148,8 @@ define(function (require) {
 			})
 
 			let openDrawer = (openCallBack, data) => {
+				$scope.logRecord = {}
+				resetHealthOptionFields()
 				if (data.data.id == null) {
 					if ($rootScope.appData.curContext !== 'Concussion' && $rootScope.appData.curContext !== 'Eval') {
 						$scope.$emit('drawer.disable.save.button')
@@ -59,38 +159,15 @@ define(function (require) {
 					$scope.logRecord.log_time = $rootScope.appData.curTime
 					$scope.logRecord.users_dcid = $rootScope.appData.curUserDcid
 					$scope.logRecord.injury_date = ['Concussion', 'Eval'].includes($scope.logRecord.log_type) ? $rootScope.appData.curDate : $scope.logRecord.injury_date
+					prepareHealthOptionFields(false)
 				} else {
 					formatService.objIterator(data.data, formatKeys.dateKeys, 'formatDateFromApi')
 					formatService.objIterator(data.data, formatKeys.timeKeys, 'convSecondsToTime12')
 					$scope.logRecord = data.data
-					const complaintValues = Object.values($rootScope.appData.complaintList)
-
-					if (complaintValues.indexOf($scope.logRecord.complaint) === -1) {
-						// The complaint value does not exist in the complaintList
-						$scope.displayComplaintOther = true
-						$scope.logRecord.complaint_other = $scope.logRecord.complaint
-						$scope.logRecord.complaint = 'Other'
-					}
-
-					const destinationValues = Object.values($rootScope.appData.destinationList)
-
-					if (destinationValues.indexOf($scope.logRecord.destination) === -1) {
-						// The destination value does not exist in the destinationList
-						$scope.displayDestinationOther = true
-						$scope.logRecord.destination_other = $scope.logRecord.destination
-						$scope.logRecord.destination = 'Other'
-					}
-
-					const conversationTypeValues = Object.values($rootScope.appData.conversationTypeList)
-
-					if (conversationTypeValues.indexOf($scope.logRecord.conversation_type) === -1) {
-						// The complaint value does not exist in the conversationType
-						$scope.displayconversationTypeOther = true
-						$scope.logRecord.conversation_type_other = $scope.logRecord.conversation_type
-						$scope.logRecord.conversation_type = 'Other'
-					}
+					prepareHealthOptionFields(true)
 				}
 
+				$scope.checkReqFields()
 				openCallBack()
 			}
 
@@ -106,20 +183,10 @@ define(function (require) {
 			let saveDrawer = async (closeDrawer, data) => {
 				loadingDialog()
 
+				applyHealthOptionSelections()
 				$scope.logRecord = Object.assign($scope.logRecord, commonPayload)
 				//add createFormatKeys to each object in submitPayload
 				$scope.logRecord = Object.assign($scope.logRecord, formatKeys)
-				//check for other values in dropdowns and takes the other value and puts it in the proper field in the logRecord also deletes the other field from the logRecord payload
-				for (const key in $scope.logRecord) {
-					if (key.endsWith('_other')) {
-						const originalKey = key.replace('_other', '')
-						if ($scope.logRecord[originalKey]) {
-							$scope.logRecord[originalKey] = $scope.logRecord[key]
-							delete $scope.logRecord[key]
-						}
-					}
-				}
-
 				//submitting staff changes through api
 				if ($scope.logRecord.id) {
 					let recordId = $scope.logRecord.id
@@ -149,7 +216,7 @@ define(function (require) {
 				let enableSaveButton = false
 				switch ($scope.logRecord.log_type) {
 					case 'Daily':
-						enableSaveButton = $scope.logRecord.complaint && $scope.logRecord.treatment && $scope.logRecord.users_dcid
+						enableSaveButton = healthOptionFieldIsValid('complaint') && $scope.logRecord.treatment && $scope.logRecord.users_dcid
 						break
 					case 'Athletic':
 						enableSaveButton = $scope.logRecord.treatment
@@ -160,18 +227,138 @@ define(function (require) {
 						enableSaveButton = $scope.logRecord.users_dcid
 						break
 					case 'Conversation':
-						enableSaveButton = $scope.logRecord.conversation_type && $scope.logRecord.contact && $scope.logRecord.users_dcid
+						enableSaveButton = healthOptionFieldIsValid('conversation_type') && $scope.logRecord.contact && $scope.logRecord.users_dcid
 						break
 				}
+				if (Object.keys($scope.healthOptionEditors).some(fieldName => {
+					const editor = $scope.healthOptionEditors[fieldName]
+					return editor.visible || editor.saving
+				})) enableSaveButton = false
 
 				$scope.$emit(enableSaveButton ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
 			}
-			//checks for other values in dropdowns and takes the other value and puts it in the proper field in the logRecord also deletes the other field from the logRecord payload
-			$scope.handleFieldChange = function (fieldName) {
-				delete $scope.logRecord[fieldName + '_other']
-				$scope['display' + fieldName.charAt(0).toUpperCase() + fieldName.slice(1) + 'Other'] = false
+			$scope.onHealthOptionSelectionChanged = fieldName => {
+				const selectedValue = $scope.healthOptionSelections[fieldName]
+				const state = $scope.healthOptionStates[fieldName]
+				if (selectedValue === ADD_HEALTH_OPTION_VALUE) {
+					$scope.healthOptionSelections[fieldName] = state.lastSelection
+					resetHealthOptionEditor(fieldName)
+					$scope.healthOptionEditors[fieldName].visible = true
+				} else {
+					resetHealthOptionEditor(fieldName)
+					state.changed = true
+					state.lastSelection = selectedValue
+				}
+				$scope.checkReqFields()
+			}
+			$scope.activeConversationOptions = () => ($rootScope.appData.healthOptions.conversation_type || [])
+				.filter(option => !option.isAddNew)
+			$scope.isConversationMethodSelected = code => ($scope.healthOptionSelections.conversation_type || [])
+				.indexOf(code) !== -1
+			$scope.toggleConversationMethod = code => {
+				const selections = $scope.healthOptionSelections.conversation_type || []
+				const selectedIndex = selections.indexOf(code)
+				if (selectedIndex === -1) selections.push(code)
+				else selections.splice(selectedIndex, 1)
+				$scope.healthOptionSelections.conversation_type = selections
+				$scope.healthOptionStates.conversation_type.changed = true
+				$scope.checkReqFields()
+			}
+			$scope.openHealthOptionValue = fieldName => {
+				resetHealthOptionEditor(fieldName)
+				$scope.healthOptionEditors[fieldName].visible = true
+				$scope.checkReqFields()
+			}
+			$scope.normalizeHealthOptionInput = fieldName => {
+				const editor = $scope.healthOptionEditors[fieldName]
+				editor.value = healthOptionConfig.normalizeDisplayValue(editor.value)
+			}
+			$scope.cancelHealthOptionValue = fieldName => {
+				if (fieldName !== 'conversation_type') {
+					$scope.healthOptionSelections[fieldName] = $scope.healthOptionStates[fieldName].lastSelection
+				}
+				resetHealthOptionEditor(fieldName)
+				$scope.checkReqFields()
+			}
+			const selectAddedHealthOption = (fieldName, code) => {
+				if (fieldName === 'conversation_type') {
+					const selections = $scope.healthOptionSelections[fieldName] || []
+					if (selections.indexOf(code) === -1) selections.push(code)
+					$scope.healthOptionSelections[fieldName] = selections
+				} else {
+					$scope.healthOptionSelections[fieldName] = code
+					$scope.healthOptionStates[fieldName].lastSelection = code
+				}
+				$scope.healthOptionStates[fieldName].changed = true
+			}
+			$scope.addHealthOptionValue = fieldName => {
+				const editor = $scope.healthOptionEditors[fieldName]
+				const displayValue = healthOptionConfig.normalizeDisplayValue(editor.value)
+				const code = healthOptionConfig.buildCodeForType(
+					HEALTH_LOG_OPTION_TYPES[fieldName].codeType,
+					displayValue
+				)
+				editor.value = displayValue
+				editor.error = ''
+
+				if (!displayValue) {
+					editor.error = 'Enter a reusable option to add.'
+					return
+				}
+				if (displayValue.length > healthOptionConfig.displayValueMaxLength) {
+					editor.error = `The value must be ${healthOptionConfig.displayValueMaxLength} characters or fewer.`
+					return
+				}
+				if (!code || code.length > healthOptionConfig.codeMaxLength) {
+					editor.error = `Shorten the value so its lowercase code is ${healthOptionConfig.codeMaxLength} characters or fewer.`
+					return
+				}
+
+				const existingByCode = $rootScope.findHealthLogOption(fieldName, code, false)
+				const existingByDisplay = $rootScope.findHealthLogOption(fieldName, displayValue, false)
+				const existingOption = existingByCode || existingByDisplay
+				if (existingOption) {
+					if (!existingOption.isActive) {
+						editor.error = 'This option already exists but is Inactive. Ask a district administrator to reactivate it.'
+						return
+					}
+					selectAddedHealthOption(fieldName, existingOption.code)
+					resetHealthOptionEditor(fieldName)
+					$scope.checkReqFields()
+					return
+				}
+
+				const existingOptions = $rootScope.appData.healthOptionsAll[fieldName] || []
+				const displayOrder = existingOptions.reduce((highestOrder, option) => {
+					const optionOrder = Number(option.uiDisplayOrder)
+					return Number.isFinite(optionOrder) ? Math.max(highestOrder, optionOrder) : highestOrder
+				}, 0) + 10
+				const payload = {
+					codetype: HEALTH_LOG_OPTION_TYPES[fieldName].codeType,
+					code,
+					displayvalue: displayValue,
+					description: displayValue,
+					isvisible: 1,
+					uidisplayorder: displayOrder
+				}
+
+				editor.saving = true
+				$scope.checkReqFields()
+				return psApiService.psApiCall('u_cdol_health_option', 'POST', payload)
+					.then(() => {
+						const option = $rootScope.addHealthLogOption(fieldName, payload)
+						selectAddedHealthOption(fieldName, option.code)
+						resetHealthOptionEditor(fieldName)
+					})
+					.catch(error => {
+						editor.error = (error.data && error.data.message) ||
+							'PowerSchool could not add this Health Log option. Try again or contact an administrator.'
+						editor.saving = false
+					})
+					.finally(() => $scope.checkReqFields())
 			}
 
+			resetHealthOptionFields()
 			init()
 		}
 	])

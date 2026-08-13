@@ -6,6 +6,47 @@ define(function (require) {
 		'$q',
 		'formatService',
 		function ($http, $q, formatService) {
+			let resData
+			const unwrapSchemaGetResponse = (responseData, tableName) => {
+				if (!responseData) return []
+				if (responseData.tables && responseData.tables[tableName] !== undefined) {
+					const tableRecords = responseData.tables[tableName]
+					return tableRecords === null ? [] : tableRecords
+				}
+
+				const responseRecords = responseData.record || responseData.result || []
+				const recordList = Array.isArray(responseRecords) ? responseRecords : [responseRecords]
+				return recordList
+					.map(record => {
+						if (!record) return null
+						const tableRecord = record.tables && record.tables[tableName]
+						if (!tableRecord) return null
+						if (tableRecord.id !== undefined || record.id === undefined) return tableRecord
+						return Object.assign({}, tableRecord, { id: record.id })
+					})
+					.filter(record => record !== null)
+			}
+			const castPayloadValuesToString = value => {
+				if (value === null || value === undefined) return undefined
+				if (Array.isArray(value)) {
+					return value.map(castPayloadValuesToString).filter(item => item !== undefined)
+				}
+				if (Object.prototype.toString.call(value) === '[object Date]') {
+					return isNaN(value.getTime()) ? '' : value.toISOString()
+				}
+				if (typeof value === 'object') {
+					const normalizedValue = {}
+					Object.keys(value).forEach(key => {
+						const normalizedFieldValue = castPayloadValuesToString(value[key])
+						if (normalizedFieldValue !== undefined) {
+							normalizedValue[key] = normalizedFieldValue
+						}
+					})
+					return normalizedValue
+				}
+				return typeof value === 'string' ? value : value.toString()
+			}
+
 			return {
 				psApiCall: (tableName, method, payload, recId) => {
 					let deferredResponse = $q.defer()
@@ -52,6 +93,7 @@ define(function (require) {
 								apiPayload = formatService.objIterator(apiPayload, apiPayload.deleteKeys, 'deleteKeys')
 							}
 							delete apiPayload.deleteKeys
+							apiPayload = castPayloadValuesToString(apiPayload)
 							const data = { tables: {} }
 							data.tables[tableName] = apiPayload
 							httpObject['data'] = data
@@ -68,11 +110,23 @@ define(function (require) {
 						res => {
 							switch (method) {
 								case 'POST':
-								case 'PUT':
-									deferredResponse.resolve(res.data.record || [])
+								case 'PUT': {
+									const records = res.data.record || res.data.result || []
+									const recordList = Array.isArray(records) ? records : [records]
+									const failedRecord = recordList.find(record => record && record.status && record.status.toUpperCase() !== 'SUCCESS')
+
+									if (failedRecord) {
+										psAlert({ message: `PowerSchool did not save the ${tableName} record. Check the browser console for the returned error.`, title: `${method} Error` })
+										console.error('PowerSchool schema API save failure', failedRecord)
+										deferredResponse.reject(failedRecord)
+										break
+									}
+
+									deferredResponse.resolve(records)
 									break
+								}
 								case 'GET':
-									resData = res.data.tables[tableName]
+									resData = unwrapSchemaGetResponse(res.data, tableName)
 									if (apiPayload.dateKeys) {
 										resData = formatService.objIterator(resData, apiPayload.dateKeys, 'formatDateFromApi')
 									}
@@ -88,6 +142,7 @@ define(function (require) {
 						},
 						res => {
 							psAlert({ message: `There was an error ${method}ing the data to ${tableName}`, title: `${method} Error` })
+							deferredResponse.reject(res)
 						}
 					)
 					return deferredResponse.promise

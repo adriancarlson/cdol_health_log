@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDOL Health Code Sets</title>
+    ~[wc:commonscripts]
+    <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+    <link href="/images/css/cdol.css" rel="stylesheet" media="screen">
+    <link href="/images/css/cdol_health_drawers.css" rel="stylesheet" media="screen">
+    <link href="/images/css/print.css" rel="stylesheet" media="print">
+    <style>
+        .health-options-toolbar {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 10px;
+        }
+
+        .health-options-toolbar label {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .health-options-toolbar select {
+            min-width: 300px;
+        }
+
+        .health-options-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .health-options-toolbar .health-options-inactive-toggle {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .health-options-table {
+            margin: 0 10px 10px;
+            width: calc(100% - 20px);
+        }
+
+        .health-option-inactive {
+            color: #666;
+            font-style: italic;
+        }
+
+        .health-options-empty {
+            text-align: center;
+            padding: 14px !important;
+        }
+
+        .health-options-feedback {
+            margin: 0 10px 8px;
+        }
+
+        .health-option-order-controls {
+            white-space: nowrap;
+        }
+
+        .health-option-order-button {
+            min-width: 25px;
+            margin: 0 1px;
+            padding: 1px 5px;
+        }
+    </style>
+</head>
+
+<body>
+    ~[wc:admin_header_css]CDOL Health Code Sets~[wc:admin_navigation_css]
+    <h1>CDOL Health Code Sets</h1>
+    ~[if#district.~(curschoolid)=0]
+    <div data-require-path="./cdolhealthoptions.js" data-module-name="healthOptionsAdminModule"
+        data-ng-controller="healthOptionsController as vm" data-bootstrap-local="true" data-ng-cloak>
+        <div class="box-round">
+            <div class="health-options-toolbar">
+                <div>
+                    <label for="health-code-set-select"><strong>Code Set</strong></label>
+                    <select id="health-code-set-select" data-ng-model="vm.appData.selectedCodeType"
+                        data-ng-change="vm.refreshSelectedOptions()"
+                        data-ng-options="optionType.codeType as optionType.displayName group by optionType.section for optionType in vm.appData.optionTypes">
+                        <option value="">Select a code set</option>
+                    </select>
+                </div>
+                <div class="health-options-actions">
+                    <label class="health-options-inactive-toggle" for="show-inactive-health-codes"
+                        data-ng-if="vm.inactiveOptionCount > 0">
+                        <input id="show-inactive-health-codes" type="checkbox"
+                            data-ng-model="vm.appData.showInactive" data-ng-change="vm.refreshSelectedOptions()"
+                            data-ng-disabled="!vm.appData.selectedCodeType">
+                        Show Inactive (+{{vm.inactiveOptionCount}})
+                    </label>
+                    <button id="add-health-code-button" type="button" pss-dialog-drawer width="650"
+                        drawer-title="Add Health Code" template-url="editHealthOption.html"
+                        data-data="{ codeType: vm.appData.selectedCodeType }"
+                        data-ng-disabled="!vm.appData.selectedCodeType">Add Code</button>
+                </div>
+            </div>
+
+            <div class="feedback-confirm health-options-feedback" data-ng-if="vm.feedback" aria-live="polite">
+                {{vm.feedback}}
+            </div>
+
+            <table class="grid health-options-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Order</th>
+                        <th style="width: 180px;">Code</th>
+                        <th>Display Value</th>
+                        <th style="width: 100px;">Status</th>
+                        <th style="width: 80px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-ng-if="!vm.appData.selectedCodeType">
+                        <td colspan="5" class="health-options-empty">Select a code set to view or add its values.</td>
+                    </tr>
+                    <tr data-ng-if="vm.appData.selectedCodeType && !vm.selectedOptions.length">
+                        <td colspan="5" class="health-options-empty">
+                            <span data-ng-if="vm.inactiveOptionCount && !vm.appData.showInactive">
+                                No active values. Select Show Inactive to view inactive values.
+                            </span>
+                            <span data-ng-if="!vm.inactiveOptionCount || vm.appData.showInactive">
+                                No values have been added to {{vm.selectedCodeSetName()}}.
+                            </span>
+                        </td>
+                    </tr>
+                    <tr data-ng-repeat="option in vm.selectedOptions track by option.id"
+                        data-ng-class="{'health-option-inactive': !option.isVisible || option.isVisible === '0'}">
+                        <td class="center health-option-order-controls">
+                            <button type="button" class="health-option-order-button"
+                                data-ng-click="vm.moveOption(option, -1)"
+                                data-ng-disabled="!vm.canMoveOption(option, -1)"
+                                title="Move up" aria-label="Move {{option.displayValue}} up">&#9650;</button>
+                            <button type="button" class="health-option-order-button"
+                                data-ng-click="vm.moveOption(option, 1)"
+                                data-ng-disabled="!vm.canMoveOption(option, 1)"
+                                title="Move down" aria-label="Move {{option.displayValue}} down">&#9660;</button>
+                        </td>
+                        <td>{{option.code}}</td>
+                        <td>{{option.displayValue}}</td>
+                        <td class="center">{{(!option.isVisible || option.isVisible === '0') ? 'Inactive' : 'Active'}}</td>
+                        <td class="actions center">
+                            <button type="button" id="edit-health-code-{{option.id}}" pss-dialog-drawer width="650"
+                                edit-button-icon="true" drawer-title="Edit Health Code"
+                                template-url="editHealthOption.html" data-data="{ option: option }"
+                                aria-label="Edit {{option.displayValue}}"></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="feedback-info">
+            Medication and Health Log code sets are available immediately in their related student pages.
+        </div>
+    </div>
+    [else#district]
+    <div class="feedback-alert">CDOL Health Code Sets can only be managed from the District Office.</div>
+    [/if#district]
+    ~[wc:admin_footer_css]
+</body>
+
+</html>

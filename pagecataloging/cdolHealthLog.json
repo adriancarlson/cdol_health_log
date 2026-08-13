@@ -11,7 +11,7 @@
 			"children": [
 				{
 					"htmlID": "cdol-health-log",
-					"title": "Daily Health Log",
+					"title": "Daily Health Log🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
@@ -21,7 +21,7 @@
 				},
 				{
 					"htmlID": "cdol-conversation-log",
-					"title": "Conversation Log",
+					"title": "Conversation Log🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
@@ -31,7 +31,7 @@
 				},
 				{
 					"htmlID": "cdol-athletic-injury",
-					"title": "Athletic Injury",
+					"title": "Athletic Injury🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
@@ -41,7 +41,7 @@
 				},
 				{
 					"htmlID": "cdol-concussion-eval",
-					"title": "Concussion Eval",
+					"title": "Concussion Eval🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
@@ -51,7 +51,7 @@
 				},
 				{
 					"htmlID": "cdol-injury-eval",
-					"title": "Injury Evaluation",
+					"title": "Injury Evaluation🔹",
 					"version": "0",
 					"contextType": "student",
 					"districtLevelContext": 0,
@@ -60,6 +60,47 @@
 					"pageURL": "/admin/students/health_log/eval_health_log.html?frn=~(studentfrn)"
 				}
 			]
+		},
+		{
+			"htmlID": "cdol-medication-header",
+			"title": "Medication",
+			"version": "0",
+			"contextType": "student",
+			"districtLevelContext": 0,
+			"parentHTMLID": "navStudentHealthSection",
+			"sortOrder": 275,
+			"children": [
+				{
+					"htmlID": "cdol-medication-administration",
+					"title": "Administer Medication🔹",
+					"version": "0",
+					"contextType": "student",
+					"districtLevelContext": 0,
+					"sortOrder": 0,
+					"checkParams": true,
+					"pageURL": "/admin/students/medication/administration.html?frn=~(studentfrn)"
+				},
+				{
+					"htmlID": "cdol-medication-inventory",
+					"title": "Medication Inventory🔹",
+					"version": "0",
+					"contextType": "student",
+					"districtLevelContext": 0,
+					"sortOrder": 200,
+					"checkParams": true,
+					"pageURL": "/admin/students/medication/inventory.html?frn=~(studentfrn)"
+				}
+			]
+		},
+		{
+			"htmlID": "cdol-health-code-sets",
+			"title": "CDOL Health Code Sets",
+			"version": "26.7.0.101",
+			"contextType": "main",
+			"districtLevelContext": 2,
+			"parentHTMLID": "navDistrictManagementHealth",
+			"sortOrder": 350,
+			"pageURL": "/admin/district/healthsetup/cdolhealthoptions.html"
 		}
 	]
 }

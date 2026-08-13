@@ -1,0 +1,595 @@
+<form id="med-inv-form" name="inventoryForm">
+    <div id="med-inv-wrap" ng-class="{'fluid-form': vm.drawerMode === 'edit'}" ng-controller="editController as vm"
+        ng-cloak>
+        <style id="med-inv-styles">
+            .fluid-form>div[id$="-row"] {
+                margin: 0 0 10px 0;
+            }
+
+            .dose-group {
+                display: inline-flex;
+                align-items: stretch;
+                max-width: 100%;
+            }
+
+            .dose-input {
+                width: 8ch;
+                min-width: 8ch;
+                max-width: 8ch;
+                border-radius: 4px 0 0 4px;
+            }
+
+            .option-add-control {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                margin-top: 0;
+            }
+
+            .option-add-input {
+                width: 180px;
+                max-width: 100%;
+            }
+
+            .option-add-button {
+                min-width: 30px;
+                font-weight: bold;
+            }
+
+            .option-add-error {
+                margin: 4px 0 0;
+                max-width: 420px;
+            }
+
+            .medication-option-select option:last-child {
+                font-style: italic;
+            }
+
+            .inv-input {
+                width: 8ch;
+                min-width: 8ch;
+                max-width: 8ch;
+            }
+
+            .inv-qty-edit-wrap {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .inv-qty-separator {
+                display: inline-block;
+                min-width: 0;
+                text-align: center;
+            }
+
+            .inv-readonly {
+                display: inline-block;
+                padding: 4px 6px;
+            }
+
+            .inv-qty-edit-wrap .inv-readonly {
+                padding-left: 0;
+                padding-right: 0;
+            }
+
+            .inv-history-note {
+                margin: 0 0 8px;
+                color: #555;
+            }
+
+            .inventory-form-grid {
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            #inv-cancel-head {
+                width: 70px;
+            }
+
+            .inventory-form-table-section {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100%;
+                margin: 0 !important;
+                padding: 0 8px 8px !important;
+                box-sizing: border-box;
+            }
+
+            .dose-unit {
+                width: fit-content;
+                min-width: 0;
+                margin-left: -1px;
+                border-radius: 0 4px 4px 0;
+            }
+
+            #inventory-transaction-mode {
+                display: block !important;
+                width: 100%;
+                margin-top: -6px;
+                box-sizing: border-box;
+            }
+
+            #transactions-label {
+                display: block;
+                margin: 0 0 4px;
+            }
+
+            #inventory-transactions-table {
+                table-layout: fixed;
+            }
+
+            #inventory-transactions-table td {
+                white-space: normal;
+                overflow-wrap: anywhere;
+            }
+
+            .transaction-fluid-form {
+                width: 100%;
+                margin-top: 0 !important;
+                padding-top: 0 !important;
+            }
+
+            #med-inv-wrap label {
+                margin-left: 0 !important;
+                padding-left: 0 !important;
+            }
+
+            #transaction-medication-row>div:first-child>label {
+                margin-left: 6px !important;
+            }
+
+            #transaction-medication-row {
+                display: grid !important;
+                grid-template-columns: 150px 90px 150px;
+                column-gap: 8px;
+                width: 100% !important;
+                margin-top: 0 !important;
+                padding-top: 8px !important;
+                padding-bottom: 8px !important;
+                box-sizing: border-box;
+            }
+
+            #transaction-medication-row>div {
+                width: auto !important;
+                min-width: 0;
+                margin: 0 !important;
+            }
+
+            .transaction-summary-center {
+                text-align: center;
+            }
+
+            .transaction-summary-value {
+                display: block;
+                margin-top: 4px;
+                line-height: 1.4;
+            }
+
+            .transaction-medication-value {
+                margin-left: 6px;
+            }
+
+            .transaction-fluid-form textarea {
+                width: 100%;
+                max-width: 520px;
+                box-sizing: border-box;
+            }
+
+            .transaction-explanation {
+                margin: 8px 10px;
+            }
+
+            .inventory-activity-status-pill {
+                display: inline-block;
+                margin-top: 3px;
+                padding: 1px 6px;
+                border: 1px solid #8a8a8a;
+                border-radius: 999px;
+                color: #555;
+                background: #f3f3f3;
+                font-size: 11px;
+                font-weight: bold;
+                white-space: nowrap;
+            }
+
+            .inventory-activity-status-pill.inventory-activity-status-error {
+                color: #a12622;
+                background-color: #faeeee;
+                border-color: #c84a4a;
+            }
+        </style>
+        <div class="feedback-alert" role="alert"
+            ng-if="vm.drawerMode === 'edit' && $root.appData.medicationOptionLoadError">
+            {{$root.appData.medicationOptionLoadError}}
+        </div>
+        <div id="med-date-row" ng-show="vm.drawerMode === 'edit'">
+            <div id="med-name-group">
+                <label id="med-name-label">Medication Name <span id="med-name-req" class="req"><em
+                            id="med-name-req-mark">*</em></span></label>
+                <input id="med-name-input" type="text" ng-model="vm.medicationRecord.medication_name"
+                    ng-change="vm.checkReqFields()" ng-blur="vm.normalizeMedicationName()">
+            </div>
+            <div id="date-added-group">
+                <label id="date-added-label">Date Added <span id="date-added-req" class="req"><em
+                            id="date-added-req-mark">*</em></span> </label>
+                <input id="date-added-input" type="text" ng-model="vm.medicationRecord.created_date" pss-date-widget
+                    ng-change="vm.checkReqFields()" data-auto-translate="true">
+            </div>
+        </div>
+        <div id="dose-units-row" ng-show="vm.drawerMode === 'edit'">
+            <div id="dose-group">
+                <label id="dose-label">Dosage <span id="dose-req" class="req"><em
+                            id="dose-req-mark">*</em></span></label>
+                <div id="dose-input-group" class="dose-group">
+                    <input id="dose-amt-input" type="text" class="dose-input" ng-model="vm.medicationRecord.dose_amount"
+                        size="10" required ng-change="vm.checkReqFields()" aria-label="Dosage amount"
+                        inputmode="decimal">
+                    <select id="dose-unit-select" class="dose-unit medication-option-select"
+                        ng-if="!vm.optionEditors.dose_unit.visible"
+                        ng-options="option.modelValue as option.displayValue for option in $root.appData.medicationOptions.dose_unit"
+                        ng-model="vm.medicationRecord.dose_unit"
+                        ng-change="vm.onMedicationOptionSelectionChanged('dose_unit')" aria-label="Dose unit">
+                        <option id="dose-unit-placeholder" value=""></option>
+                    </select>
+                    <div class="option-add-control" ng-if="vm.optionEditors.dose_unit.visible">
+                        <input id="dose-unit-add-input" class="option-add-input" type="text" maxlength="100"
+                            ng-model="vm.optionEditors.dose_unit.value"
+                            ng-blur="vm.normalizeMedicationOptionInput('dose_unit')" placeholder="Enter a dose unit"
+                            aria-label="New dose unit">
+                        <button id="dose-unit-add-button" class="option-add-button" type="button"
+                            ng-click="vm.addMedicationOptionValue('dose_unit')"
+                            ng-disabled="vm.optionEditors.dose_unit.saving" aria-label="Add dose unit"
+                            title="Add dose unit">+</button>
+                        <button id="dose-unit-add-cancel" type="button"
+                            ng-click="vm.cancelMedicationOptionValue('dose_unit')"
+                            ng-disabled="vm.optionEditors.dose_unit.saving">Cancel</button>
+                    </div>
+                </div>
+                <div class="feedback-alert option-add-error" role="alert"
+                    ng-if="vm.optionEditors.dose_unit.error">{{vm.optionEditors.dose_unit.error}}</div>
+            </div>
+            <div id="inv-unit-group">
+                <label id="inv-unit-label">Unit <span id="inv-unit-req" class="req"><em
+                            id="inv-unit-req-mark">*</em></span> </label>
+                <select id="inv-unit-select" class="medication-option-select"
+                    ng-if="!vm.optionEditors.inventory_unit.visible"
+                    ng-options="option.modelValue as option.displayValue for option in $root.appData.medicationOptions.inventory_unit"
+                    ng-model="vm.medicationRecord.inventory_unit"
+                    ng-change="vm.onMedicationOptionSelectionChanged('inventory_unit')"
+                    aria-label="Inventory unit">
+                    <option id="inv-unit-placeholder" value="">Select a Unit</option>
+                </select>
+                <div class="option-add-control" ng-if="vm.optionEditors.inventory_unit.visible">
+                    <input id="inv-unit-add-input" class="option-add-input" type="text" maxlength="100"
+                        ng-model="vm.optionEditors.inventory_unit.value"
+                        ng-blur="vm.normalizeMedicationOptionInput('inventory_unit')" placeholder="Enter an inventory unit"
+                        aria-label="New inventory unit">
+                    <button id="inv-unit-add-button" class="option-add-button" type="button"
+                        ng-click="vm.addMedicationOptionValue('inventory_unit')"
+                        ng-disabled="vm.optionEditors.inventory_unit.saving"
+                        aria-label="Add inventory unit" title="Add inventory unit">+</button>
+                    <button id="inv-unit-add-cancel" type="button"
+                        ng-click="vm.cancelMedicationOptionValue('inventory_unit')"
+                        ng-disabled="vm.optionEditors.inventory_unit.saving">Cancel</button>
+                </div>
+                <div class="feedback-alert option-add-error" role="alert"
+                    ng-if="vm.optionEditors.inventory_unit.error">{{vm.optionEditors.inventory_unit.error}}</div>
+            </div>
+        </div>
+        <div id="duplicate-medication-message" class="feedback-alert" role="alert" aria-live="polite"
+            ng-if="vm.drawerMode === 'edit' && vm.duplicateMedicationExists()">
+            A medication with this name, dosage, and dose unit already exists for this student. Use Add Inventory on
+            the existing medication to record medication received.
+        </div>
+        <div id="route-freq-row" ng-show="vm.drawerMode === 'edit'">
+            <div id="route-group">
+                <label id="route-label">Route <span id="route-req" class="req"><em id="route-req-mark">*</em></span>
+                </label>
+                <select id="route-select" class="medication-option-select" ng-if="!vm.optionEditors.route.visible"
+                    ng-options="option.modelValue as option.displayValue for option in $root.appData.medicationOptions.route"
+                    ng-model="vm.medicationRecord.route" ng-change="vm.onMedicationOptionSelectionChanged('route')">
+                    <option id="route-placeholder" value="">Select a Route</option>
+                </select>
+                <div class="option-add-control" ng-if="vm.optionEditors.route.visible">
+                    <input id="route-add-input" class="option-add-input" type="text" maxlength="100"
+                        ng-model="vm.optionEditors.route.value" ng-blur="vm.normalizeMedicationOptionInput('route')"
+                        placeholder="Enter a route" aria-label="New route">
+                    <button id="route-add-button" class="option-add-button" type="button"
+                        ng-click="vm.addMedicationOptionValue('route')" ng-disabled="vm.optionEditors.route.saving"
+                        aria-label="Add route" title="Add route">+</button>
+                    <button id="route-add-cancel" type="button" ng-click="vm.cancelMedicationOptionValue('route')"
+                        ng-disabled="vm.optionEditors.route.saving">Cancel</button>
+                </div>
+                <div class="feedback-alert option-add-error" role="alert"
+                    ng-if="vm.optionEditors.route.error">{{vm.optionEditors.route.error}}</div>
+            </div>
+            <div id="freq-group">
+                <label id="freq-label">Frequency <span id="freq-req" class="req"><em id="freq-req-mark">*</em></span>
+                </label>
+                <select id="freq-select" class="medication-option-select"
+                    ng-if="!vm.optionEditors.frequency.visible"
+                    ng-options="option.modelValue as option.displayValue for option in $root.appData.medicationOptions.frequency"
+                    ng-model="vm.medicationRecord.frequency" ng-change="vm.onMedicationOptionSelectionChanged('frequency')">
+                    <option id="freq-placeholder" value="">Select a Frequency</option>
+                </select>
+                <div class="option-add-control" ng-if="vm.optionEditors.frequency.visible">
+                    <input id="frequency-add-input" class="option-add-input" type="text" maxlength="100"
+                        ng-model="vm.optionEditors.frequency.value"
+                        ng-blur="vm.normalizeMedicationOptionInput('frequency')" placeholder="Enter a frequency"
+                        aria-label="New frequency">
+                    <button id="frequency-add-button" class="option-add-button" type="button"
+                        ng-click="vm.addMedicationOptionValue('frequency')" ng-disabled="vm.optionEditors.frequency.saving"
+                        aria-label="Add frequency" title="Add frequency">+</button>
+                    <button id="frequency-add-cancel" type="button"
+                        ng-click="vm.cancelMedicationOptionValue('frequency')"
+                        ng-disabled="vm.optionEditors.frequency.saving">Cancel</button>
+                </div>
+                <div class="feedback-alert option-add-error" role="alert"
+                    ng-if="vm.optionEditors.frequency.error">{{vm.optionEditors.frequency.error}}</div>
+            </div>
+        </div>
+        <div id="notes-row" ng-show="vm.drawerMode === 'edit'">
+            <div id="notes-group">
+                <label id="notes-label">Medication Notes:</label>
+                <textarea id="notes-text" spellcheck="true" wrap="absolute" rows="5" cols="60"
+                    ng-model="vm.medicationRecord.notes"></textarea>
+            </div>
+        </div>
+        <div id="inv-table-section" class="inventory-form-table-section" ng-show="vm.drawerMode === 'edit'">
+            <label id="start-inv-label">{{vm.isEditMode ? 'Inventory' : 'Starting Inventory'}}
+                <span id="start-inv-req" class="req"><em id="start-inv-req-mark">*</em></span> </label>
+            <table id="inv-grid" class="grid inventory-form-grid">
+                <thead id="inv-grid-head">
+                    <tr id="inv-grid-head-row">
+                        <th id="inv-qty-head">Quantity</th>
+                        <th id="inv-date-head">Date Added</th>
+                        <th id="inv-user-head">Who Added?</th>
+                        <th id="inv-notes-head">Inventory Notes</th>
+                        <th id="inv-cancel-head" ng-if="vm.hasPendingInventoryRows()"
+                            aria-label="Cancel inventory row"></th>
+                    </tr>
+                </thead>
+                <tbody id="inv-grid-body">
+                    <tr id="inv-new-row-0">
+                        <td id="inv-qty-cell-0" class="center">
+                            <span ng-if="!vm.isEditMode">
+                                <input id="inv-qty-input-0" class="inv-input" type="text"
+                                    ng-model="vm.inventoryRecord[0].quantity_added" size="10" required
+                                    ng-change="vm.checkReqFields()" aria-label="Dosage amount" inputmode="decimal">
+                            </span>
+                            <span ng-if="vm.isEditMode && !vm.inventoryRecord[0]._isExisting">
+                                <input id="inv-qty-input-0-edit-new" class="inv-input" type="text"
+                                    ng-model="vm.inventoryRecord[0].quantity_added" size="10" required
+                                    ng-change="vm.checkReqFields()" aria-label="Quantity added" inputmode="decimal">
+                            </span>
+                            <span class="inv-qty-edit-wrap" ng-if="vm.isEditMode && vm.inventoryRecord[0]._isExisting">
+                                <span class="inv-readonly">{{vm.inventoryRecord[0].quantity_remaining}}</span>
+                                <span class="inv-qty-separator">/</span>
+                                <span class="inv-readonly">{{vm.inventoryRecord[0].quantity_added}}</span>
+                            </span>
+                            {{$root.medicationOptionDisplayValue('inventory_unit', vm.medicationRecord.inventory_unit) |
+                            pluralize}}
+                        </td>
+                        <td id="inv-date-cell-0" class="center">
+                            <span class="inv-readonly"
+                                ng-if="vm.inventoryRecord[0]._isExisting">{{vm.inventoryRecord[0].added_date}}</span>
+                            <input ng-if="!vm.inventoryRecord[0]._isExisting" id="inv-date-input-0" type="text"
+                                ng-init="vm.inventoryRecord[0].added_date = vm.inventoryRecord[0].added_date || $root.appData.curDate"
+                                ng-model="vm.inventoryRecord[0].added_date" pss-date-widget
+                                ng-change="vm.checkReqFields()" data-auto-translate="true">
+                        </td>
+                        <td id="inv-users-cell-0" class="center">
+                            <span class="inv-readonly"
+                                ng-if="vm.inventoryRecord[0]._isExisting">{{vm.inventoryRecord[0].added_by_name ||
+                                vm.inventoryRecord[0].users_dcid}}</span>
+                            <select ng-if="!vm.inventoryRecord[0]._isExisting" id="users-dcid-0"
+                                ng-options="staff.dcid as (staff.first_name + ' ' + staff.last_name) for staff in $root.appData.staffList"
+                                ng-model="vm.inventoryRecord[0].users_dcid" ng-change="vm.checkReqFields()">
+                            </select>
+                        </td>
+                        <td id="inv-notes-cell-0" class="center">
+                            <span class="inv-readonly"
+                                ng-if="vm.inventoryRecord[0]._isExisting">{{vm.inventoryRecord[0].notes || '-'}}</span>
+                            <textarea ng-if="!vm.inventoryRecord[0]._isExisting" id="inv-notes-text-0" spellcheck="true"
+                                wrap="absolute" rows="3" cols="30" ng-model="vm.inventoryRecord[0].notes"></textarea>
+                        </td>
+                        <td id="inv-cancel-cell-0" class="center" ng-if="vm.hasPendingInventoryRows()"></td>
+                    </tr>
+                    <tr id="inv-new-row-{{$index + 1}}" ng-repeat="inv in vm.additionalInventoryRows track by $index">
+                        <td id="inv-qty-cell-{{$index + 1}}" class="center">
+                            <span ng-if="!vm.isEditMode">
+                                <input id="inv-qty-input-{{$index + 1}}" class="inv-input" type="text"
+                                    ng-model="inv.quantity_added" size="10" required ng-change="vm.checkReqFields()"
+                                    aria-label="Dosage amount" inputmode="decimal">
+                            </span>
+                            <span ng-if="vm.isEditMode && !inv._isExisting">
+                                <input id="inv-qty-input-edit-new-{{$index + 1}}" class="inv-input" type="text"
+                                    ng-model="inv.quantity_added" size="10" required ng-change="vm.checkReqFields()"
+                                    aria-label="Quantity added" inputmode="decimal">
+                            </span>
+                            <span class="inv-qty-edit-wrap" ng-if="vm.isEditMode && inv._isExisting">
+                                <span class="inv-readonly">{{inv.quantity_remaining}}</span>
+                                <span class="inv-qty-separator">/</span>
+                                <span class="inv-readonly">{{inv.quantity_added}}</span>
+                            </span>
+                            {{$root.medicationOptionDisplayValue('inventory_unit', vm.medicationRecord.inventory_unit) |
+                            pluralize}}
+                        </td>
+                        <td id="inv-date-cell-{{$index + 1}}" class="center">
+                            <span class="inv-readonly" ng-if="inv._isExisting">{{inv.added_date}}</span>
+                            <input ng-if="!inv._isExisting" id="inv-date-input-{{$index + 1}}" type="text"
+                                ng-init="inv.added_date = inv.added_date || $root.appData.curDate"
+                                ng-model="inv.added_date" pss-date-widget ng-change="vm.checkReqFields()"
+                                data-auto-translate="true">
+                        </td>
+                        <td id="inv-users-cell-{{$index + 1}}" class="center">
+                            <span class="inv-readonly" ng-if="inv._isExisting">{{inv.added_by_name ||
+                                inv.users_dcid}}</span>
+                            <select ng-if="!inv._isExisting" id="users-dcid-{{$index + 1}}"
+                                ng-options="staff.dcid as (staff.first_name + ' ' + staff.last_name) for staff in $root.appData.staffList"
+                                ng-model="inv.users_dcid" ng-change="vm.checkReqFields()">
+                            </select>
+                        </td>
+                        <td id="inv-notes-cell-{{$index + 1}}" class="center">
+                            <span class="inv-readonly" ng-if="inv._isExisting">{{inv.notes || '-'}}</span>
+                            <textarea ng-if="!inv._isExisting" id="inv-notes-text-{{$index + 1}}" spellcheck="true"
+                                wrap="absolute" rows="3" cols="30" ng-model="inv.notes"></textarea>
+                        </td>
+                        <td id="inv-cancel-cell-{{$index + 1}}" class="center"
+                            ng-if="vm.hasPendingInventoryRows()">
+                            <button id="inv-cancel-btn-{{$index + 1}}" type="button"
+                                ng-if="!inv._isExisting"
+                                ng-click="$event.stopPropagation(); vm.cancelAdditionalInventory(inv)">Cancel</button>
+                        </td>
+                    </tr>
+                    <tr id="inv-add-row"
+                        ng-show="vm.inventoryRecord[0].quantity_added && vm.inventoryRecord[0].added_date && vm.inventoryRecord[0].users_dcid">
+                        <td id="inv-add-cell" class="center"
+                            ng-attr-colspan="{{vm.hasPendingInventoryRows() ? 5 : 4}}">
+                            <button id="inv-add-btn" type="button" ng-click="vm.addInventoryRecord()">Add
+                                Inventory</button>
+                            <button id="inv-remove-btn" type="button" ng-if="vm.hasExistingInventoryLines()"
+                                ng-click="vm.enterRemovalMode()"
+                                ng-disabled="vm.removalMedication.inventory_total_remaining <= 0 || vm.hasPendingInventoryRows()">Remove
+                                Inventory</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="feedback-info" ng-if="vm.isEditMode">Existing inventory is read-only. Use Add
+                Inventory to record medication received, or Remove Inventory to record medication leaving the school.
+            </div>
+        </div>
+        <div id="inventory-transactions-section" class="inventory-form-table-section" ng-if="vm.isEditMode"
+            ng-show="vm.drawerMode === 'edit'">
+            <label id="transactions-label">Inventory Activity</label>
+            <table id="inventory-transactions-table" class="grid inventory-form-grid">
+                <colgroup>
+                    <col style="width: 20%;">
+                    <col style="width: 13%;">
+                    <col style="width: 20%;">
+                    <col style="width: 20%;">
+                    <col style="width: 27%;">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Quantity</th>
+                        <th>Date</th>
+                        <th>Processed By</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr
+                        ng-if="!vm.removalMedication.inventory_transactions || !(vm.removalMedication.inventory_transactions | filter:vm.transactionAffectsInventory).length">
+                        <td colspan="5" class="center">No inventory activity</td>
+                    </tr>
+                    <tr
+                        ng-repeat="transaction in (vm.removalMedication.inventory_transactions | filter:vm.transactionAffectsInventory)">
+                        <td>
+                            <div>{{vm.transactionTypeLabel(transaction.transaction_type)}}</div>
+                            <div ng-if="transaction.is_reversed"><em>Reversed</em></div>
+                            <span class="inventory-activity-status-pill"
+                                ng-if="transaction.correction_status_label"
+                                ng-class="{ 'inventory-activity-status-error': transaction.correction_status_label === 'Entered in Error' }">
+                                {{transaction.correction_status_label}}
+                            </span>
+                        </td>
+                        <td class="center"
+                            ng-class="transaction.quantity_change < 0 ? 'inventory-change-negative' : 'inventory-change-positive'">
+                            {{transaction.quantity_change > 0 ? '+' : ''}}{{transaction.quantity_change}}
+                            {{$root.medicationOptionDisplayValue('inventory_unit', vm.removalMedication.inventory_unit) |
+                            pluralize}}
+                        </td>
+                        <td>{{(transaction.correction_date || transaction.event_date) | date}}</td>
+                        <td>{{transaction.correction_user_name || transaction.user_name ||
+                            transaction.correction_users_dcid || transaction.users_dcid}}</td>
+                        <td>
+                            <div ng-if="!transaction.correction_reason">{{transaction.notes}}</div>
+                            <div ng-if="transaction.correction_reason">
+                                <strong>Correction reason:</strong> {{transaction.correction_reason}}
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="inventory-transaction-mode" ng-if="vm.drawerMode !== 'edit'">
+            <div class="fluid-form transaction-fluid-form">
+                <div id="transaction-medication-row">
+                    <div>
+                        <label>Medication</label>
+                        <span
+                            class="transaction-summary-value transaction-medication-value">{{vm.removalMedication.medication_name}}</span>
+                    </div>
+                    <div class="transaction-summary-center">
+                        <label>Dosage</label>
+                        <span class="transaction-summary-value">{{vm.removalMedication.dose_amount}}
+                            {{$root.medicationOptionDisplayValue('dose_unit', vm.removalMedication.dose_unit)}}</span>
+                    </div>
+                    <div class="transaction-summary-center">
+                        <label>Available Inventory</label>
+                        <span class="transaction-summary-value">{{vm.removalMedication.inventory_total_remaining}}
+                            {{$root.medicationOptionDisplayValue('inventory_unit', vm.removalMedication.inventory_unit) |
+                            pluralize}}</span>
+                    </div>
+                </div>
+
+                <div id="transaction-removal-row" ng-if="vm.drawerMode === 'remove'">
+                    <div>
+                        <label>Quantity to Remove <span class="req"><em>*</em></span></label>
+                        <input type="text" class="inv-input" size="10" inputmode="decimal"
+                            ng-model="vm.transactionRecord.quantity" ng-change="vm.checkReqFields()"
+                            aria-label="Quantity to Remove">
+                        {{$root.medicationOptionDisplayValue('inventory_unit', vm.removalMedication.inventory_unit) |
+                        pluralize}}
+                    </div>
+                    <div>
+                        <label>Removal Type <span class="req"><em>*</em></span></label>
+                        <select ng-options="key as value for (key, value) in $root.appData.inventoryTransactionTypeList"
+                            ng-model="vm.transactionRecord.transaction_type" ng-change="vm.checkReqFields()">
+                            <option value="">Select a Removal Type</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="feedback-alert" role="alert" aria-live="polite"
+                    ng-if="vm.drawerMode === 'remove' && vm.removalQuantityExceedsAvailable()">
+                    The quantity entered exceeds the available inventory of
+                    {{vm.removalMedication.inventory_total_remaining}}
+                    {{$root.medicationOptionDisplayValue('inventory_unit', vm.removalMedication.inventory_unit) | pluralize}}.
+                    Enter a smaller quantity.
+                </div>
+
+                <div id="transaction-details-row">
+                    <div>
+                        <label>Date <span class="req"><em>*</em></span></label>
+                        <input type="text" ng-model="vm.transactionRecord.event_date" pss-date-widget
+                            ng-change="vm.checkReqFields()" data-auto-translate="true">
+                    </div>
+                    <div>
+                        <label>Processed By <span class="req"><em>*</em></span></label>
+                        <select
+                            ng-options="staff.dcid as (staff.first_name + ' ' + staff.last_name) for staff in $root.appData.staffList"
+                            ng-model="vm.transactionRecord.users_dcid" ng-change="vm.checkReqFields()">
+                        </select>
+                    </div>
+                </div>
+
+                <div id="transaction-notes-row">
+                    <div>
+                        <label>Notes <span class="req"><em>*</em></span></label>
+                        <textarea spellcheck="true" wrap="absolute" rows="4" cols="60"
+                            ng-model="vm.transactionRecord.notes" ng-change="vm.checkReqFields()"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feedback-info" ng-if="vm.drawerMode === 'remove'">The quantity will be removed automatically
+                from the oldest inventory lot with medication remaining.</div>
+        </div>
+    </div>
+</form>

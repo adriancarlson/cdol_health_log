@@ -1,0 +1,47 @@
+# AGENTS.md
+
+## Purpose
+
+This repository contains a PowerSchool SIS customization for student medication inventory and medication administration.
+
+## Start here
+
+Before changing code, read:
+
+1. `docs/PROJECT_CONTEXT.md`
+2. `docs/REQUIREMENTS.md`
+3. `docs/DATA_MODEL.md`
+4. `docs/DECISIONS.md`
+5. `docs/CURRENT_STATE.md`
+6. `docs/OPEN_WORK.md`
+
+Treat those documents and the installed schema as the current source of truth. When code and documentation disagree, report the conflict before changing behavior.
+
+## Working rules
+
+- Inspect the existing PowerSchool plugin structure and conventions before editing.
+- Preserve compatibility with PowerSchool SIS, Oracle SQL, AngularJS/RequireJS/jQuery patterns already used by the project.
+- Prefer clear ES6+ JavaScript where the existing PowerSchool runtime supports it.
+- Do not invent PowerSchool endpoints, table behavior, plugin paths, or security rules.
+- Do not use real student, medication, or health data in fixtures or tests.
+- Never commit passwords, API keys, session tokens, production exports, or personally identifiable information.
+- Preserve a complete audit trail for medication inventory and administration activity.
+- Do not overwrite historical inventory lots.
+- Inventory consumption must use FIFO from the oldest lot with quantity remaining.
+- A refill creates a new inventory lot, not a duplicate medication definition.
+- Medication administration must use a table-based workflow, not a calendar-based workflow.
+- Route values must come from a controlled dropdown, not unrestricted free text.
+- Do not use `cc` as a dosage unit.
+- Ask before making destructive schema changes.
+- For uncertain requirements, add a clearly labeled item to `docs/OPEN_WORK.md` rather than silently choosing behavior.
+
+## Validation
+
+Before presenting changes:
+
+- Run available linting, tests, and build or packaging checks.
+- Validate XML.
+- Check JavaScript console errors.
+- Confirm Oracle SQL compatibility.
+- Confirm that authorization restrictions are enforced server-side where possible, not only hidden in the UI.
+- Summarize changed files, tests run, unresolved risks, and any documentation updates.
