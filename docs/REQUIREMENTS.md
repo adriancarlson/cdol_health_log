@@ -47,12 +47,13 @@ Dose unit, inventory unit, route, and frequency options must come from the share
 - `MED_INVENTORY_UNIT`
 - `MED_ROUTE`
 - `MED_FREQUENCY`
+- `MED_REMOVAL_TYPE`
 
-The table is shared with the Health Log complaint, destination, and conversation-type lists. Sport continues to use PowerSchool's native `Sports` Code Set. Medication removal reasons and other fixed audit-workflow values must not become user-extensible options.
+The table is shared with the Health Log complaint, destination, and conversation-type lists. Sport continues to use PowerSchool's native `Sports` Code Set. Removal rows store the stable code selected from `MED_REMOVAL_TYPE`; system-owned administration and correction transaction types remain application-controlled.
 
 Do not automatically seed initial values. District administrators populate and maintain each category from `/admin/district/healthsetup/cdolhealthoptions.html`. The page must appear only in District Office navigation under **District Management → Health**, immediately after the native Health Code Sets link. It must allow an administrator to select a CDOL Health Code Set, add codes, edit the display value, mark a value Active or Inactive, and change display order with Move up and Move down controls on the main grid. Display order is assigned automatically and is not typed in the Add/Edit drawer. Inactive values must remain stored so historical references are not deleted. The main grid hides Inactive values by default. When the selected set contains inactive values, a Show Inactive checkbox with the inactive count appears immediately before Add Code. When selected, Inactive values appear after all Active values and can only be reordered within the Inactive group.
 
-Each medication dropdown includes an italicized `Other` action for authorized Medication Inventory users. Selecting it temporarily replaces that dropdown with a text field, plus button, and Cancel button. A successful plus action creates the value in the associated option category, restores the dropdown, adds the new value, and selects it for the current medication. Cancel restores the unselected dropdown without creating a value. `Other` itself is a UI action and must never be saved as the medication value.
+Each medication dropdown, including Removal Type, includes an italicized `Other` action for authorized Medication Inventory users. Selecting it temporarily replaces that dropdown with a text field, plus button, and Cancel button. A successful plus action creates the value in the associated option category, restores the dropdown, adds the new value, and selects it for the current medication or removal. Cancel restores the unselected dropdown without creating a value. `Other` itself is a UI action and must never be saved as the field value.
 
 For a newly added option:
 
@@ -103,7 +104,7 @@ Existing Health Log records must preserve their stored values without migration 
 
 The Health Log page receives GET and POST access to `u_cdol_health_option`; option editing, activation, inactivation, and reordering remain district-admin functions. PowerSchool permission mappings authorize access to the shared table route and cannot restrict POST access to individual `codetype` categories.
 
-The approved import defaults are maintained in `docs/u_cdol_health_option_defaults.csv`. They contain no stored `Other` records.
+The approved Medication and Health Log import defaults are maintained in `docs/u_cdol_health_option_defaults.csv`. The existing Medication Removal Type values are maintained separately in `docs/u_cdol_health_option_removal_type_defaults.csv` so they can be imported when the configurable dropdown is introduced. The UI's italicized `Other` action is not a stored option; the removal template retains the existing `OTHER_REMOVAL` audit code and its `Other Removal` label for backward compatibility.
 
 ## 5. Inventory
 

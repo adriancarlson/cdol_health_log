@@ -137,7 +137,7 @@
                     <tbody>
                         <tr
                             ng-show="!(vm.filteredAdministrationList | filter:vm.filterAdministrationByMedication).length">
-                            <td colspan="8">No matching medication administrations have been recorded for this student.
+                            <td colspan="8">No medication administrations have been recorded for ~(first_name) ~(last_name).
                             </td>
                         </tr>
                         <tr ng-repeat="administration in (vm.filteredAdministrationList | filter:vm.filterAdministrationByMedication)"
