@@ -201,8 +201,7 @@
                 border-color: #c84a4a;
             }
         </style>
-        <div class="feedback-alert" role="alert"
-            ng-if="vm.drawerMode === 'edit' && $root.appData.medicationOptionLoadError">
+        <div class="feedback-alert" role="alert" ng-if="$root.appData.medicationOptionLoadError">
             {{$root.appData.medicationOptionLoadError}}
         </div>
         <div id="med-date-row" ng-show="vm.drawerMode === 'edit'">
@@ -550,10 +549,28 @@
                     </div>
                     <div>
                         <label>Removal Type <span class="req"><em>*</em></span></label>
-                        <select ng-options="key as value for (key, value) in $root.appData.inventoryTransactionTypeList"
-                            ng-model="vm.transactionRecord.transaction_type" ng-change="vm.checkReqFields()">
+                        <select id="removal-type-select" class="medication-option-select"
+                            ng-if="!vm.optionEditors.removal_type.visible"
+                            ng-options="option.modelValue as option.displayValue for option in $root.appData.medicationOptions.removal_type"
+                            ng-model="vm.transactionRecord.transaction_type"
+                            ng-change="vm.onMedicationOptionSelectionChanged('removal_type')">
                             <option value="">Select a Removal Type</option>
                         </select>
+                        <div class="option-add-control" ng-if="vm.optionEditors.removal_type.visible">
+                            <input id="removal-type-add-input" class="option-add-input" type="text" maxlength="100"
+                                ng-model="vm.optionEditors.removal_type.value"
+                                ng-blur="vm.normalizeMedicationOptionInput('removal_type')"
+                                placeholder="Enter a removal type" aria-label="New removal type">
+                            <button id="removal-type-add-button" class="option-add-button" type="button"
+                                ng-click="vm.addMedicationOptionValue('removal_type')"
+                                ng-disabled="vm.optionEditors.removal_type.saving"
+                                aria-label="Add removal type" title="Add removal type">+</button>
+                            <button id="removal-type-add-cancel" type="button"
+                                ng-click="vm.cancelMedicationOptionValue('removal_type')"
+                                ng-disabled="vm.optionEditors.removal_type.saving">Cancel</button>
+                        </div>
+                        <div class="feedback-alert option-add-error" role="alert"
+                            ng-if="vm.optionEditors.removal_type.error">{{vm.optionEditors.removal_type.error}}</div>
                     </div>
                 </div>
                 <div class="feedback-alert" role="alert" aria-live="polite"

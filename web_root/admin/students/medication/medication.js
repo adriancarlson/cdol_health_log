@@ -113,18 +113,12 @@ define([
 				dose_unit: [],
 				inventory_unit: [],
 				route: [],
-				frequency: []
+				frequency: [],
+				removal_type: []
 			},
 			medicationOptionsLoaded: false,
 			medicationOptionsLoading: false,
-			medicationOptionLoadError: '',
-			inventoryTransactionTypeList: {
-				ADDED_IN_ERROR: 'Added in Error',
-				PARENT_PICKUP: 'Parent Pickup',
-				DISPOSAL: 'Disposal',
-				LOST_DAMAGED: 'Lost or Damaged',
-				OTHER_REMOVAL: 'Other Removal'
-			}
+			medicationOptionLoadError: ''
 		}
 
 		$rootScope.appData = vm.appData
@@ -255,7 +249,7 @@ define([
 			if (transactionType === 'ADMINISTRATION') return 'Administration'
 			if (transactionType === 'ADMINISTRATION_CORRECTION') return 'Administration Correction'
 			if (transactionType === 'ADMINISTRATION_VOID') return 'Administration Entered in Error'
-			return vm.appData.inventoryTransactionTypeList[transactionType] || transactionType
+			return $rootScope.medicationOptionDisplayValue('removal_type', transactionType)
 		}
 		vm.beginTransactionDrawer = () => loadingDialog()
 		vm.clearAdministrationFeedback = clearAdministrationFeedback
@@ -517,7 +511,7 @@ define([
 			if (transactionType === 'ADMINISTRATION') return 'Administration'
 			if (transactionType === 'ADMINISTRATION_CORRECTION') return 'Administration Correction'
 			if (transactionType === 'ADMINISTRATION_VOID') return 'Administration Entered in Error'
-			return $rootScope.appData.inventoryTransactionTypeList[transactionType] || transactionType
+			return $rootScope.medicationOptionDisplayValue('removal_type', transactionType)
 		}
 		vm.transactionAffectsInventory = transaction => {
 			return Math.abs(Number(transaction && transaction.quantity_change) || 0) > 0.0000000001
@@ -636,6 +630,7 @@ define([
 		}
 		const enforceMedicationOptionSelections = record => {
 			Object.keys(MEDICATION_OPTION_TYPES).forEach(fieldName => {
+				if (fieldName === 'removal_type') return
 				const currentValue = record[fieldName]
 				if (!hasValue(currentValue)) return
 				const existingOption = findMedicationOption(fieldName, currentValue)
@@ -646,10 +641,17 @@ define([
 				record[fieldName] = ''
 			})
 		}
+		const medicationOptionRecord = fieldName => fieldName === 'removal_type'
+			? vm.transactionRecord
+			: (vm.medicationRecord || vm[recordKey] || {})
+		const medicationOptionRecordField = fieldName => fieldName === 'removal_type'
+			? 'transaction_type'
+			: fieldName
 		vm.onMedicationOptionSelectionChanged = fieldName => {
-			const record = vm.medicationRecord || vm[recordKey] || {}
-			if (record[fieldName] === ADD_HEALTH_OPTION_VALUE) {
-				record[fieldName] = ''
+			const record = medicationOptionRecord(fieldName)
+			const recordField = medicationOptionRecordField(fieldName)
+			if (record[recordField] === ADD_HEALTH_OPTION_VALUE) {
+				record[recordField] = ''
 				resetOptionEditor(fieldName)
 				vm.optionEditors[fieldName].visible = true
 			} else {
@@ -662,14 +664,15 @@ define([
 			editor.value = normalizeHealthOptionDisplayValue(editor.value)
 		}
 		vm.cancelMedicationOptionValue = fieldName => {
-			const record = vm.medicationRecord || vm[recordKey] || {}
-			record[fieldName] = ''
+			const record = medicationOptionRecord(fieldName)
+			record[medicationOptionRecordField(fieldName)] = ''
 			resetOptionEditor(fieldName)
 			vm.checkReqFields()
 		}
 		vm.addMedicationOptionValue = fieldName => {
 			const editor = vm.optionEditors[fieldName]
-			const record = vm.medicationRecord || vm[recordKey] || {}
+			const record = medicationOptionRecord(fieldName)
+			const recordField = medicationOptionRecordField(fieldName)
 			const displayValue = normalizeHealthOptionDisplayValue(editor.value)
 			const code = buildHealthOptionCode(displayValue)
 			editor.value = displayValue
@@ -700,7 +703,7 @@ define([
 				)
 			)
 			if (existingOption) {
-				record[fieldName] = existingOption.modelValue
+				record[recordField] = existingOption.modelValue
 				resetOptionEditor(fieldName)
 				vm.checkReqFields()
 				return
@@ -717,7 +720,7 @@ define([
 			return psApiService.psApiCall('u_cdol_health_option', 'POST', payload)
 				.then(() => {
 					const option = $rootScope.addMedicationHealthOption(fieldName, payload)
-					record[fieldName] = option.modelValue
+					record[recordField] = option.modelValue
 					resetOptionEditor(fieldName)
 				})
 				.catch(error => {
@@ -802,7 +805,8 @@ define([
 			const quantityText = String(record.quantity === undefined || record.quantity === null ? '' : record.quantity).trim()
 			const quantity = Number(quantityText)
 			const quantityIsValid = /^(?:\d+\.?\d*|\.\d+)$/.test(quantityText) && Number.isFinite(quantity) && quantity > 0
-			return Boolean(record.transaction_type && quantityIsValid && quantity <= Number(vm.removalMedication.inventory_total_remaining))
+			const removalTypeIsValid = Boolean(findMedicationOption('removal_type', record.transaction_type))
+			return Boolean(removalTypeIsValid && quantityIsValid && quantity <= Number(vm.removalMedication.inventory_total_remaining))
 		}
 
 		vm.removalQuantityExceedsAvailable = () => {
@@ -817,6 +821,7 @@ define([
 			vm.transactionOpenedFromEdit = true
 			vm.drawerMode = 'remove'
 			resetTransactionRecord()
+			resetOptionEditor('removal_type')
 			$timeout(() => {
 				updateDrawerTitle(vm.drawerMode)
 				vm.checkReqFields()
@@ -828,6 +833,7 @@ define([
 			vm.drawerMode = 'edit'
 			vm.transactionOpenedFromEdit = false
 			resetTransactionRecord()
+			resetOptionEditor('removal_type')
 			updateDrawerTitle(vm.drawerMode)
 			vm.checkReqFields()
 		}

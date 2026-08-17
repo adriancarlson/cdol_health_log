@@ -5,6 +5,7 @@ define(() => {
 		{ codeType: 'MED_INVENTORY_UNIT', displayName: 'Medication Inventory Units', section: 'Medication', medicationField: 'inventory_unit' },
 		{ codeType: 'MED_ROUTE', displayName: 'Medication Routes', section: 'Medication', medicationField: 'route' },
 		{ codeType: 'MED_FREQUENCY', displayName: 'Medication Frequencies', section: 'Medication', medicationField: 'frequency' },
+		{ codeType: 'MED_REMOVAL_TYPE', displayName: 'Medication Removal Types', section: 'Medication', medicationField: 'removal_type' },
 		{ codeType: 'HEALTH_COMPLAINT', displayName: 'Health Log Complaints', section: 'Health Log' },
 		{ codeType: 'HEALTH_DESTINATION', displayName: 'Health Log Destinations', section: 'Health Log' },
 		{ codeType: 'HEALTH_CONVERSATION', displayName: 'Health Log Communication Methods', section: 'Health Log' }
