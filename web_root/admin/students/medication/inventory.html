@@ -201,27 +201,27 @@
                             <td class="center">{{$root.medicationOptionDisplayValue('frequency', medication.frequency)}}</td>
                             <td class="inventory-cell">
                                 <div class="inventory-cell-content"
-                                    ng-if="medication.inventory_batches && medication.inventory_batches.length">
+                                    ng-if="medication.display_inventory_batches && medication.display_inventory_batches.length">
                                     <table class="inventory-batches-table" style="width: 100%; margin: 0; padding: 0;"
-                                        ng-class="medication.inventory_batches.length === 1 ? medication.inventory_status_row_class : ''">
+                                        ng-class="medication.display_inventory_batches.length === 1 ? medication.inventory_status_row_class : ''">
                                         <tbody>
                                             <tr class="inventory-batch-row"
-                                                ng-class="medication.inventory_batches.length === 1 ? medication.inventory_status_row_class : ''"
-                                                ng-repeat="batch in (medication.inventory_batches | orderBy:'added_date')">
+                                                ng-class="medication.display_inventory_batches.length === 1 ? medication.inventory_status_row_class : ''"
+                                                ng-repeat="batch in medication.display_inventory_batches">
                                                 <td style="text-align: right; padding: 2px 4px 2px 0;">
                                                     <div class="inventory-row-content">
                                                         <span class="inventory-status-text"
-                                                            ng-if="medication.inventory_batches.length === 1 && medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
+                                                            ng-if="medication.display_inventory_batches.length === 1 && medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
                                                         <span
                                                             class="inventory-quantity-text">{{batch.quantity_remaining}}
-                                                            / {{batch.quantity_added}}
+                                                            / {{batch.effective_quantity_added}}
                                                             {{$root.medicationOptionDisplayValue('inventory_unit',
                                                             medication.inventory_unit) | pluralize}}</span>
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr class="inventory-total-row"
-                                                ng-if="medication.inventory_batches.length > 1"
+                                                ng-if="medication.display_inventory_batches.length > 1"
                                                 ng-class="medication.inventory_status_row_class">
                                                 <td style="text-align: right; padding: 2px 4px 2px 0;">
                                                     <div class="inventory-row-content">
@@ -229,9 +229,26 @@
                                                             ng-if="medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
                                                         <span class="inventory-quantity-text"><strong>Total:</strong>
                                                             {{medication.inventory_total_remaining}} /
-                                                            {{medication.inventory_total_initial}}
+                                                            {{medication.inventory_total_effective}}
                                                             {{$root.medicationOptionDisplayValue('inventory_unit',
                                                             medication.inventory_unit) | pluralize}}</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="inventory-cell-content"
+                                    ng-if="medication.inventory_batches && medication.inventory_batches.length && (!medication.display_inventory_batches || medication.display_inventory_batches.length === 0)">
+                                    <table class="inventory-batches-table" style="width: 100%; margin: 0; padding: 0;"
+                                        ng-class="medication.inventory_status_row_class">
+                                        <tbody>
+                                            <tr class="inventory-batch-row" ng-class="medication.inventory_status_row_class">
+                                                <td style="text-align: right; padding: 2px 4px 2px 0;">
+                                                    <div class="inventory-row-content">
+                                                        <span class="inventory-status-text">{{medication.inventory_status_label}}</span>
+                                                        <span class="inventory-quantity-text">0 / 0
+                                                            {{$root.medicationOptionDisplayValue('inventory_unit', medication.inventory_unit) | pluralize}}</span>
                                                     </div>
                                                 </td>
                                             </tr>

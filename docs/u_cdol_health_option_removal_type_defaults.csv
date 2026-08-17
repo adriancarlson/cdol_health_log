@@ -1,6 +1,7 @@
 u_cdol_health_option.codetype,u_cdol_health_option.code,u_cdol_health_option.displayvalue,u_cdol_health_option.description,u_cdol_health_option.isvisible,u_cdol_health_option.uidisplayorder
 MED_REMOVAL_TYPE,ADDED_IN_ERROR,Added in Error,Added in Error,1,10
-MED_REMOVAL_TYPE,PARENT_PICKUP,Parent Pickup,Parent Pickup,1,20
-MED_REMOVAL_TYPE,DISPOSAL,Disposal,Disposal,1,30
-MED_REMOVAL_TYPE,LOST_DAMAGED,Lost or Damaged,Lost or Damaged,1,40
-MED_REMOVAL_TYPE,OTHER_REMOVAL,Other Removal,Other Removal,1,50
+MED_REMOVAL_TYPE,WRONG_NUMBER_ENTERED,Wrong Number Entered,Wrong Number Entered,1,20
+MED_REMOVAL_TYPE,PARENT_PICKUP,Parent Pickup,Parent Pickup,1,30
+MED_REMOVAL_TYPE,DISPOSAL,Disposal,Disposal,1,40
+MED_REMOVAL_TYPE,LOST_DAMAGED,Lost or Damaged,Lost or Damaged,1,50
+MED_REMOVAL_TYPE,OTHER_REMOVAL,Other Removal,Other Removal,1,60

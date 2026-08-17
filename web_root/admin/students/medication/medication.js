@@ -67,6 +67,14 @@ define([
 	const normalizeHealthOptionDisplayValue = healthOptionConfig.normalizeDisplayValue
 	const buildHealthOptionCode = healthOptionConfig.buildCode
 	const normalizeHealthOptionRecord = healthOptionConfig.normalizeRecord
+	const INVENTORY_ENTRY_CORRECTION_TYPES = new Set(['ADDEDINERROR', 'WRONGNUMBERENTERED'])
+	const normalizeInventoryTransactionType = value => String(value === undefined || value === null ? '' : value)
+		.toUpperCase()
+		.replace(/[^A-Z0-9]/g, '')
+	const isInventoryEntryCorrection = transaction => INVENTORY_ENTRY_CORRECTION_TYPES.has(
+		normalizeInventoryTransactionType(transaction && transaction.transaction_type)
+	)
+	const roundedInventoryQuantity = value => Number(Number(value || 0).toFixed(10))
 	const isActiveHealthOption = record => {
 		if (record.isVisible === false || record.isVisible === 0 || record.isVisible === '0') return false
 		return true
@@ -267,10 +275,16 @@ define([
 		const applyInventoryStatus = medication => {
 			const quantityRemaining = Math.max(0, Number(medication.inventory_total_remaining) || 0)
 			const storedBaselineQuantity = Number(medication.inventory_baseline_quantity)
+			const effectiveInventoryQuantity = Number(medication.inventory_total_effective)
 			const historicalInventoryQuantity = Number(medication.inventory_total_initial)
-			const baselineQuantity = storedBaselineQuantity > 0
+			let baselineQuantity = storedBaselineQuantity > 0
 				? storedBaselineQuantity
-				: (historicalInventoryQuantity > 0 ? historicalInventoryQuantity : quantityRemaining)
+				: (effectiveInventoryQuantity > 0
+					? effectiveInventoryQuantity
+					: (historicalInventoryQuantity > 0 ? historicalInventoryQuantity : quantityRemaining))
+			if (effectiveInventoryQuantity > 0 && baselineQuantity > effectiveInventoryQuantity) {
+				baselineQuantity = effectiveInventoryQuantity
+			}
 
 			Object.assign(medication, getInventoryStatus(quantityRemaining, baselineQuantity))
 		}
@@ -284,24 +298,45 @@ define([
 					Number(transaction.medication_id) === Number(medication.medication_id)
 				)
 
-				let quantityToConsume = Math.max(0, -medication.inventory_transactions.reduce(
-					(total, transaction) => total + (Number(transaction.quantity_change) || 0),
-					0
-				))
+				let inventoryEntryCorrectionQuantity = Math.max(0, -medication.inventory_transactions
+					.filter(isInventoryEntryCorrection)
+					.reduce(
+						(total, transaction) => total + (Number(transaction.quantity_change) || 0),
+						0
+					))
+				let operationalQuantityToConsume = Math.max(0, -medication.inventory_transactions
+					.filter(transaction => !isInventoryEntryCorrection(transaction))
+					.reduce(
+						(total, transaction) => total + (Number(transaction.quantity_change) || 0),
+						0
+					))
 				const sortedBatches = medication.inventory_batches.slice().sort((left, right) => {
 					const dateComparison = String(left.added_date || '').localeCompare(String(right.added_date || ''))
 					return dateComparison || Number(left.inventory_id) - Number(right.inventory_id)
 				})
 
 				sortedBatches.forEach(batch => {
-					const quantityAdded = Number(batch.quantity_added) || 0
-					const quantityConsumed = Math.min(quantityAdded, quantityToConsume)
-					batch.quantity_remaining = Number((quantityAdded - quantityConsumed).toFixed(10))
-					quantityToConsume = Number((quantityToConsume - quantityConsumed).toFixed(10))
+					const quantityAdded = Math.max(0, Number(batch.quantity_added) || 0)
+					const correctionQuantity = Math.min(quantityAdded, inventoryEntryCorrectionQuantity)
+					const effectiveQuantityAdded = roundedInventoryQuantity(quantityAdded - correctionQuantity)
+					const quantityConsumed = Math.min(effectiveQuantityAdded, operationalQuantityToConsume)
+
+					batch.inventory_entry_correction_quantity = roundedInventoryQuantity(correctionQuantity)
+					batch.effective_quantity_added = effectiveQuantityAdded
+					batch.quantity_remaining = roundedInventoryQuantity(effectiveQuantityAdded - quantityConsumed)
+					inventoryEntryCorrectionQuantity = roundedInventoryQuantity(inventoryEntryCorrectionQuantity - correctionQuantity)
+					operationalQuantityToConsume = roundedInventoryQuantity(operationalQuantityToConsume - quantityConsumed)
 				})
-				medication.inventory_total_remaining = medication.inventory_batches.reduce(
+				medication.inventory_total_effective = roundedInventoryQuantity(sortedBatches.reduce(
+					(total, batch) => total + (Number(batch.effective_quantity_added) || 0),
+					0
+				))
+				medication.inventory_total_remaining = roundedInventoryQuantity(sortedBatches.reduce(
 					(total, batch) => total + (Number(batch.quantity_remaining) || 0),
 					0
+				))
+				medication.display_inventory_batches = sortedBatches.filter(batch =>
+					Number(batch.effective_quantity_added) > 0 || Number(batch.inventory_entry_correction_quantity) <= 0
 				)
 				applyInventoryStatus(medication)
 
@@ -1019,7 +1054,9 @@ define([
 			delete medicationPayload.inventory
 			delete medicationPayload.inventory_batches
 			delete medicationPayload.inventory_total_initial
+			delete medicationPayload.inventory_total_effective
 			delete medicationPayload.inventory_total_remaining
+			delete medicationPayload.display_inventory_batches
 			delete medicationPayload.inventory_transactions
 			delete medicationPayload.inventory_percentage_remaining
 			delete medicationPayload.inventory_status

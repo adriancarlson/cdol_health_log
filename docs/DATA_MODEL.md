@@ -60,7 +60,9 @@ PowerSchool standalone table.
 | `users_dcid` | Integer | User who added or counted the lot |
 | `notes` | String(4000) | Lot or count-in notes |
 
-The inventory unit is stored on the medication definition and is shared by its lots. Lots are immutable records of medication received. The application derives each lot's remaining quantity by applying the medication's net transaction quantity to its lots in FIFO order.
+The inventory unit is stored on the medication definition and is shared by its lots. Lots are immutable records of medication received. The application derives each lot's remaining quantity by applying transaction quantities to its lots in FIFO order.
+
+`Added in Error` and `Wrong Number Entered` removal transactions reduce the effective quantity received before ordinary deductions are applied. The stored `quantity_added` value remains unchanged for audit purposes. The main Inventory display uses the effective quantity as its denominator and hides only lots whose effective quantity is reduced to zero by an entry correction. The low-inventory calculation also caps the replenishment baseline at the effective received quantity. The original lot and correction remain available through Edit Inventory and Inventory Activity. Transaction codes are normalized for this classification so the standard `ADDED_IN_ERROR` and `WRONG_NUMBER_ENTERED` codes and the previously generated `wrongnumberentered` code behave consistently.
 
 The inventory-alert baseline is reset automatically to the total available inventory after one or more new inventory rows are saved. It is not reset by a deduction and is not entered by the nurse. The percentage remaining is calculated rather than stored. It compares current inventory quantity against the replenishment baseline. Normal is above 20%, Low is above 10% through 20%, Critical is above zero through 10%, and Out is zero.
 
@@ -90,7 +92,7 @@ Append-only standalone inventory transaction table. Each real-world removal crea
 | `correction_users_dcid` | Integer | User who recorded the correction |
 | `correction_reason` | String(4000) | Required explanation for the correction |
 
-Removal rows use the common transaction fields. A given dose uses `transaction_type = ADMINISTRATION`, stores the administration details in the snapshot fields, and records the administered inventory quantity as a negative `quantity_change`. One row therefore serves as both the administration audit record and the inventory deduction, avoiding a partial two-record save.
+Removal rows use the common transaction fields. `ADDED_IN_ERROR` and `WRONG_NUMBER_ENTERED` are inventory-entry correction types; all other configurable removal types are ordinary deductions. A given dose uses `transaction_type = ADMINISTRATION`, stores the administration details in the snapshot fields, and records the administered inventory quantity as a negative `quantity_change`. One row therefore serves as both the administration audit record and the inventory deduction, avoiding a partial two-record save.
 
 Administration corrections remain append-only:
 

@@ -128,6 +128,10 @@ Rules:
 - Derive each lot's remaining quantity from immutable received lots and the transaction history.
 - Deduct administered medication using FIFO, beginning with the oldest lot that still has quantity remaining.
 - Support inventory deductions when medication is picked up by a parent or otherwise removed.
+- Treat `Added in Error` and `Wrong Number Entered` removals as corrections to medication received. Apply the corrected quantity FIFO to derive an effective received quantity without changing or deleting the original lot or audit transaction.
+- Use the effective received quantity as the displayed denominator. Hide a lot from the main Inventory quantity display only when an entry correction reduces its effective received quantity to zero; retain the medication definition, original lot, and Inventory Activity history.
+- Do not allow the low-inventory calculation's replenishment baseline to exceed the effective received quantity after an inventory-entry correction.
+- Continue displaying ordinarily depleted lots when they reach zero through administrations, parent pickup, disposal, lost/damaged medication, or another non-correction removal.
 - Show total quantity remaining across all open lots.
 - Display remaining/original quantities with spaces around the slash, such as `2.75 / 5 Pills`.
 - Reset the inventory-alert baseline to the total available quantity immediately after inventory is added.
