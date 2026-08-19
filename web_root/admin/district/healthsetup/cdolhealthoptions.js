@@ -15,7 +15,7 @@ define([
 		return orderDifference || String(left.displayValue).localeCompare(String(right.displayValue))
 	})
 
-	healthOptionsAdminModule.controller('healthOptionsController', function ($scope, $rootScope, $q, $timeout, psApiService) {
+	healthOptionsAdminModule.controller('healthOptionsController', function ($scope, $rootScope, $http, $q, $timeout, psApiService) {
 		const vm = this
 		let feedbackTimeout
 		vm.appData = {
@@ -102,10 +102,43 @@ define([
 		}
 		$rootScope.reloadHealthOptions = skipLoadingDialog => {
 			if (!skipLoadingDialog) loadingDialog()
-			return psApiService.psApiCall('u_cdol_health_option', 'GET', {})
-				.then(records => {
+			const usageRequest = $http.get('./data/healthOptionUsage.json')
+				.then(response => response.data)
+				.catch(error => {
+					console.error('Unable to load health option usage counts.', error)
+					return null
+				})
+			return $q.all([
+				psApiService.psApiCall('u_cdol_health_option', 'GET', {}),
+				usageRequest
+			])
+				.then(results => {
+					const records = results[0]
+					let usageRecords = results[1]
+					if (usageRecords !== null && usageRecords !== undefined &&
+						typeof psUtils !== 'undefined' && psUtils.htmlEntitiesToCharCode) {
+						usageRecords = psUtils.htmlEntitiesToCharCode(usageRecords)
+					}
+					if (typeof usageRecords === 'string') {
+						const usageJson = usageRecords.trim()
+						try {
+							usageRecords = usageJson ? JSON.parse(usageJson) : null
+						} catch (error) {
+							console.error('Unable to parse health option usage counts.', error)
+							usageRecords = null
+						}
+					}
+					const usageCountsAvailable = usageRecords !== null && usageRecords !== undefined
+					if (usageCountsAvailable && !Array.isArray(usageRecords)) usageRecords = [usageRecords]
+					const usageByOptionId = (usageRecords || []).reduce((usageMap, usageRecord) => {
+						usageMap[String(usageRecord.id)] = Number(usageRecord.usage_count) || 0
+						return usageMap
+					}, {})
 					vm.options = (Array.isArray(records) ? records : (records ? [records] : []))
 						.map(healthOptionConfig.normalizeRecord)
+						.map(option => Object.assign(option, {
+							usageCount: usageCountsAvailable ? (usageByOptionId[String(option.id)] || 0) : '\u2014'
+						}))
 					$rootScope.healthOptionList = vm.options
 					vm.refreshSelectedOptions()
 				})

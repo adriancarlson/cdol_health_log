@@ -114,15 +114,16 @@
                         <th style="width: 180px;">Code</th>
                         <th>Display Value</th>
                         <th style="width: 100px;">Status</th>
+                        <th style="width: 80px;">Count</th>
                         <th style="width: 80px;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr data-ng-if="!vm.appData.selectedCodeType">
-                        <td colspan="5" class="health-options-empty">Select a code set to view or add its values.</td>
+                        <td colspan="6" class="health-options-empty">Select a code set to view or add its values.</td>
                     </tr>
                     <tr data-ng-if="vm.appData.selectedCodeType && !vm.selectedOptions.length">
-                        <td colspan="5" class="health-options-empty">
+                        <td colspan="6" class="health-options-empty">
                             <span data-ng-if="vm.inactiveOptionCount && !vm.appData.showInactive">
                                 No active values. Select Show Inactive to view inactive values.
                             </span>
@@ -146,6 +147,7 @@
                         <td>{{option.code}}</td>
                         <td>{{option.displayValue}}</td>
                         <td class="center">{{(!option.isVisible || option.isVisible === '0') ? 'Inactive' : 'Active'}}</td>
+                        <td class="center">{{option.usageCount}}</td>
                         <td class="actions center">
                             <button type="button" id="edit-health-code-{{option.id}}" pss-dialog-drawer width="650"
                                 edit-button-icon="true" drawer-title="Edit Health Code"

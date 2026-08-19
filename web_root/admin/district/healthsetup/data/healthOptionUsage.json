@@ -1,0 +1,99 @@
+~[tlist_sql;
+	SELECT
+		COALESCE(
+			JSON_ARRAYAGG(
+				JSON_OBJECT(
+					'id' VALUE option_usage.id,
+					'usage_count' VALUE option_usage.usage_count
+					NULL ON NULL
+					RETURNING CLOB
+				)
+				ORDER BY option_usage.id
+				RETURNING CLOB
+			),
+			TO_CLOB(CHR(91) || CHR(93))
+		)
+	FROM (
+		SELECT
+			health_option.id,
+			COUNT(usage_value.usage_key) AS usage_count
+		FROM u_cdol_health_option health_option
+		LEFT JOIN (
+			SELECT 'MED_DOSE_UNIT' AS codetype,
+				LOWER(TRIM(medication.dose_unit)) AS stored_value,
+				'MEDICATION_' || TO_CHAR(medication.id) || '_DOSE_UNIT' AS usage_key
+			FROM u_student_medication medication
+			WHERE medication.dose_unit IS NOT NULL
+			UNION ALL
+			SELECT 'MED_INVENTORY_UNIT', LOWER(TRIM(medication.inventory_unit)),
+				'MEDICATION_' || TO_CHAR(medication.id) || '_INVENTORY_UNIT'
+			FROM u_student_medication medication
+			WHERE medication.inventory_unit IS NOT NULL
+			UNION ALL
+			SELECT 'MED_ROUTE', LOWER(TRIM(medication.route)),
+				'MEDICATION_' || TO_CHAR(medication.id) || '_ROUTE'
+			FROM u_student_medication medication
+			WHERE medication.route IS NOT NULL
+			UNION ALL
+			SELECT 'MED_FREQUENCY', LOWER(TRIM(medication.frequency)),
+				'MEDICATION_' || TO_CHAR(medication.id) || '_FREQUENCY'
+			FROM u_student_medication medication
+			WHERE medication.frequency IS NOT NULL
+			UNION ALL
+			SELECT 'MED_DOSE_UNIT', LOWER(TRIM(txn.dose_unit)),
+				'TRANSACTION_' || TO_CHAR(txn.id) || '_DOSE_UNIT'
+			FROM u_student_med_inv_txn txn
+			WHERE txn.dose_unit IS NOT NULL
+			UNION ALL
+			SELECT 'MED_INVENTORY_UNIT', LOWER(TRIM(txn.inventory_unit)),
+				'TRANSACTION_' || TO_CHAR(txn.id) || '_INVENTORY_UNIT'
+			FROM u_student_med_inv_txn txn
+			WHERE txn.inventory_unit IS NOT NULL
+			UNION ALL
+			SELECT 'MED_ROUTE', LOWER(TRIM(txn.route)),
+				'TRANSACTION_' || TO_CHAR(txn.id) || '_ROUTE'
+			FROM u_student_med_inv_txn txn
+			WHERE txn.route IS NOT NULL
+			UNION ALL
+			SELECT 'MED_FREQUENCY', LOWER(TRIM(txn.frequency)),
+				'TRANSACTION_' || TO_CHAR(txn.id) || '_FREQUENCY'
+			FROM u_student_med_inv_txn txn
+			WHERE txn.frequency IS NOT NULL
+			UNION ALL
+			SELECT 'MED_REMOVAL_TYPE', LOWER(TRIM(txn.transaction_type)),
+				'TRANSACTION_' || TO_CHAR(txn.id) || '_TRANSACTION_TYPE'
+			FROM u_student_med_inv_txn txn
+			WHERE txn.transaction_type IS NOT NULL
+			UNION ALL
+			SELECT 'HEALTH_COMPLAINT', LOWER(TRIM(health_log.complaint)),
+				'HEALTH_LOG_' || TO_CHAR(health_log.id) || '_COMPLAINT'
+			FROM u_cdol_health_log health_log
+			WHERE health_log.complaint IS NOT NULL
+			UNION ALL
+			SELECT 'HEALTH_DESTINATION', LOWER(TRIM(health_log.destination)),
+				'HEALTH_LOG_' || TO_CHAR(health_log.id) || '_DESTINATION'
+			FROM u_cdol_health_log health_log
+			WHERE health_log.destination IS NOT NULL
+			UNION ALL
+			SELECT 'HEALTH_CONVERSATION', LOWER(TRIM(health_log.conversation_type)),
+				'HEALTH_LOG_' || TO_CHAR(health_log.id) || '_CONVERSATION_TYPE'
+			FROM u_cdol_health_log health_log
+			WHERE health_log.conversation_type IS NOT NULL
+		) usage_value
+			ON usage_value.codetype = health_option.codetype
+			AND (
+				usage_value.stored_value IN (
+					LOWER(TRIM(health_option.code)),
+					LOWER(TRIM(health_option.displayvalue))
+				)
+				OR (
+					health_option.codetype = 'HEALTH_CONVERSATION'
+					AND INSTR(
+						',' || REPLACE(usage_value.stored_value, ' ', '') || ',',
+						',' || LOWER(REPLACE(health_option.code, ' ', '')) || ','
+					) > 0
+				)
+			)
+		GROUP BY health_option.id
+	) option_usage
+;]~(data)[/tlist_sql]
