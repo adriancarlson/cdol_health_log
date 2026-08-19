@@ -96,6 +96,9 @@
                             data-ng-disabled="!vm.appData.selectedCodeType">
                         Show Inactive (+{{vm.inactiveOptionCount}})
                     </label>
+                    <button id="sort-health-codes-button" type="button"
+                        data-ng-click="vm.sortSelectedOptionsAlphabetically()"
+                        data-ng-disabled="!vm.canSortSelectedOptions()">Sort Alphabetically</button>
                     <button id="add-health-code-button" type="button" pss-dialog-drawer width="650"
                         drawer-title="Add Health Code" template-url="editHealthOption.html"
                         data-data="{ codeType: vm.appData.selectedCodeType }"
@@ -113,6 +116,7 @@
                         <th style="width: 80px;">Order</th>
                         <th style="width: 180px;">Code</th>
                         <th>Display Value</th>
+                        <th style="width: 130px;">Created By</th>
                         <th style="width: 100px;">Status</th>
                         <th style="width: 80px;">Count</th>
                         <th style="width: 80px;">Action</th>
@@ -120,10 +124,10 @@
                 </thead>
                 <tbody>
                     <tr data-ng-if="!vm.appData.selectedCodeType">
-                        <td colspan="6" class="health-options-empty">Select a code set to view or add its values.</td>
+                        <td colspan="7" class="health-options-empty">Select a code set to view or add its values.</td>
                     </tr>
                     <tr data-ng-if="vm.appData.selectedCodeType && !vm.selectedOptions.length">
-                        <td colspan="6" class="health-options-empty">
+                        <td colspan="7" class="health-options-empty">
                             <span data-ng-if="vm.inactiveOptionCount && !vm.appData.showInactive">
                                 No active values. Select Show Inactive to view inactive values.
                             </span>
@@ -146,6 +150,7 @@
                         </td>
                         <td>{{option.code}}</td>
                         <td>{{option.displayValue}}</td>
+                        <td>{{option.whoCreated || '—'}}</td>
                         <td class="center">{{(!option.isVisible || option.isVisible === '0') ? 'Inactive' : 'Active'}}</td>
                         <td class="center">{{option.usageCount}}</td>
                         <td class="actions center">

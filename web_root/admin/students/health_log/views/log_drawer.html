@@ -162,6 +162,7 @@
                 <div class="health-option-add-control" data-ng-if="healthOptionEditors.complaint.visible">
                     <input class="health-option-add-input" type="text" maxlength="100"
                         data-ng-model="healthOptionEditors.complaint.value"
+                        data-ng-change="updateHealthOptionSimilarity('complaint')"
                         data-ng-blur="normalizeHealthOptionInput('complaint')"
                         placeholder="Enter a reusable complaint" aria-label="New complaint">
                     <button class="health-option-add-button" type="button"
@@ -174,6 +175,12 @@
                 <span class="req" data-ng-if="!healthOptionStates.complaint.readOnly && !healthOptionSelections.complaint && !healthOptionEditors.complaint.visible"><em>Required</em></span>
                 <div class="feedback-alert health-option-add-error" role="alert"
                     data-ng-if="healthOptionEditors.complaint.error">{{healthOptionEditors.complaint.error}}</div>
+                <div class="feedback-alert health-option-add-error" role="alert"
+                    data-ng-if="!healthOptionEditors.complaint.error && healthOptionEditors.complaint.similarOption">
+                    A similar option already exists: <strong>{{healthOptionEditors.complaint.similarOption.displayValue}}</strong><span
+                        data-ng-if="!healthOptionEditors.complaint.similarOption.isActive"> (Inactive)</span>.<br>
+                    Please use the existing option unless a separate value is <strong><em><u>absolutely</u></em></strong> necessary.
+                </div>
                 <div class="feedback-note health-option-feedback-note" data-ng-if="healthOptionEditors.complaint.visible">
                     This adds a complaint choice in the dropdown for future health logs. Put visit and student specific details in Notes.
                 </div>
@@ -222,6 +229,7 @@
                 <div class="health-option-add-control" data-ng-if="healthOptionEditors.destination.visible">
                     <input class="health-option-add-input" type="text" maxlength="100"
                         data-ng-model="healthOptionEditors.destination.value"
+                        data-ng-change="updateHealthOptionSimilarity('destination')"
                         data-ng-blur="normalizeHealthOptionInput('destination')"
                         placeholder="Enter a reusable destination" aria-label="New destination">
                     <button class="health-option-add-button" type="button"
@@ -233,6 +241,12 @@
                 </div>
                 <div class="feedback-alert health-option-add-error" role="alert"
                     data-ng-if="healthOptionEditors.destination.error">{{healthOptionEditors.destination.error}}</div>
+                <div class="feedback-alert health-option-add-error" role="alert"
+                    data-ng-if="!healthOptionEditors.destination.error && healthOptionEditors.destination.similarOption">
+                    A similar option already exists: <strong>{{healthOptionEditors.destination.similarOption.displayValue}}</strong><span
+                        data-ng-if="!healthOptionEditors.destination.similarOption.isActive"> (Inactive)</span>.<br>
+                    Please use the existing option unless a separate value is <strong><em><u>absolutely</u></em></strong> necessary.
+                </div>
                 <div class="feedback-note health-option-feedback-note" data-ng-if="healthOptionEditors.destination.visible">
                     This adds a destination choice in the dropdown for future health logs. Put visit and student specific details in Notes.
                 </div>
@@ -286,6 +300,7 @@
                 <div class="health-option-add-control" data-ng-if="healthOptionEditors.conversation_type.visible">
                     <input class="health-option-add-input" type="text" maxlength="100"
                         data-ng-model="healthOptionEditors.conversation_type.value"
+                        data-ng-change="updateHealthOptionSimilarity('conversation_type')"
                         data-ng-blur="normalizeHealthOptionInput('conversation_type')"
                         placeholder="Enter a reusable communication method" aria-label="New communication method">
                     <button class="health-option-add-button" type="button"
@@ -297,6 +312,12 @@
                 </div>
                 <div class="feedback-alert health-option-add-error" role="alert"
                     data-ng-if="healthOptionEditors.conversation_type.error">{{healthOptionEditors.conversation_type.error}}</div>
+                <div class="feedback-alert health-option-add-error" role="alert"
+                    data-ng-if="!healthOptionEditors.conversation_type.error && healthOptionEditors.conversation_type.similarOption">
+                    A similar option already exists: <strong>{{healthOptionEditors.conversation_type.similarOption.displayValue}}</strong><span
+                        data-ng-if="!healthOptionEditors.conversation_type.similarOption.isActive"> (Inactive)</span>.<br>
+                    Please use the existing option unless a separate value is <strong><em><u>absolutely</u></em></strong> necessary.
+                </div>
                 <div class="feedback-note health-option-feedback-note" data-ng-if="healthOptionEditors.conversation_type.visible">
                     This adds a communication method checkbox for future health logs. Put conversation and student specific details in Notes.
                 </div>

@@ -236,6 +236,7 @@
                     <div class="option-add-control" ng-if="vm.optionEditors.dose_unit.visible">
                         <input id="dose-unit-add-input" class="option-add-input" type="text" maxlength="100"
                             ng-model="vm.optionEditors.dose_unit.value"
+                            ng-change="vm.updateMedicationOptionSimilarity('dose_unit')"
                             ng-blur="vm.normalizeMedicationOptionInput('dose_unit')" placeholder="Enter a dose unit"
                             aria-label="New dose unit">
                         <button id="dose-unit-add-button" class="option-add-button" type="button"
@@ -249,6 +250,11 @@
                 </div>
                 <div class="feedback-alert option-add-error" role="alert"
                     ng-if="vm.optionEditors.dose_unit.error">{{vm.optionEditors.dose_unit.error}}</div>
+                <div class="feedback-alert option-add-error" role="alert"
+                    ng-if="!vm.optionEditors.dose_unit.error && vm.optionEditors.dose_unit.similarOption">
+                    A similar option already exists: <strong>{{vm.optionEditors.dose_unit.similarOption.displayValue}}</strong>.<br>
+                    Please use the existing option unless a separate value is <strong><em><u>absolutely</u></em></strong> necessary.
+                </div>
             </div>
             <div id="inv-unit-group">
                 <label id="inv-unit-label">Unit <span id="inv-unit-req" class="req"><em
@@ -264,6 +270,7 @@
                 <div class="option-add-control" ng-if="vm.optionEditors.inventory_unit.visible">
                     <input id="inv-unit-add-input" class="option-add-input" type="text" maxlength="100"
                         ng-model="vm.optionEditors.inventory_unit.value"
+                        ng-change="vm.updateMedicationOptionSimilarity('inventory_unit')"
                         ng-blur="vm.normalizeMedicationOptionInput('inventory_unit')" placeholder="Enter an inventory unit"
                         aria-label="New inventory unit">
                     <button id="inv-unit-add-button" class="option-add-button" type="button"
@@ -276,6 +283,11 @@
                 </div>
                 <div class="feedback-alert option-add-error" role="alert"
                     ng-if="vm.optionEditors.inventory_unit.error">{{vm.optionEditors.inventory_unit.error}}</div>
+                <div class="feedback-alert option-add-error" role="alert"
+                    ng-if="!vm.optionEditors.inventory_unit.error && vm.optionEditors.inventory_unit.similarOption">
+                    A similar option already exists: <strong>{{vm.optionEditors.inventory_unit.similarOption.displayValue}}</strong>.<br>
+                    Please use the existing option unless a separate value is <strong><em><u>absolutely</u></em></strong> necessary.
+                </div>
             </div>
         </div>
         <div id="duplicate-medication-message" class="feedback-alert" role="alert" aria-live="polite"
@@ -294,7 +306,8 @@
                 </select>
                 <div class="option-add-control" ng-if="vm.optionEditors.route.visible">
                     <input id="route-add-input" class="option-add-input" type="text" maxlength="100"
-                        ng-model="vm.optionEditors.route.value" ng-blur="vm.normalizeMedicationOptionInput('route')"
+                        ng-model="vm.optionEditors.route.value" ng-change="vm.updateMedicationOptionSimilarity('route')"
+                        ng-blur="vm.normalizeMedicationOptionInput('route')"
                         placeholder="Enter a route" aria-label="New route">
                     <button id="route-add-button" class="option-add-button" type="button"
                         ng-click="vm.addMedicationOptionValue('route')" ng-disabled="vm.optionEditors.route.saving"
@@ -304,6 +317,11 @@
                 </div>
                 <div class="feedback-alert option-add-error" role="alert"
                     ng-if="vm.optionEditors.route.error">{{vm.optionEditors.route.error}}</div>
+                <div class="feedback-alert option-add-error" role="alert"
+                    ng-if="!vm.optionEditors.route.error && vm.optionEditors.route.similarOption">
+                    A similar option already exists: <strong>{{vm.optionEditors.route.similarOption.displayValue}}</strong>.<br>
+                    Please use the existing option unless a separate value is <strong><em><u>absolutely</u></em></strong> necessary.
+                </div>
             </div>
             <div id="freq-group">
                 <label id="freq-label">Frequency <span id="freq-req" class="req"><em id="freq-req-mark">*</em></span>
@@ -317,6 +335,7 @@
                 <div class="option-add-control" ng-if="vm.optionEditors.frequency.visible">
                     <input id="frequency-add-input" class="option-add-input" type="text" maxlength="100"
                         ng-model="vm.optionEditors.frequency.value"
+                        ng-change="vm.updateMedicationOptionSimilarity('frequency')"
                         ng-blur="vm.normalizeMedicationOptionInput('frequency')" placeholder="Enter a frequency"
                         aria-label="New frequency">
                     <button id="frequency-add-button" class="option-add-button" type="button"
@@ -328,6 +347,11 @@
                 </div>
                 <div class="feedback-alert option-add-error" role="alert"
                     ng-if="vm.optionEditors.frequency.error">{{vm.optionEditors.frequency.error}}</div>
+                <div class="feedback-alert option-add-error" role="alert"
+                    ng-if="!vm.optionEditors.frequency.error && vm.optionEditors.frequency.similarOption">
+                    A similar option already exists: <strong>{{vm.optionEditors.frequency.similarOption.displayValue}}</strong>.<br>
+                    Please use the existing option unless a separate value is <strong><em><u>absolutely</u></em></strong> necessary.
+                </div>
             </div>
         </div>
         <div id="notes-row" ng-show="vm.drawerMode === 'edit'">
@@ -559,6 +583,7 @@
                         <div class="option-add-control" ng-if="vm.optionEditors.removal_type.visible">
                             <input id="removal-type-add-input" class="option-add-input" type="text" maxlength="100"
                                 ng-model="vm.optionEditors.removal_type.value"
+                                ng-change="vm.updateMedicationOptionSimilarity('removal_type')"
                                 ng-blur="vm.normalizeMedicationOptionInput('removal_type')"
                                 placeholder="Enter a removal type" aria-label="New removal type">
                             <button id="removal-type-add-button" class="option-add-button" type="button"
@@ -571,6 +596,11 @@
                         </div>
                         <div class="feedback-alert option-add-error" role="alert"
                             ng-if="vm.optionEditors.removal_type.error">{{vm.optionEditors.removal_type.error}}</div>
+                        <div class="feedback-alert option-add-error" role="alert"
+                            ng-if="!vm.optionEditors.removal_type.error && vm.optionEditors.removal_type.similarOption">
+                            A similar option already exists: <strong>{{vm.optionEditors.removal_type.similarOption.displayValue}}</strong>.<br>
+                            Please use the existing option unless a separate value is <strong><em><u>absolutely</u></em></strong> necessary.
+                        </div>
                     </div>
                 </div>
                 <div class="feedback-alert" role="alert" aria-live="polite"

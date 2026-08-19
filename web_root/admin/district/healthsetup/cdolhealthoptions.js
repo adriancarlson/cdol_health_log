@@ -69,6 +69,30 @@ define([
 				feedbackTimeout = null
 			}, 5000)
 		}
+		const saveOptionOrder = (reorderedOptions, feedbackMessage) => {
+			const updates = reorderedOptions
+				.map((record, index) => ({ record, order: (index + 1) * 10 }))
+				.filter(update => Number(update.record.uiDisplayOrder) !== update.order)
+
+			if (!updates.length) {
+				$rootScope.showHealthOptionsFeedback(feedbackMessage)
+				return $q.when()
+			}
+
+			vm.reordering = true
+			loadingDialog()
+			return $q.all(updates.map(update =>
+				psApiService.psApiCall('u_cdol_health_option', 'PUT', {
+					uidisplayorder: update.order
+				}, update.record.id)
+			))
+				.then(() => $rootScope.reloadHealthOptions(true))
+				.then(() => $rootScope.showHealthOptionsFeedback(feedbackMessage))
+				.finally(() => {
+					vm.reordering = false
+					closeLoading()
+				})
+		}
 		vm.moveOption = (option, direction) => {
 			if (!vm.canMoveOption(option, direction)) return
 			const optionIsActive = isVisible(option.isVisible)
@@ -82,23 +106,28 @@ define([
 			const reorderedOptions = optionIsActive
 				? statusOptions.concat(inactiveOptions)
 				: activeOptions.concat(statusOptions)
-			const updates = reorderedOptions
-				.map((record, index) => ({ record, order: (index + 1) * 10 }))
-				.filter(update => Number(update.record.uiDisplayOrder) !== update.order)
-
-			vm.reordering = true
-			loadingDialog()
-			return $q.all(updates.map(update =>
-				psApiService.psApiCall('u_cdol_health_option', 'PUT', {
-					uidisplayorder: update.order
-				}, update.record.id)
-			))
-				.then(() => $rootScope.reloadHealthOptions(true))
-				.then(() => $rootScope.showHealthOptionsFeedback('Display order updated.'))
-				.finally(() => {
-					vm.reordering = false
-					closeLoading()
-				})
+			return saveOptionOrder(reorderedOptions, 'Display order updated.')
+		}
+		vm.canSortSelectedOptions = () => Boolean(
+			!vm.reordering && vm.appData.selectedCodeType && vm.allSelectedOptions.length > 1
+		)
+		vm.sortSelectedOptionsAlphabetically = () => {
+			if (!vm.canSortSelectedOptions()) return
+			const sortAlphabetically = options => options.slice().sort((left, right) => {
+				const leftLabel = String(left.displayValue || '').toLowerCase()
+				const rightLabel = String(right.displayValue || '').toLowerCase()
+				return leftLabel.localeCompare(rightLabel) || Number(left.id) - Number(right.id)
+			})
+			const activeOptions = sortAlphabetically(
+				vm.allSelectedOptions.filter(option => isVisible(option.isVisible))
+			)
+			const inactiveOptions = sortAlphabetically(
+				vm.allSelectedOptions.filter(option => !isVisible(option.isVisible))
+			)
+			return saveOptionOrder(
+				activeOptions.concat(inactiveOptions),
+				`${vm.selectedCodeSetName()} sorted alphabetically.`
+			)
 		}
 		$rootScope.reloadHealthOptions = skipLoadingDialog => {
 			if (!skipLoadingDialog) loadingDialog()
@@ -155,6 +184,7 @@ define([
 		vm.optionRecord = {}
 		vm.originalOptionRecord = null
 		vm.isEditMode = false
+		vm.similarOptionRecord = null
 
 		const hasValue = value => value !== undefined && value !== null && String(value).trim() !== ''
 		const findDuplicate = () => {
@@ -166,6 +196,16 @@ define([
 				return normalizeIdentity(option.displayValue) === displayIdentity ||
 					String(option.code || '').trim().toLowerCase() === codeIdentity
 			})
+		}
+		const findSimilarOption = () => {
+			if (vm.isEditMode || !hasValue(vm.optionRecord.displayValue)) return null
+			const categoryOptions = ($rootScope.healthOptionList || []).filter(option =>
+				option.codeType === vm.optionRecord.codeType
+			)
+			return healthOptionConfig.findSimilarOption(vm.optionRecord.displayValue, categoryOptions)
+		}
+		vm.updateSimilarOption = () => {
+			vm.similarOptionRecord = findSimilarOption()
 		}
 
 		vm.codeSetName = () => {
@@ -180,6 +220,7 @@ define([
 					vm.optionRecord.displayValue
 				)
 			}
+			vm.updateSimilarOption()
 			vm.checkReqFields()
 		}
 		vm.conversationCodeHasComma = () => vm.optionRecord.codeType === 'HEALTH_CONVERSATION' &&
@@ -246,6 +287,7 @@ define([
 					isVisible: true
 				}
 			}
+			vm.updateSimilarOption()
 			vm.checkReqFields()
 			openCallback()
 		}

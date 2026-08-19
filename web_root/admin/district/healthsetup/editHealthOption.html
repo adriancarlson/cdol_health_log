@@ -35,6 +35,11 @@
             width: 200px;
         }
 
+        .health-option-audit-field {
+            flex: 1 1 220px;
+            min-width: 0;
+        }
+
         .health-option-drawer-message {
             margin: 10px 14px;
         }
@@ -68,8 +73,36 @@
         </div>
     </div>
 
+    <div class="health-option-form-row" data-ng-if="vm.isEditMode">
+        <div class="health-option-form-field health-option-audit-field">
+            <label>Created By</label>
+            <span>{{vm.optionRecord.whoCreated || '—'}}</span>
+        </div>
+        <div class="health-option-form-field health-option-audit-field">
+            <label>Created On</label>
+            <span>{{vm.optionRecord.whenCreated ? (vm.optionRecord.whenCreated | date:'MM/dd/yyyy h:mm a') : '—'}}</span>
+        </div>
+    </div>
+
+    <div class="health-option-form-row" data-ng-if="vm.isEditMode">
+        <div class="health-option-form-field health-option-audit-field">
+            <label>Modified By</label>
+            <span>{{vm.optionRecord.whoModified || '—'}}</span>
+        </div>
+        <div class="health-option-form-field health-option-audit-field">
+            <label>Modified On</label>
+            <span>{{vm.optionRecord.whenModified ? (vm.optionRecord.whenModified | date:'MM/dd/yyyy h:mm a') : '—'}}</span>
+        </div>
+    </div>
+
     <div class="feedback-alert health-option-drawer-message" role="alert" data-ng-if="vm.duplicateOptionExists()">
         This code or display value already exists in {{vm.codeSetName()}}.
+    </div>
+    <div class="feedback-alert health-option-drawer-message" role="alert"
+        data-ng-if="!vm.duplicateOptionExists() && vm.similarOptionRecord">
+        A similar option already exists: <strong>{{vm.similarOptionRecord.displayValue}}</strong><span
+            data-ng-if="!vm.similarOptionRecord.isVisible || vm.similarOptionRecord.isVisible === '0'"> (Inactive)</span>.<br>
+        Please use the existing option unless a separate value is <strong><em><u>absolutely</u></em></strong> necessary.
     </div>
     <div class="feedback-alert health-option-drawer-message" role="alert" data-ng-if="vm.conversationCodeHasComma()">
         Conversation method codes cannot contain commas because commas separate multiple saved methods.

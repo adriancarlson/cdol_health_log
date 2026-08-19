@@ -33,7 +33,8 @@ define(function (require) {
 					visible: false,
 					value: '',
 					error: '',
-					saving: false
+					saving: false,
+					similarOption: null
 				}
 			}
 			const resetHealthOptionFields = () => {
@@ -272,6 +273,12 @@ define(function (require) {
 			$scope.normalizeHealthOptionInput = fieldName => {
 				const editor = $scope.healthOptionEditors[fieldName]
 				editor.value = healthOptionConfig.normalizeDisplayValue(editor.value)
+				$scope.updateHealthOptionSimilarity(fieldName)
+			}
+			$scope.updateHealthOptionSimilarity = fieldName => {
+				const editor = $scope.healthOptionEditors[fieldName]
+				const existingOptions = $rootScope.appData.healthOptionsAll[fieldName] || []
+				editor.similarOption = healthOptionConfig.findSimilarOption(editor.value, existingOptions)
 			}
 			$scope.cancelHealthOptionValue = fieldName => {
 				if (fieldName !== 'conversation_type') {
@@ -300,6 +307,7 @@ define(function (require) {
 				)
 				editor.value = displayValue
 				editor.error = ''
+				$scope.updateHealthOptionSimilarity(fieldName)
 
 				if (!displayValue) {
 					editor.error = 'Enter a reusable option to add.'

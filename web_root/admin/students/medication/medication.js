@@ -647,7 +647,8 @@ define([
 				visible: false,
 				value: '',
 				error: '',
-				saving: false
+				saving: false,
+				similarOption: null
 			}
 		}
 		const resetOptionEditors = () => {
@@ -697,6 +698,13 @@ define([
 		vm.normalizeMedicationOptionInput = fieldName => {
 			const editor = vm.optionEditors[fieldName]
 			editor.value = normalizeHealthOptionDisplayValue(editor.value)
+			vm.updateMedicationOptionSimilarity(fieldName)
+		}
+		vm.updateMedicationOptionSimilarity = fieldName => {
+			const editor = vm.optionEditors[fieldName]
+			const existingOptions = ($rootScope.appData.medicationOptions[fieldName] || [])
+				.filter(option => !option.isAddNew)
+			editor.similarOption = healthOptionConfig.findSimilarOption(editor.value, existingOptions)
 		}
 		vm.cancelMedicationOptionValue = fieldName => {
 			const record = medicationOptionRecord(fieldName)
@@ -712,6 +720,7 @@ define([
 			const code = buildHealthOptionCode(displayValue)
 			editor.value = displayValue
 			editor.error = ''
+			vm.updateMedicationOptionSimilarity(fieldName)
 
 			if (!displayValue) {
 				editor.error = 'Enter a value to add.'

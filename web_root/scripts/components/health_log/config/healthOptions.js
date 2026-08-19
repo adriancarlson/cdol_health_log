@@ -34,6 +34,28 @@ define(() => {
 			.replace(/\s+/g, ' ')
 		return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1)
 	}
+	const normalizeIdentity = value => normalizeDisplayValue(value).toLowerCase()
+	const similarityNoiseWords = [
+		'a', 'an', 'at', 'back', 'for', 'go', 'going', 'in', 'of', 'on',
+		'return', 'returned', 'returning', 'send', 'sent', 'the', 'to', 'went'
+	]
+	const normalizeSimilarityIdentity = value => {
+		const normalizedValue = normalizeIdentity(value)
+			.replace(/&/g, ' and ')
+			.replace(/[^a-z0-9\s]/g, ' ')
+			.replace(/\s+/g, ' ')
+			.trim()
+		if (!normalizedValue) return ''
+		const meaningfulWords = normalizedValue.split(' ').filter(word => similarityNoiseWords.indexOf(word) === -1)
+		return (meaningfulWords.length ? meaningfulWords : normalizedValue.split(' ')).join(' ')
+	}
+	const findSimilarOption = (value, options) => {
+		const similarityIdentity = normalizeSimilarityIdentity(value)
+		if (!similarityIdentity) return null
+		return (options || []).find(option =>
+			normalizeSimilarityIdentity(option && option.displayValue) === similarityIdentity
+		) || null
+	}
 	const buildCode = value => normalizeDisplayValue(value)
 		.toLowerCase()
 		.replace(/\s+/g, '')
@@ -48,7 +70,11 @@ define(() => {
 		description: fieldValue(record, 'description', 'description'),
 		displayValue: fieldValue(record, 'displayValue', 'displayvalue'),
 		isVisible: fieldValue(record, 'isVisible', 'isvisible'),
-		uiDisplayOrder: fieldValue(record, 'uiDisplayOrder', 'uidisplayorder')
+		uiDisplayOrder: fieldValue(record, 'uiDisplayOrder', 'uidisplayorder'),
+		whoCreated: fieldValue(record, 'whoCreated', 'whocreated'),
+		whenCreated: fieldValue(record, 'whenCreated', 'whencreated'),
+		whoModified: fieldValue(record, 'whoModified', 'whomodified'),
+		whenModified: fieldValue(record, 'whenModified', 'whenmodified')
 	})
 
 	return {
@@ -58,6 +84,8 @@ define(() => {
 		medicationTypes,
 		healthLogTypes,
 		normalizeDisplayValue,
+		normalizeSimilarityIdentity,
+		findSimilarOption,
 		buildCode,
 		buildCodeForType,
 		normalizeRecord
