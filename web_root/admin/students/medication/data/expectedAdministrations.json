@@ -1,0 +1,114 @@
+~[tlist_sql;
+    WITH medication_start AS (
+        SELECT
+            medication.id AS medication_id,
+            MIN(TRUNC(inventory.added_date)) AS first_inventory_date
+        FROM u_student_medication medication
+        INNER JOIN u_student_medication_inventory inventory
+            ON inventory.u_student_medication_id = medication.id
+        GROUP BY medication.id
+    ),
+    active_settings AS (
+        SELECT schoolid, daily_cutoff_time
+        FROM (
+            SELECT
+                setting.schoolid,
+                setting.daily_cutoff_time,
+                ROW_NUMBER() OVER (
+                    PARTITION BY setting.schoolid
+                    ORDER BY setting.id DESC
+                ) AS setting_rank
+            FROM u_cdol_med_admin_setting setting
+            WHERE setting.daily_cutoff_time IS NOT NULL
+        )
+        WHERE setting_rank = 1
+    ),
+    student_enrollment AS (
+        SELECT
+            students.dcid AS studentsdcid,
+            students.schoolid,
+            TRUNC(students.entrydate) AS entrydate,
+            TRUNC(students.exitdate) AS exitdate
+        FROM students
+        UNION ALL
+        SELECT
+            students.dcid AS studentsdcid,
+            reenrollments.schoolid,
+            TRUNC(reenrollments.entrydate) AS entrydate,
+            TRUNC(reenrollments.exitdate) AS exitdate
+        FROM students
+        INNER JOIN reenrollments
+            ON reenrollments.studentid = students.id
+    ),
+    expected_rows AS (
+        SELECT DISTINCT
+            medication.id AS medication_id,
+            medication.studentsdcid,
+            medication.schoolid,
+            medication.yearid,
+            medication.medication_name,
+            medication.dose_amount,
+            medication.dose_unit,
+            medication.inventory_unit,
+            medication.route,
+            medication.frequency,
+            TO_CHAR(calendar_day.date_value, 'YYYY-MM-DD') AS expected_date,
+            active_settings.daily_cutoff_time
+        FROM u_student_medication medication
+        INNER JOIN medication_start
+            ON medication_start.medication_id = medication.id
+        INNER JOIN active_settings
+            ON active_settings.schoolid = medication.schoolid
+        INNER JOIN terms
+            ON terms.schoolid = medication.schoolid
+            AND terms.yearid = medication.yearid
+            AND terms.isyearrec = 1
+        INNER JOIN calendar_day
+            ON calendar_day.schoolid = medication.schoolid
+            AND calendar_day.date_value BETWEEN terms.firstday AND terms.lastday
+        INNER JOIN student_enrollment
+            ON student_enrollment.studentsdcid = medication.studentsdcid
+            AND student_enrollment.schoolid = medication.schoolid
+            AND calendar_day.date_value >= student_enrollment.entrydate
+            AND calendar_day.date_value < student_enrollment.exitdate
+        WHERE medication.yearid = ~(gpv.yearID;num)
+            AND ~(gpv.curSchoolID;num) IN (0, medication.schoolid)
+            AND medication.studentsdcid = ~(gpv.curStudentDCID;num)
+            AND LOWER(TRIM(medication.frequency)) = 'daily'
+            AND TRUNC(calendar_day.date_value) > medication_start.first_inventory_date
+            AND NVL(calendar_day.insession, 0) = 1
+            AND TRUNC(calendar_day.date_value) - TRUNC(calendar_day.date_value, 'IW') BETWEEN 0 AND 4
+            AND (
+                TRUNC(calendar_day.date_value) < TRUNC(SYSDATE)
+                OR (
+                    TRUNC(calendar_day.date_value) = TRUNC(SYSDATE)
+                    AND active_settings.daily_cutoff_time <= ROUND((SYSDATE - TRUNC(SYSDATE)) * 86400)
+                )
+            )
+    )
+    SELECT COALESCE(
+        JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'medication_id' VALUE expected_rows.medication_id,
+                'studentsdcid' VALUE expected_rows.studentsdcid,
+                'schoolid' VALUE expected_rows.schoolid,
+                'yearid' VALUE expected_rows.yearid,
+                'medication_name' VALUE expected_rows.medication_name,
+                'dose_amount' VALUE expected_rows.dose_amount,
+                'dose_unit' VALUE expected_rows.dose_unit,
+                'inventory_unit' VALUE expected_rows.inventory_unit,
+                'route' VALUE expected_rows.route,
+                'frequency' VALUE expected_rows.frequency,
+                'expected_date' VALUE expected_rows.expected_date,
+                'daily_cutoff_time' VALUE expected_rows.daily_cutoff_time
+                NULL ON NULL
+                RETURNING CLOB
+            )
+            ORDER BY expected_rows.expected_date DESC,
+                expected_rows.medication_name
+            RETURNING CLOB
+        ),
+        TO_CLOB(CHR(91) || CHR(93))
+    ) AS json_result
+    FROM expected_rows
+;]~(data)[/tlist_sql]

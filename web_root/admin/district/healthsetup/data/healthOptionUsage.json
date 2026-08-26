@@ -65,6 +65,11 @@
 			FROM u_student_med_inv_txn txn
 			WHERE txn.transaction_type IS NOT NULL
 			UNION ALL
+			SELECT 'MED_NOT_GIVEN_REASON', LOWER(TRIM(txn.not_given_reason_code)),
+				'TRANSACTION_' || TO_CHAR(txn.id) || '_NOT_GIVEN_REASON'
+			FROM u_student_med_inv_txn txn
+			WHERE txn.not_given_reason_code IS NOT NULL
+			UNION ALL
 			SELECT 'HEALTH_COMPLAINT', LOWER(TRIM(health_log.complaint)),
 				'HEALTH_LOG_' || TO_CHAR(health_log.id) || '_COMPLAINT'
 			FROM u_cdol_health_log health_log

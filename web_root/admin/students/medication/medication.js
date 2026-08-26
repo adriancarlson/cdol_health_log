@@ -75,6 +75,25 @@ define([
 		normalizeInventoryTransactionType(transaction && transaction.transaction_type)
 	)
 	const roundedInventoryQuantity = value => Number(Number(value || 0).toFixed(10))
+	const normalizeDateKey = value => {
+		if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) {
+			return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`
+		}
+		const dateText = String(value || '').trim()
+		const isoMatch = dateText.match(/^(\d{4})-(\d{2})-(\d{2})/)
+		if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`
+		const usMatch = dateText.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+		if (usMatch) return `${usMatch[3]}-${usMatch[1].padStart(2, '0')}-${usMatch[2].padStart(2, '0')}`
+		return dateText
+	}
+	const secondsToTime12 = value => {
+		const totalSeconds = Number(value)
+		if (!Number.isFinite(totalSeconds)) return ''
+		const hours24 = Math.floor(totalSeconds / 3600) % 24
+		const minutes = Math.floor((totalSeconds % 3600) / 60)
+		const hours12 = hours24 % 12 || 12
+		return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${hours24 >= 12 ? 'PM' : 'AM'}`
+	}
 	const isActiveHealthOption = record => {
 		if (record.isVisible === false || record.isVisible === 0 || record.isVisible === '0') return false
 		return true
@@ -122,7 +141,8 @@ define([
 				inventory_unit: [],
 				route: [],
 				frequency: [],
-				removal_type: []
+				removal_type: [],
+				not_given_reason: []
 			},
 			medicationOptionsLoaded: false,
 			medicationOptionsLoading: false,
@@ -257,6 +277,8 @@ define([
 			if (transactionType === 'ADMINISTRATION') return 'Administration'
 			if (transactionType === 'ADMINISTRATION_CORRECTION') return 'Administration Correction'
 			if (transactionType === 'ADMINISTRATION_VOID') return 'Administration Entered in Error'
+			if (transactionType === 'NON_ADMINISTRATION') return 'Not Given'
+			if (transactionType === 'NON_ADMINISTRATION_CORRECTION') return 'Not-Given Correction'
 			return $rootScope.medicationOptionDisplayValue('removal_type', transactionType)
 		}
 		vm.beginTransactionDrawer = () => loadingDialog()
@@ -365,21 +387,30 @@ define([
 			})
 		}
 
-		const prepareAdministrationHistory = (medications, transactions) => {
+		const prepareAdministrationHistory = (medications, transactions, expectedAdministrations) => {
 			const medicationById = new Map((medications || []).map(medication => [Number(medication.medication_id), medication]))
 			const transactionRows = transactions || []
-			const correctionsByOriginal = new Map()
+			const administrationCorrectionsByOriginal = new Map()
+			const notGivenCorrectionsByOriginal = new Map()
+			const notGivenById = new Map()
 
-			transactionRows
-				.filter(transaction => ['ADMINISTRATION_CORRECTION', 'ADMINISTRATION_VOID'].includes(transaction.transaction_type))
-				.forEach(transaction => {
-					const originalTransactionId = Number(transaction.reversal_of_transaction_id)
-					if (!Number.isFinite(originalTransactionId) || originalTransactionId <= 0) return
-					if (!correctionsByOriginal.has(originalTransactionId)) correctionsByOriginal.set(originalTransactionId, [])
-					correctionsByOriginal.get(originalTransactionId).push(transaction)
-				})
+			transactionRows.forEach(transaction => {
+				const transactionId = Number(transaction.transaction_id)
+				const originalTransactionId = Number(transaction.reversal_of_transaction_id)
+				if (transaction.transaction_type === 'NON_ADMINISTRATION' && Number.isFinite(transactionId)) {
+					notGivenById.set(transactionId, transaction)
+				}
+				if (['ADMINISTRATION_CORRECTION', 'ADMINISTRATION_VOID'].includes(transaction.transaction_type) && originalTransactionId > 0) {
+					if (!administrationCorrectionsByOriginal.has(originalTransactionId)) administrationCorrectionsByOriginal.set(originalTransactionId, [])
+					administrationCorrectionsByOriginal.get(originalTransactionId).push(transaction)
+				}
+				if (transaction.transaction_type === 'NON_ADMINISTRATION_CORRECTION' && originalTransactionId > 0) {
+					if (!notGivenCorrectionsByOriginal.has(originalTransactionId)) notGivenCorrectionsByOriginal.set(originalTransactionId, [])
+					notGivenCorrectionsByOriginal.get(originalTransactionId).push(transaction)
+				}
+			})
 
-			return transactionRows
+			const administrationRows = transactionRows
 				.filter(transaction => transaction.transaction_type === 'ADMINISTRATION')
 				.map(transaction => {
 					const medication = medicationById.get(Number(transaction.medication_id)) || {}
@@ -393,13 +424,26 @@ define([
 						frequency: transaction.frequency || medication.frequency,
 						quantity_administered: Number(transaction.administration_quantity) || Math.abs(Number(transaction.quantity_change) || 0),
 						inventory_total_remaining: Number(medication.inventory_total_remaining) || 0,
+						is_given: true,
 						is_corrected: false,
 						is_entered_in_error: false,
+						status_label: 'Given',
 						correction_status_label: '',
 						correction_history: []
 					})
 
-					const correctionRows = (correctionsByOriginal.get(administration.root_transaction_id) || [])
+					const convertedNotGiven = notGivenById.get(Number(transaction.reversal_of_transaction_id))
+					if (convertedNotGiven) {
+						administration.correction_history.push({
+							status_label: 'Previously Not Given',
+							correction_date: transaction.correction_date || transaction.recorded_date,
+							correction_time: transaction.correction_time || transaction.recorded_time,
+							correction_user_name: transaction.correction_user_name || transaction.user_name,
+							correction_reason: transaction.correction_reason || convertedNotGiven.not_given_reason_label
+						})
+					}
+
+					const correctionRows = (administrationCorrectionsByOriginal.get(administration.root_transaction_id) || [])
 						.slice()
 						.sort((left, right) => Number(left.transaction_id) - Number(right.transaction_id))
 
@@ -420,6 +464,8 @@ define([
 
 						if (correction.transaction_type === 'ADMINISTRATION_VOID') {
 							administration.is_entered_in_error = true
+							administration.is_corrected = false
+							administration.status_label = 'Entered in Error'
 							administration.correction_status_label = 'Entered in Error'
 							return
 						}
@@ -437,10 +483,97 @@ define([
 						administration.frequency = correction.frequency || administration.frequency
 						administration.quantity_administered = Number(correction.administration_quantity) || administration.quantity_administered
 						administration.is_corrected = true
+						administration.is_entered_in_error = false
+						administration.status_label = 'Corrected'
 						administration.correction_status_label = 'Corrected'
 					})
 
 					return administration
+				})
+
+			const effectiveConvertedNotGivenIds = new Set(administrationRows
+				.filter(administration => !administration.is_entered_in_error && notGivenById.has(Number(administration.reversal_of_transaction_id)))
+				.map(administration => Number(administration.reversal_of_transaction_id)))
+
+			const notGivenRows = Array.from(notGivenById.entries())
+				.filter(([transactionId]) => !effectiveConvertedNotGivenIds.has(transactionId))
+				.map(([transactionId, transaction]) => {
+					const medication = medicationById.get(Number(transaction.medication_id)) || {}
+					const notGiven = Object.assign({}, transaction, {
+						root_transaction_id: transactionId,
+						medication_name: transaction.medication_name || medication.medication_name,
+						dose_amount: transaction.dose_amount || medication.dose_amount,
+						dose_unit: transaction.dose_unit || medication.dose_unit,
+						inventory_unit: transaction.inventory_unit || medication.inventory_unit,
+						route: transaction.route || medication.route,
+						frequency: transaction.frequency || medication.frequency,
+						inventory_total_remaining: Number(medication.inventory_total_remaining) || 0,
+						quantity_administered: null,
+						is_not_given: true,
+						status_label: 'Not Given',
+						correction_history: []
+					})
+
+					const correctionRows = (notGivenCorrectionsByOriginal.get(transactionId) || [])
+						.slice()
+						.sort((left, right) => Number(left.transaction_id) - Number(right.transaction_id))
+					correctionRows.forEach(correction => {
+						notGiven.correction_history.push({
+							status_label: 'Not-Given Reason Corrected',
+							correction_date: correction.correction_date,
+							correction_time: correction.correction_time,
+							correction_user_name: correction.correction_user_name,
+							correction_reason: correction.correction_reason
+						})
+						notGiven.not_given_reason_code = correction.not_given_reason_code || notGiven.not_given_reason_code
+						notGiven.not_given_reason_label = correction.not_given_reason_label || notGiven.not_given_reason_label
+						notGiven.notes = correction.notes
+						notGiven.is_corrected = true
+						notGiven.correction_status_label = 'Corrected'
+					})
+					return notGiven
+				})
+
+			const resolvedOccurrenceKeys = new Set()
+			administrationRows.forEach(row => {
+				if (!row.is_entered_in_error) resolvedOccurrenceKeys.add(`${Number(row.medication_id)}|${normalizeDateKey(row.event_date)}`)
+			})
+			notGivenRows.forEach(row => resolvedOccurrenceKeys.add(`${Number(row.medication_id)}|${normalizeDateKey(row.event_date)}`))
+
+			const expectedRowsByOccurrence = new Map()
+			;(expectedAdministrations || []).forEach(expected => {
+				const medicationId = Number(expected.medication_id)
+				const dateKey = normalizeDateKey(expected.expected_date)
+				const occurrenceKey = `${medicationId}|${dateKey}`
+				if (!medicationId || !dateKey || resolvedOccurrenceKeys.has(occurrenceKey) || expectedRowsByOccurrence.has(occurrenceKey)) return
+				const medication = medicationById.get(medicationId) || expected
+				expectedRowsByOccurrence.set(occurrenceKey, {
+					root_transaction_id: `expected-${medicationId}-${dateKey}`,
+					occurrence_key: occurrenceKey,
+					medication_id: medicationId,
+					schoolid: Number(expected.schoolid || medication.schoolid),
+					event_date: dateKey,
+					event_time: Number(expected.daily_cutoff_time),
+					daily_cutoff_time: Number(expected.daily_cutoff_time),
+					medication_name: medication.medication_name,
+					dose_amount: medication.dose_amount,
+					dose_unit: medication.dose_unit,
+					inventory_unit: medication.inventory_unit,
+					route: medication.route,
+					frequency: medication.frequency,
+					inventory_total_remaining: Number(medication.inventory_total_remaining) || 0,
+					quantity_administered: null,
+					is_action_required: true,
+					status_label: 'Action Required',
+					correction_history: []
+				})
+			})
+
+			return administrationRows.concat(notGivenRows, Array.from(expectedRowsByOccurrence.values()))
+				.sort((left, right) => {
+					const dateComparison = normalizeDateKey(right.event_date).localeCompare(normalizeDateKey(left.event_date))
+					if (dateComparison) return dateComparison
+					return Number(right.event_time || 0) - Number(left.event_time || 0)
 				})
 		}
 
@@ -486,14 +619,56 @@ define([
 			}).then(res => Array.isArray(res?.data) ? psUtils.htmlEntitiesToCharCode(res.data) : [])
 
 			const medicationOptionsPromise = loadMedicationOptions()
+			const settingsPromise = $rootScope.appData.context === 'administration'
+				? psApiService.psApiCall('u_cdol_med_admin_setting', 'GET', {})
+				: $q.when([])
+			const expectedAdministrationsPromise = $rootScope.appData.context === 'administration'
+				? $http({
+					url: './data/expectedAdministrations.json',
+					method: 'GET',
+					params: paramValues
+				}).then(res => {
+					const rows = parseJsonArray(res && res.data)
+					return psUtils.htmlEntitiesToCharCode(rows)
+				})
+				: $q.when([])
 
-			const dataPromise = $q.all([medicationPromise, transactionPromise, medicationOptionsPromise]).then(results => {
+			const dataPromise = $q.all([
+				medicationPromise,
+				transactionPromise,
+				medicationOptionsPromise,
+				settingsPromise,
+				expectedAdministrationsPromise
+			]).then(results => {
 				const medicationList = prepareMedicationData(results[0], results[1])
 				vm.medicationList = medicationList
 				vm.availableMedicationList = medicationList.filter(medication => Number(medication.inventory_total_remaining) > 0)
 				$rootScope.appData.availableMedicationList = vm.availableMedicationList
 				if ($rootScope.appData.context === 'administration') {
-					vm.administrationList = prepareAdministrationHistory(medicationList, results[1])
+					const settings = (Array.isArray(results[3]) ? results[3] : [results[3]]).filter(Boolean)
+					const settingBySchool = new Map()
+					settings
+						.slice()
+						.sort((left, right) => Number(left.id) - Number(right.id))
+						.forEach(setting => settingBySchool.set(Number(setting.schoolid), setting))
+					vm.appData.medicationAdministrationSettings = settings
+					const dailyMedicationSchoolIds = Array.from(new Set(medicationList
+						.filter(medication => String(medication.frequency || '').trim().toLowerCase() === 'daily')
+						.map(medication => Number(medication.schoolid))))
+					vm.missingCutoffSchoolIds = dailyMedicationSchoolIds.filter(schoolId => !settingBySchool.has(schoolId))
+					vm.hasMissingDailyCutoff = vm.missingCutoffSchoolIds.length > 0
+					const displaySetting = settingBySchool.get(Number(vm.appData.curSchoolId)) ||
+						(dailyMedicationSchoolIds.length === 1 ? settingBySchool.get(dailyMedicationSchoolIds[0]) : null)
+					vm.dailyCutoffLabel = displaySetting
+						? secondsToTime12(displaySetting.daily_cutoff_time)
+						: ''
+					vm.administrationList = prepareAdministrationHistory(medicationList, results[1], results[4])
+					vm.appData.activeNotGivenByOccurrence = vm.administrationList
+						.filter(row => row.is_not_given)
+						.reduce((rows, row) => {
+							rows[`${Number(row.medication_id)}|${normalizeDateKey(row.event_date)}`] = row
+							return rows
+						}, {})
 					vm.administrationMedicationOptions = prepareAdministrationMedicationOptions(vm.administrationList)
 				} else {
 					vm[`${$rootScope.appData.context}List`] = medicationList
@@ -514,6 +689,7 @@ define([
 			if ($rootScope.appData.context === 'administration') {
 				vm.administrationList = []
 				vm.administrationMedicationOptions = []
+				vm.appData.activeNotGivenByOccurrence = {}
 			}
 			$rootScope.loadData()
 		}
@@ -546,6 +722,8 @@ define([
 			if (transactionType === 'ADMINISTRATION') return 'Administration'
 			if (transactionType === 'ADMINISTRATION_CORRECTION') return 'Administration Correction'
 			if (transactionType === 'ADMINISTRATION_VOID') return 'Administration Entered in Error'
+			if (transactionType === 'NON_ADMINISTRATION') return 'Not Given'
+			if (transactionType === 'NON_ADMINISTRATION_CORRECTION') return 'Not-Given Correction'
 			return $rootScope.medicationOptionDisplayValue('removal_type', transactionType)
 		}
 		vm.transactionAffectsInventory = transaction => {
@@ -1327,23 +1505,39 @@ define([
 			closeDrawer(true)
 		}
 
-		const buildPayload = () => ({
-			u_student_medication_id: vm.medication.medication_id,
-			transaction_type: 'ADMINISTRATION',
-			quantity_change: -normalizedQuantity(),
-			event_date: vm.administrationRecord.event_date,
-			event_time: timeToSeconds(vm.administrationRecord.event_time),
-			users_dcid: vm.administrationRecord.users_dcid,
-			notes: String(vm.administrationRecord.notes || '').trim(),
-			medication_name: vm.medication.medication_name,
-			dose_amount: vm.medication.dose_amount,
-			dose_unit: vm.medication.dose_unit,
-			inventory_unit: vm.medication.inventory_unit,
-			route: vm.medication.route,
-			frequency: vm.medication.frequency,
-			administration_quantity: normalizedQuantity(),
-			dateKeys: ['_date']
-		})
+		const buildPayload = () => {
+			const occurrenceKey = `${Number(vm.medication.medication_id)}|${normalizeDateKey(vm.administrationRecord.event_date)}`
+			const existingNotGiven = ($rootScope.appData.activeNotGivenByOccurrence || {})[occurrenceKey]
+			const payload = {
+				u_student_medication_id: vm.medication.medication_id,
+				transaction_type: 'ADMINISTRATION',
+				quantity_change: -normalizedQuantity(),
+				event_date: vm.administrationRecord.event_date,
+				event_time: timeToSeconds(vm.administrationRecord.event_time),
+				users_dcid: vm.administrationRecord.users_dcid,
+				notes: String(vm.administrationRecord.notes || '').trim(),
+				medication_name: vm.medication.medication_name,
+				dose_amount: vm.medication.dose_amount,
+				dose_unit: vm.medication.dose_unit,
+				inventory_unit: vm.medication.inventory_unit,
+				route: vm.medication.route,
+				frequency: vm.medication.frequency,
+				administration_quantity: normalizedQuantity(),
+				recorded_date: $rootScope.appData.curDate,
+				recorded_time: timeToSeconds($rootScope.getCurrentTime()),
+				dateKeys: ['_date']
+			}
+			if (existingNotGiven) {
+				Object.assign(payload, {
+					reversal_of_transaction_id: existingNotGiven.root_transaction_id,
+					correction_date: $rootScope.appData.curDate,
+					correction_time: timeToSeconds($rootScope.getCurrentTime()),
+					correction_users_dcid: $rootScope.appData.curUserDcid,
+					correction_reason: 'Administration recorded after the day was documented as Not Given.'
+				})
+			}
+			return payload
+		}
 
 		const saveDrawer = closeDrawer => {
 			if (!vm.isFormValid()) {
@@ -1378,6 +1572,299 @@ define([
 		$scope.$emit('cancel.drawer.event', cancelDrawer)
 		$scope.$emit('save.drawer.event', saveDrawer)
 		resetRecord()
+	})
+
+	medicationModule.controller('expectedAdministrationController', function ($scope, $rootScope, psApiService) {
+		const vm = this
+		vm.administration = null
+		vm.isCorrection = false
+		vm.record = {}
+		vm.saveInProgress = false
+		vm.projectedInventoryStatus = null
+		vm.reasonEditor = {
+			visible: false,
+			value: '',
+			error: '',
+			saving: false,
+			similarOption: null
+		}
+
+		const formatDateForInput = value => {
+			const dateKey = normalizeDateKey(value)
+			const match = dateKey.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+			return match ? `${match[2]}/${match[3]}/${match[1]}` : value
+		}
+		const normalizeTime = value => {
+			const match = String(value || '').trim().toUpperCase().match(/^(0?[1-9]|1[0-2]):([0-5]\d)\s*(AM|PM)$/)
+			if (!match) return ''
+			return `${match[1].padStart(2, '0')}:${match[2]} ${match[3]}`
+		}
+		const timeToSeconds = value => {
+			const normalizedTime = normalizeTime(value)
+			if (!normalizedTime) return null
+			const hours = Number(normalizedTime.slice(0, 2)) % 12 + (normalizedTime.endsWith('PM') ? 12 : 0)
+			return hours * 3600 + Number(normalizedTime.slice(3, 5)) * 60
+		}
+		const normalizedQuantity = () => {
+			const quantityText = String(vm.record.quantity === undefined || vm.record.quantity === null ? '' : vm.record.quantity).trim()
+			if (!/^(?:\d+\.?\d*|\.\d+)$/.test(quantityText)) return null
+			const quantity = Number(quantityText)
+			return Number.isFinite(quantity) && quantity > 0 ? quantity : null
+		}
+		const activeReasonOptions = () => ($rootScope.appData.medicationOptions.not_given_reason || [])
+		const selectedReasonOption = () => activeReasonOptions().find(option =>
+			!option.isAddNew && String(option.modelValue) === String(vm.record.not_given_reason_code)
+		)
+		const resetReasonEditor = () => {
+			vm.reasonEditor = {
+				visible: false,
+				value: '',
+				error: '',
+				saving: false,
+				similarOption: null
+			}
+		}
+		const updateProjectedInventoryStatus = () => {
+			if (!vm.administration || vm.record.resolution_type !== 'given') {
+				vm.projectedInventoryStatus = null
+				return
+			}
+			const quantity = normalizedQuantity()
+			const available = Number(vm.administration.inventory_total_remaining) || 0
+			if (quantity === null || quantity > available) {
+				vm.projectedInventoryStatus = null
+				return
+			}
+			const projected = available - quantity
+			vm.projectedInventoryStatus = getInventoryStatus(projected, available)
+			if (vm.projectedInventoryStatus.inventory_status === 'OUT') {
+				vm.projectedInventoryStatus.inventory_status_label = 'Last of Inventory'
+			}
+		}
+
+		vm.quantityExceedsAvailable = () => {
+			const quantity = normalizedQuantity()
+			return quantity !== null && quantity > Number(vm.administration && vm.administration.inventory_total_remaining)
+		}
+		vm.onResolutionChanged = () => {
+			resetReasonEditor()
+			vm.checkReqFields()
+		}
+		vm.onReasonChanged = () => {
+			if (vm.record.not_given_reason_code === ADD_HEALTH_OPTION_VALUE) {
+				vm.record.not_given_reason_code = ''
+				resetReasonEditor()
+				vm.reasonEditor.visible = true
+			} else {
+				resetReasonEditor()
+			}
+			vm.checkReqFields()
+		}
+		vm.normalizeReasonInput = () => {
+			vm.reasonEditor.value = normalizeHealthOptionDisplayValue(vm.reasonEditor.value)
+			vm.updateReasonSimilarity()
+		}
+		vm.updateReasonSimilarity = () => {
+			vm.reasonEditor.similarOption = healthOptionConfig.findSimilarOption(
+				vm.reasonEditor.value,
+				activeReasonOptions().filter(option => !option.isAddNew)
+			)
+		}
+		vm.cancelReasonValue = () => {
+			vm.record.not_given_reason_code = ''
+			resetReasonEditor()
+			vm.checkReqFields()
+		}
+		vm.addReasonValue = () => {
+			const displayValue = normalizeHealthOptionDisplayValue(vm.reasonEditor.value)
+			const code = buildHealthOptionCode(displayValue)
+			vm.reasonEditor.value = displayValue
+			vm.reasonEditor.error = ''
+			vm.updateReasonSimilarity()
+
+			if (!displayValue) {
+				vm.reasonEditor.error = 'Enter a reason to add.'
+				return
+			}
+			if (displayValue.length > HEALTH_OPTION_DISPLAY_VALUE_MAX_LENGTH) {
+				vm.reasonEditor.error = `The reason must be ${HEALTH_OPTION_DISPLAY_VALUE_MAX_LENGTH} characters or fewer.`
+				return
+			}
+			if (!code || code.length > HEALTH_OPTION_CODE_MAX_LENGTH) {
+				vm.reasonEditor.error = `Shorten the reason so its code is ${HEALTH_OPTION_CODE_MAX_LENGTH} characters or fewer.`
+				return
+			}
+
+			const existingOptions = activeReasonOptions().filter(option => !option.isAddNew)
+			const existing = existingOptions.find(option =>
+				String(option.code).toLowerCase() === code ||
+				String(option.displayValue).toLowerCase() === displayValue.toLowerCase()
+			)
+			if (existing) {
+				vm.record.not_given_reason_code = existing.modelValue
+				resetReasonEditor()
+				vm.checkReqFields()
+				return
+			}
+
+			const displayOrder = existingOptions.reduce((highestOrder, option) => {
+				const order = Number(option.uiDisplayOrder)
+				return Number.isFinite(order) ? Math.max(highestOrder, order) : highestOrder
+			}, 0) + 10
+			const payload = buildHealthOptionPayload('not_given_reason', { code, displayValue }, displayOrder)
+			vm.reasonEditor.saving = true
+			vm.checkReqFields()
+			return psApiService.psApiCall('u_cdol_health_option', 'POST', payload)
+				.then(() => {
+					const option = $rootScope.addMedicationHealthOption('not_given_reason', payload)
+					vm.record.not_given_reason_code = option.modelValue
+					resetReasonEditor()
+				})
+				.catch(error => {
+					vm.reasonEditor.error = (error.data && error.data.message) ||
+						'PowerSchool could not add this reason. Try again or contact an administrator.'
+					vm.reasonEditor.saving = false
+				})
+				.finally(() => vm.checkReqFields())
+		}
+
+		const hasChangedNotGiven = () => {
+			if (!vm.isCorrection || vm.record.resolution_type === 'given') return true
+			return String(vm.record.not_given_reason_code || '') !== String(vm.administration.not_given_reason_code || '') ||
+				String(vm.record.notes || '').trim() !== String(vm.administration.notes || '').trim()
+		}
+		vm.isFormValid = () => {
+			if (!vm.administration || vm.saveInProgress || vm.reasonEditor.saving || vm.reasonEditor.visible) return false
+			if (vm.isCorrection && !String(vm.record.correction_reason || '').trim()) return false
+			if (vm.record.resolution_type === 'given') {
+				const quantity = normalizedQuantity()
+				return Boolean(
+					quantity !== null &&
+					quantity <= Number(vm.administration.inventory_total_remaining) &&
+					normalizeTime(vm.record.event_time) &&
+					vm.record.users_dcid
+				)
+			}
+			return vm.record.resolution_type === 'not_given' && Boolean(selectedReasonOption()) && hasChangedNotGiven()
+		}
+		vm.checkReqFields = () => {
+			updateProjectedInventoryStatus()
+			$scope.$emit(vm.isFormValid() ? 'drawer.enable.save.button' : 'drawer.disable.save.button')
+		}
+
+		const initializeRecord = administration => {
+			const notGiven = Boolean(administration && administration.is_not_given)
+			vm.record = {
+				resolution_type: notGiven ? 'not_given' : '',
+				quantity: '',
+				event_date: formatDateForInput(administration && administration.event_date),
+				event_time: $rootScope.getCurrentTime(),
+				users_dcid: $rootScope.appData.curUserDcid,
+				not_given_reason_code: notGiven ? administration.not_given_reason_code : '',
+				notes: notGiven ? String(administration.notes || '') : '',
+				correction_reason: ''
+			}
+			resetReasonEditor()
+		}
+		const openDrawer = (openCallBack, data) => {
+			const drawerData = (data && data.data) || {}
+			vm.administration = drawerData.notGiven || drawerData.expected || null
+			vm.isCorrection = Boolean(drawerData.notGiven)
+			vm.saveInProgress = false
+			initializeRecord(vm.administration)
+			vm.checkReqFields()
+			openCallBack()
+		}
+		const cancelDrawer = closeDrawer => {
+			vm.administration = null
+			vm.isCorrection = false
+			vm.saveInProgress = false
+			vm.record = {}
+			resetReasonEditor()
+			closeDrawer(true)
+		}
+
+		const snapshotFields = () => ({
+			medication_name: vm.administration.medication_name,
+			dose_amount: vm.administration.dose_amount,
+			dose_unit: vm.administration.dose_unit,
+			inventory_unit: vm.administration.inventory_unit,
+			route: vm.administration.route,
+			frequency: vm.administration.frequency
+		})
+		const auditFields = () => ({
+			recorded_date: $rootScope.appData.curDate,
+			recorded_time: timeToSeconds($rootScope.getCurrentTime())
+		})
+		const correctionFields = () => vm.isCorrection ? {
+			reversal_of_transaction_id: vm.administration.root_transaction_id,
+			correction_date: $rootScope.appData.curDate,
+			correction_time: timeToSeconds($rootScope.getCurrentTime()),
+			correction_users_dcid: $rootScope.appData.curUserDcid,
+			correction_reason: String(vm.record.correction_reason || '').trim()
+		} : {}
+		const buildPayload = () => {
+			const common = Object.assign({
+				u_student_medication_id: vm.administration.medication_id,
+				event_date: vm.record.event_date,
+				notes: String(vm.record.notes || '').trim(),
+				dateKeys: ['_date']
+			}, snapshotFields(), auditFields(), correctionFields())
+
+			if (vm.record.resolution_type === 'given') {
+				return Object.assign(common, {
+					transaction_type: 'ADMINISTRATION',
+					quantity_change: -normalizedQuantity(),
+					event_time: timeToSeconds(vm.record.event_time),
+					users_dcid: vm.record.users_dcid,
+					administration_quantity: normalizedQuantity()
+				})
+			}
+
+			const reason = selectedReasonOption()
+			return Object.assign(common, {
+				transaction_type: vm.isCorrection ? 'NON_ADMINISTRATION_CORRECTION' : 'NON_ADMINISTRATION',
+				quantity_change: 0,
+				event_time: Number(vm.administration.daily_cutoff_time || vm.administration.event_time),
+				users_dcid: $rootScope.appData.curUserDcid,
+				not_given_reason_code: reason.code,
+				not_given_reason_label: reason.displayValue
+			})
+		}
+		const saveDrawer = closeDrawer => {
+			if (!vm.isFormValid()) {
+				psAlert({
+					title: 'Incomplete Missed Administration',
+					message: vm.record.resolution_type === 'given'
+						? 'Enter a valid quantity, time, and staff member. The quantity cannot exceed available inventory.'
+						: 'Select a not-given reason and complete any required correction information.'
+				})
+				return
+			}
+
+			vm.saveInProgress = true
+			vm.checkReqFields()
+			loadingDialog()
+			const resolutionLabel = vm.record.resolution_type === 'given' ? 'administration' : 'not-given reason'
+			psApiService.psApiCall('u_student_med_inv_txn', 'POST', buildPayload())
+				.then(() => {
+					$rootScope.showAdministrationFeedback(`${vm.administration.medication_name} ${resolutionLabel} saved for ${vm.record.event_date}.`)
+					$rootScope.reloadData()
+					vm.administration = null
+					vm.record = {}
+					closeLoading()
+					closeDrawer(true)
+				})
+				.catch(() => {
+					vm.saveInProgress = false
+					vm.checkReqFields()
+					closeLoading()
+				})
+		}
+
+		$scope.$emit('open.drawer.event', openDrawer)
+		$scope.$emit('cancel.drawer.event', cancelDrawer)
+		$scope.$emit('save.drawer.event', saveDrawer)
 	})
 
 	medicationModule.controller('administrationCorrectionController', function ($scope, $rootScope, psApiService) {

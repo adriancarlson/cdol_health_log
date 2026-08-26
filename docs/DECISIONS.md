@@ -75,6 +75,23 @@
 71. `Added in Error` and `Wrong Number Entered` removals correct the effective quantity received rather than behaving like ordinary consumption. They remain append-only transactions, are allocated FIFO, never overwrite or delete the original lot, and cap the low-inventory replenishment baseline at the corrected effective quantity.
 72. The Inventory page uses the effective received quantity as the denominator and hides only lots fully eliminated by an inventory-entry correction. Ordinarily depleted lots remain visible, and a medication whose lots are all corrected away remains visible as Out of Inventory.
 73. Inventory-entry correction matching normalizes transaction codes so `ADDED_IN_ERROR`, `WRONG_NUMBER_ENTERED`, and the previously generated `wrongnumberentered` code remain compatible without migrating stored transactions.
+74. Daily expected administrations are calculated from PowerSchool's school calendar and student enrollment rather
+than pre-created as database rows. Only the controlled `daily` frequency code participates; weekends and days where
+the school's calendar is not in session are excluded.
+75. Gap calculation begins on the day after the medication's first inventory-added date. The current day does not
+become Action Required until the medication school's configured cutoff time.
+76. The cutoff is stored per school in `u_cdol_med_admin_setting`. Without an effective cutoff row, the Administration
+page warns the user and does not create speculative gaps for that school.
+77. An unresolved gap is a red calculated Action Required row. Resolving it as Given creates the normal inventory-
+deducting `ADMINISTRATION` transaction on the expected date. Resolving it as Not Given creates a zero-quantity
+`NON_ADMINISTRATION` transaction.
+78. Not Given reasons use `MED_NOT_GIVEN_REASON`. The approved initial import values are `Ill`, `Refused`, and `Absent`.
+The italicized `Other` item remains the standard add-new action and is never stored as a reason.
+79. Each Not Given transaction stores the stable reason code and the then-current reason label. This supports grouping
+future reports by identity while preserving historical wording after a district label change.
+80. Not Given corrections and conversions are append-only. A reason correction uses
+`NON_ADMINISTRATION_CORRECTION`; a later Given row links to the original Not Given transaction. Effective reports omit
+converted Not Given events but retain the original and linked audit rows.
 
 ## Superseded or rejected approaches
 

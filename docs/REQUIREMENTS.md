@@ -48,6 +48,7 @@ Dose unit, inventory unit, route, and frequency options must come from the share
 - `MED_ROUTE`
 - `MED_FREQUENCY`
 - `MED_REMOVAL_TYPE`
+- `MED_NOT_GIVEN_REASON`
 
 The table is shared with the Health Log complaint, destination, and conversation-type lists. Sport continues to use PowerSchool's native `Sports` Code Set. Removal rows store the stable code selected from `MED_REMOVAL_TYPE`; system-owned administration and correction transaction types remain application-controlled.
 
@@ -161,20 +162,40 @@ Each administration event should capture:
 - Notes
 - Inventory deduction
 
-Expected statuses include at least:
+Administration history includes these effective statuses:
 
 - Given
-- Missed
-- Refused
-- Absent
-- Sick or ill
-- Other
+- Not Given
+- Action Required for an unresolved expected daily administration
+- Corrected
+- Entered in Error
+
+For a medication whose controlled Frequency code is `daily`, the system must derive one expected administration for
+each weekday marked in session in the medication school's PowerSchool calendar. An expected day begins strictly after
+the medication's first inventory-added date and must also fall within the student's enrollment at that school and the
+medication's school year. Saturdays, Sundays, and calendar days not marked in session are excluded. PRN and all other
+frequencies do not create expected rows.
+
+Each school must configure a daily medication cutoff time. The current day becomes Action Required only after that
+cutoff; earlier qualifying days become Action Required immediately. A missing school cutoff must produce a visible
+configuration warning and must not create speculative Action Required rows.
+
+An unresolved expected row is calculated at page load and is not stored. It is displayed in red as a missed daily
+administration requiring action. The nurse resolves it by either recording the medication as Given for that expected
+school day or recording a Not Given reason.
 
 When a scheduled dose is not given:
 
-- A reason is required.
-- `Other` requires an explanatory note.
-- The system should highlight gaps or missed expected administrations.
+- A reason from `MED_NOT_GIVEN_REASON` is required.
+- The initial import values are `Ill`, `Refused`, and `Absent`.
+- `Other` is the shared italicized add-new action. It creates and selects a reusable reason; `Other` is never stored as
+  the transaction reason.
+- The transaction stores both the stable reason code and a label snapshot so future reports can group by stable code
+  while retaining the wording shown when the event was documented.
+- Notes remain available for event-specific details.
+- A later reason correction creates an append-only correction row rather than updating the original.
+- If the medication was actually given, converting a Not Given entry to Given creates a linked administration row,
+  deducts inventory, preserves the original Not Given audit record, and removes that Not Given from effective reports.
 
 For administration:
 
@@ -184,6 +205,8 @@ For administration:
 - The entered inventory quantity, including decimals such as `0.5 Pill`, becomes the actual inventory deduction; the medication definition does not store a fixed inventory quantity per dose.
 - The system should include a spelling and dose double-check step or confirmation prompt before committing sensitive medication details.
 - PRN administrations must be supported without creating false missed-dose alerts.
+- Backdated administrations created from an Action Required row use that expected school date and capture the actual
+  administration time and staff member.
 
 ## 7. Alerts and reminders
 
@@ -191,10 +214,8 @@ The project should support:
 
 - Low-inventory indicators
 - Alerts when expected daily administrations are missing
-- A configurable daily reminder time
+- A configurable daily cutoff time per school
 - Clear identification of records needing action
-
-The storage level for reminder settings, such as per user, school, or medication, remains an open design decision.
 
 ## 8. Auditability
 

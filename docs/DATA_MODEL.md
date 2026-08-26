@@ -2,7 +2,7 @@
 
 ## Repository schema
 
-The repository XML defines three medication-related tables plus one shared Health option table. Installation in PowerSchool must be validated after packaging.
+The repository XML defines four medication-related tables plus one shared Health option table. Installation in PowerSchool must be validated after packaging.
 
 ### `u_student_medication`
 
@@ -42,7 +42,7 @@ PowerSchool standalone table for shared, categorized choices used by CDOL Health
 
 PowerSchool supplies the record ID plus its standard created/modified user and timestamp columns automatically. Those audit fields are not declared in the extension XML and are not included in application POST or PUT payloads.
 
-Medication uses `MED_DOSE_UNIT`, `MED_INVENTORY_UNIT`, `MED_ROUTE`, `MED_FREQUENCY`, and `MED_REMOVAL_TYPE`. Health Logs use `HEALTH_COMPLAINT`, `HEALTH_DESTINATION`, and `HEALTH_CONVERSATION`. Sport remains connected to PowerSchool's native `Sports` Code Set; there is no custom `HEALTH_SPORT` category. The table begins empty; no initial option rows are created during installation or page loading. District administrators can import the approved CSV defaults and maintain the categories through the district CDOL Health Code Sets page. The workflow marks values Inactive instead of deleting them, so separate modifiable and deletable flags are not stored. The client suppresses duplicate code or display values within a category. New rows receive display order automatically; administrators reorder rows with Move up and Move down controls or alphabetize the selected code set while preserving separate Active and Inactive groups.
+Medication uses `MED_DOSE_UNIT`, `MED_INVENTORY_UNIT`, `MED_ROUTE`, `MED_FREQUENCY`, `MED_REMOVAL_TYPE`, and `MED_NOT_GIVEN_REASON`. Health Logs use `HEALTH_COMPLAINT`, `HEALTH_DESTINATION`, and `HEALTH_CONVERSATION`. Sport remains connected to PowerSchool's native `Sports` Code Set; there is no custom `HEALTH_SPORT` category. The table begins empty; no initial option rows are created during installation or page loading. District administrators can import the approved CSV defaults and maintain the categories through the district CDOL Health Code Sets page. The workflow marks values Inactive instead of deleting them, so separate modifiable and deletable flags are not stored. The client suppresses duplicate code or display values within a category. New rows receive display order automatically; administrators reorder rows with Move up and Move down controls or alphabetize the selected code set while preserving separate Active and Inactive groups.
 
 Medication option fields and new Health Log complaint and destination fields store one stable option `code`. New Health Log communication methods store one or more stable codes in the existing `conversation_type` field, separated by commas, such as `email,phone`. Display pages resolve known codes to the current `displayvalue`, allowing an administrator to improve a label later without changing saved identities.
 
@@ -93,6 +93,10 @@ Append-only standalone inventory transaction table. Each real-world removal crea
 | `correction_time` | Integer | Time the correction was recorded in PowerSchool seconds-from-midnight format |
 | `correction_users_dcid` | Integer | User who recorded the correction |
 | `correction_reason` | String(4000) | Required explanation for the correction |
+| `not_given_reason_code` | String(40) | Stable `MED_NOT_GIVEN_REASON` code stored for a Not Given event |
+| `not_given_reason_label` | String(100) | Reason-label snapshot retained for historical reporting |
+| `recorded_date` | Date | Date the administration or Not Given documentation was entered |
+| `recorded_time` | Integer | Time the documentation was entered in seconds from midnight |
 
 Removal rows use the common transaction fields. `ADDED_IN_ERROR` and `WRONG_NUMBER_ENTERED` are inventory-entry correction types; all other configurable removal types are ordinary deductions. A given dose uses `transaction_type = ADMINISTRATION`, stores the administration details in the snapshot fields, and records the administered inventory quantity as a negative `quantity_change`. One row therefore serves as both the administration audit record and the inventory deduction, avoiding a partial two-record save.
 
@@ -102,6 +106,29 @@ Administration corrections remain append-only:
 - `ADMINISTRATION_VOID` references the original administration, restores the current effective administered quantity with a positive `quantity_change`, and marks the original history entry Entered in Error.
 - The original `ADMINISTRATION` row is never updated or deleted.
 - Multiple corrections reference the original row and are applied in transaction-ID order. History presents the latest effective values once while preserving every underlying transaction.
+- `NON_ADMINISTRATION` records a resolved Not Given event with zero inventory change, the expected school date, the
+  school cutoff time, the documenting user, and both reason identity fields.
+- `NON_ADMINISTRATION_CORRECTION` references the original Not Given row, stores its corrected reason snapshot and
+  notes, and leaves inventory unchanged.
+- An `ADMINISTRATION` row may reference a `NON_ADMINISTRATION` row when a previously documented Not Given event is
+  converted to Given. Effective Not Given reporting excludes the converted event while the original audit row remains.
+
+### `u_cdol_med_admin_setting`
+
+PowerSchool standalone table. The effective row for a school is the highest record ID for that school.
+
+| Field | Type | Purpose |
+|---|---|---|
+| `schoolid` | Integer | School whose daily medication cutoff is being configured |
+| `daily_cutoff_time` | Integer | Seconds from midnight after which today's unresolved daily doses require action |
+
+### Calculated expected administrations
+
+Expected daily rows are derived at request time rather than persisted. The query joins the medication's school and
+year to `Terms`, `Calendar_Day`, and the student's current or historical enrollment. It includes only the `daily`
+frequency code, dates after the first inventory-added date, weekdays, and days where the school calendar reports
+`InSession = 1`. A past qualifying day, or today's qualifying day after the configured cutoff, remains Action Required
+until an effective Given or Not Given transaction exists for the same medication and date.
 
 ## Required relationship behavior
 
@@ -113,10 +140,16 @@ Administration corrections remain append-only:
 - Each inventory removal creates one transaction row rather than updating an original lot.
 - Saved inventory and administration transactions remain append-only. The nurse-facing workflow calls administration corrections `Corrected` or `Entered in Error`; it does not expose reversal terminology.
 
-## Initial administration model
+## Effective administration model
 
-The initial implementation records only doses that were actually administered. The administration page resolves original `ADMINISTRATION` rows together with any linked correction rows and shows one effective history row. Entered-in-error rows remain visible and clearly marked. Student and school-year context are derived through the linked medication definition.
+The administration page resolves original Given and Not Given rows together with their append-only corrections and
+shows one effective history row per stored event. It then merges unresolved calculated expected rows. Entered-in-error
+Given rows remain visible and clearly marked but do not resolve an expected daily occurrence. Student and school-year
+context are derived through the linked medication definition.
 
 The administration form collects the actual quantity used in the medication's inventory unit and shows the prescribed dose amount and unit in parentheses for reference. That entered quantity becomes the transaction's negative `quantity_change`.
 
-Expected schedules and missed-dose statuses and reasons remain later phases and may require additional schema after those workflows are approved.
+Because unresolved gaps are calculated, they do not appear in transaction-only reports until the nurse documents a
+reason. Documented Not Given transactions are directly reportable by student, medication, event date, stable reason
+code, label snapshot, and documenting user. Reports that need current effective results must apply the same correction
+and conversion relationships used by the administration page.

@@ -101,6 +101,16 @@
 			"parentHTMLID": "navDistrictManagementHealth",
 			"sortOrder": 350,
 			"pageURL": "/admin/district/healthsetup/cdolhealthoptions.html"
+		},
+		{
+			"htmlID": "cdol-medication-administration-settings",
+			"title": "Medication Administration Settings",
+			"version": "26.8.5.0",
+			"contextType": "main",
+			"districtLevelContext": 1,
+			"parentHTMLID": "navDataAndReportingDataManagement",
+			"sortOrder": 975,
+			"pageURL": "/admin/schoolsetup/medication/administration_settings.html"
 		}
 	]
 }

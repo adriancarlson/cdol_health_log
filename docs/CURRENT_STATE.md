@@ -50,6 +50,16 @@
 - New Health Log records use Active options from `HEALTH_COMPLAINT`, `HEALTH_DESTINATION`, and `HEALTH_CONVERSATION`. Complaint and Destination store one code and retain the italicized `Other` workflow. Communication Methods display active options as checkboxes, require at least one choice, and store selected codes comma-separated in `conversation_type`; `+ Add communication method` creates and immediately checks a reusable method. All three inline add controls display the shared advisory reuse warning for similar existing options while the user types. History resolves combined codes to comma-and-space-separated labels. Save remains disabled while any add is open, pending, or failed. Treatment remains free text, Sport continues to use PowerSchool's native `Sports` Code Set, and `HEALTH_SPORT` is not exposed by the custom manager.
 - Existing Health Log values are resolved by code or case-insensitive display value without bulk conversion. Active matches show the dropdown or checked communication methods while preserving the original stored value unless a selection is deliberately changed. A communication value is split on commas only when every segment resolves to a known method. Inactive matches and unmatched historical values display read-only and remain unchanged when another field is edited. History falls back to the original text when a value cannot be resolved.
 - `docs/u_cdol_health_option_defaults.csv` contains the approved Medication and Health Log import values, including the expanded complaint list and Recess. Conversation Type defaults are Email, Phone, and In Person. `docs/u_cdol_health_option_removal_type_defaults.csv` separately contains the five former hard-coded removal choices with their original stable transaction codes plus `WRONG_NUMBER_ENTERED`. The italicized `Other` UI action is not stored.
+- Daily medication gap detection is implemented for the controlled `daily` frequency code. It derives expected rows
+  from the medication school's year term, `Calendar_Day` in-session flag, weekday, student enrollment, first inventory
+  date, and per-school daily cutoff. A missing cutoff displays a configuration warning and suppresses calculated gaps.
+- Unresolved gaps appear as red Action Required rows in Administration history. The resolution drawer can create a
+  backdated Given transaction or a stored Not Given transaction with a required controlled reason.
+- `MED_NOT_GIVEN_REASON` is district-managed and uses the same italicized `Other` add-new action as other medication
+  code sets. The approved import defaults are Ill, Refused, and Absent; no Student-prefixed values or stored Other
+  value are included.
+- Not Given rows store stable reason codes and label snapshots. Reason corrections and later conversion to Given are
+  append-only, and the Administration page computes the effective state while retaining audit history.
 
 ## Prior implementation status reported in ChatGPT
 
@@ -67,9 +77,7 @@ The most recent recovered implementation summary stated:
 The available project files do not prove completion of:
 
 - Live PowerSchool installation and validation of the initial Medication Administration page and `ADMINISTRATION` transaction fields
-- Missed-dose workflow
-- Required missed-dose reasons
-- Gap detection
+- Live PowerSchool validation of the missed-dose calendar query, school cutoff settings, and Not Given workflows
 - Reminder scheduling
 - Controlled-medication reconciliation
 - Authorization enforcement

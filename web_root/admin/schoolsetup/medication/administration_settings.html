@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Medication Administration Settings</title>
+        ~[wc:commonscripts]
+        <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+        <link href="/images/css/print.css" rel="stylesheet" media="print">
+    </head>
+
+    <body>
+        ~[wc:admin_header_css]Medication Administration Settings~[wc:admin_navigation_css]
+
+        <div class="box-round" data-require-path="./administration_settings.js"
+            data-module-name="medicationSettingsModule" ng-controller="medicationSettingsController as settings"
+            data-bootstrap-local="true" ng-cur-school-id="~(curschoolid)" ng-cloak>
+            <div class="feedback-alert" role="alert" ng-if="settings.isDistrictOffice">
+                Select a school before configuring its medication administration cutoff time.
+            </div>
+
+            <div ng-if="!settings.isDistrictOffice">
+                <div class="feedback-confirm" role="status" aria-live="polite" ng-if="settings.feedbackMessage">
+                    {{settings.feedbackMessage}}
+                </div>
+                <div class="feedback-info">
+                    Daily medications become Action Required after this time on an in-session school day when no
+                    administration or not-given reason has been recorded.
+                </div>
+                <div class="fluid-form">
+                    <div>
+                        <label for="daily-medication-cutoff">Daily Medication Cutoff Time
+                            <span class="req"><em>*</em></span>
+                        </label>
+                        <input id="daily-medication-cutoff" class="timeEntry" type="text" size="8"
+                            ng-model="settings.cutoffTime" ng-change="settings.validate()" placeholder="03:00 PM">
+                    </div>
+                </div>
+                <div class="button-row">
+                    <button type="button" ng-click="settings.save()" ng-disabled="!settings.isValid || settings.saving">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        ~[wc:admin_footer_css]
+    </body>
+
+</html>
