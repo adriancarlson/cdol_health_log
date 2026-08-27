@@ -7,23 +7,19 @@
         <link href="/images/css/screen.css" rel="stylesheet" media="screen">
         <link href="/images/css/print.css" rel="stylesheet" media="print">
         <style>
-            #quick-sheet-actions {
-                margin: 0 0 10px;
-                text-align: right;
-            }
-
             .quick-sheet-person-name {
                 display: flex;
                 flex-wrap: wrap;
                 column-gap: 0.3em;
             }
 
-            .quick-sheet-person-name > span:empty {
+            .quick-sheet-person-name>span:empty {
                 display: none;
             }
 
             #quick-sheet-otc-list {
                 line-height: 1.5;
+                padding: 0 10px;
             }
 
             .quick-sheet-otc-medication+.quick-sheet-otc-medication::before {
@@ -34,148 +30,55 @@
                 display: none;
             }
 
-            .quick-sheet-print-only {
-                display: none;
-            }
-
-            @page {
-                size: letter portrait;
-                margin: 0.35in;
-            }
-
             @media print {
-
-                html,
-                body {
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    width: auto !important;
-                    font-size: 9pt;
-                    color: #000;
-                    background: #fff !important;
-                }
-
-                body>*:not(#emergency-quick-sheet) {
+                .quick-sheet-hide-before-title,
+                #quick-sheet-title-boundary {
                     display: none !important;
-                }
-
-                #emergency-quick-sheet {
-                    display: block !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                    border: 0 !important;
-                    box-shadow: none !important;
-                    background: #fff !important;
-                }
-
-                .quick-sheet-no-print {
-                    display: none !important;
-                }
-
-                .quick-sheet-print-only {
-                    display: block !important;
-                }
-
-                #quick-sheet-print-header {
-                    margin: 0 0 6px;
-                    padding: 0 0 4px;
-                    border-bottom: 2px solid #000;
-                }
-
-                #quick-sheet-print-header h1 {
-                    margin: 0;
-                    font-size: 16pt;
-                    line-height: 1.1;
-                }
-
-                #quick-sheet-print-header p {
-                    margin: 2px 0 0;
-                }
-
-                #emergency-quick-sheet .box-round {
-                    margin: 5px 0 0 !important;
-                    padding: 5px 7px !important;
-                    border: 1px solid #777 !important;
-                    border-radius: 0 !important;
-                    box-shadow: none !important;
-                    background: #fff !important;
-                }
-
-                #emergency-quick-sheet>.box-round {
-                    margin-top: 0 !important;
-                    padding: 0 !important;
-                    border: 0 !important;
-                }
-
-                #emergency-quick-sheet h4 {
-                    margin: 0 0 3px !important;
-                    padding: 0 0 2px !important;
-                    font-size: 10pt;
-                    line-height: 1.15;
-                    border-bottom: 1px solid #999;
-                }
-
-                #emergency-quick-sheet p {
-                    margin: 0 0 4px !important;
-                    line-height: 1.2;
-                }
-
-                #emergency-quick-sheet table {
-                    width: 100% !important;
-                    margin: 0 !important;
-                    border-collapse: collapse !important;
-                    table-layout: auto;
-                }
-
-                #emergency-quick-sheet th,
-                #emergency-quick-sheet td {
-                    padding: 2px 4px !important;
-                    font-size: 8.5pt !important;
-                    line-height: 1.15 !important;
-                    vertical-align: top !important;
-                    overflow-wrap: anywhere;
-                }
-
-                #emergency-quick-sheet tr {
-                    break-inside: avoid-page;
-                    page-break-inside: avoid;
                 }
 
                 #quick-sheet-demographics td:first-child {
-                    width: 23%;
+                    width: 25% !important;
                     white-space: nowrap;
                 }
 
-                #quick-sheet-otc-list {
-                    margin-bottom: 3px;
-                    line-height: 1.25;
+                #quick-sheet-contacts {
+                    width: 100% !important;
+                    table-layout: fixed;
                 }
 
-                #quick-sheet-prescription-table th {
-                    background: #ddd !important;
-                    color: #000 !important;
-                }
-
-                #quick-sheet-contacts th:nth-child(4),
-                #quick-sheet-contacts td:nth-child(4),
-                #quick-sheet-contacts th:nth-child(5),
-                #quick-sheet-contacts td:nth-child(5) {
-                    display: none !important;
+                #quick-sheet-contacts th,
+                #quick-sheet-contacts td {
+                    padding: 2px 4px !important;
+                    font-size: 8pt !important;
+                    line-height: 1.05 !important;
+                    vertical-align: top;
+                    overflow-wrap: normal;
+                    word-break: normal;
                 }
 
                 #quick-sheet-contacts th:nth-child(1),
                 #quick-sheet-contacts td:nth-child(1) {
-                    width: 42% !important;
+                    width: 34% !important;
                 }
 
                 #quick-sheet-contacts th:nth-child(2),
                 #quick-sheet-contacts td:nth-child(2) {
-                    width: 20% !important;
+                    width: 13% !important;
                 }
 
                 #quick-sheet-contacts th:nth-child(3),
                 #quick-sheet-contacts td:nth-child(3) {
-                    width: 38% !important;
+                    width: 15% !important;
+                }
+
+                #quick-sheet-contacts th:nth-child(4),
+                #quick-sheet-contacts td:nth-child(4) {
+                    width: 20% !important;
+                }
+
+                #quick-sheet-contacts th:nth-child(5),
+                #quick-sheet-contacts td:nth-child(5) {
+                    width: 18% !important;
                 }
             }
         </style>
@@ -184,164 +87,157 @@
     <body>
         ~[wc:admin_header_frame_css]
         ~[wc:admin_navigation_frame_css]
-        ~[wc:title_student_begin_css]Emergency Quick Sheet~[wc:title_student_end_css]
-        <div id="emergency-quick-sheet">
-            <div id="quick-sheet-actions" class="quick-sheet-no-print">
-                <button id="print-quick-sheet-button" type="button" onclick="window.print()">Print Quick Sheet</button>
-            </div>
-            <div id="quick-sheet-print-header" class="quick-sheet-print-only">
-                <h1>Emergency Quick Sheet</h1>
-                <p>~(schoolname)</p>
+        <div id="quick-sheet-title-boundary">
+            ~[wc:title_student_begin_css]Emergency Quick Sheet~[wc:title_student_end_css]
+        </div>
+        <div class="box-round">
+            <h4>Student Demographics</h4>
+            <table id="quick-sheet-demographics" class="linkDescList">
+                <tr id="quick-sheet-student-preferred-name">
+                    <td class="bold">
+                        Student Preferred Name
+                    </td>
+                    <td>
+                        <div class="quick-sheet-person-name">
+                            <span>~(first_name)</span>
+                            <span>~(middle_name)</span>
+                            <span>~(last_name)</span>
+                            <span>~([students.studentcorefields]PSCORE_LEGAL_SUFFIX)</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr id="quick-sheet-student-name">
+                    <td class="bold">
+                        Student Legal Name
+                    </td>
+                    <td>
+                        <div class="quick-sheet-person-name">
+                            <span>~([students.studentcorefields]PSCORE_LEGAL_FIRST_NAME)</span>
+                            <span>~([students.studentcorefields]PSCORE_LEGAL_MIDDLE_NAME)</span>
+                            <span>~([students.studentcorefields]PSCORE_LEGAL_LAST_NAME)</span>
+                            <span>~([students.studentcorefields]PSCORE_LEGAL_SUFFIX)</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr id="quick-sheet-student-birthdate">
+                    <td class="bold">
+                        Date of Birth
+                    </td>
+                    <td>
+                        ~(dob) <span>~(age)</span>
+                    </td>
+                </tr>
+                <tr id="quick-sheet-student-gender">
+                    <td class="bold">
+                        Gender
+                    </td>
+                    <td>
+                        ~(decode;~(gender);M;Male;F;Female;Not Specified)
+                    </td>
+                </tr>
+                <tr id="quick-sheet-student-address">
+                    <td class="bold">
+                        Address
+                    </td>
+                    <td>
+                        ~(street)<br> ~(city), ~(state) ~(zip)
+                    </td>
+                </tr>
+                <tr id="quick-sheet-student-allergies">
+                    <td class="bold">
+                        Allergies
+                    </td>
+                    <td>~(allergies;if.blank.then=None Listed)
+                    </td>
+                </tr>
+                ~[if#medical-alert.~(alert_Medical)#]
+                <tr id="quick-sheet-student-medical-alert">
+                    <td class="bold">
+                        Medical Alert
+                    </td>
+                    <td>
+                        ~(alert_Medical)
+                    </td>
+                </tr>
+                [/if#medical-alert]
+                ~[if#ihp.~([students.U_STUDENT_ADDITIONAL_INFO]IHP_DESCRIPTION)#]<tr id="quick-sheet-student-ihp-alert">
+                    <td class="bold">
+                        Individualized Health Plan
+                    </td>
+                    <td>
+                        ~([students.U_STUDENT_ADDITIONAL_INFO]IHP_DESCRIPTION)
+                    </td>
+                </tr>
+                [/if#ihp]
+            </table>
+            <div class="box-round">
+                <h4>OTC Medications</h4>
+                <div id="quick-sheet-otc-list">
+                    <p><strong>Permission to Administer:</strong><br />
+                        ~[if#acetaminophen.~([students.U_STUDENT_ADDITIONAL_INFO]acetaminophen)=1]<span
+                            class="quick-sheet-otc-medication">Acetaminophen <em><small>(ex.
+                                    Tylenol)</small></em></span>[/if#acetaminophen]
+                        ~[if#ibuprofen.~([students.U_STUDENT_ADDITIONAL_INFO]ibuprofen)=1]<span
+                            class="quick-sheet-otc-medication">Ibuprofen <em><small>(ex. Motrin or
+                                    Advil)</small></em></span>[/if#ibuprofen]
+                        ~[if#antihistamine.~([students.U_STUDENT_ADDITIONAL_INFO]antihistamine)=1]<span
+                            class="quick-sheet-otc-medication">Antihistamine <em><small>(ex. Benadryl, Zyrtec, or
+                                    Claritin)</small></em></span>[/if#antihistamine]
+                        ~[if#antacid.~([students.U_STUDENT_ADDITIONAL_INFO]antacid)=1]<span
+                            class="quick-sheet-otc-medication">Antacid <em><small>(ex.
+                                    TUMS)</small></em></span>[/if#antacid]
+                        ~[if#antibiotic.~([students.U_STUDENT_ADDITIONAL_INFO]antibiotic)=1]<span
+                            class="quick-sheet-otc-medication">Antibiotic ointment <em><small>(ex.
+                                    Neosporin)</small></em></span>[/if#antibiotic]
+                        ~[if#hydrocortisone.~([students.U_STUDENT_ADDITIONAL_INFO]hydrocortisone)=1]<span
+                            class="quick-sheet-otc-medication">Hydrocortisone cream</span>[/if#hydrocortisone]
+                        ~[if#coughdrop.~([students.U_STUDENT_ADDITIONAL_INFO]cough_drop)=1]<span
+                            class="quick-sheet-otc-medication">Cough drops or throat lozenges</span>[/if#coughdrop]
+                        <span class="quick-sheet-otc-none">None Listed</span>
+                    </p>
+                </div>
+                ~[if#adminportal.~[directory]=admin]
+                <h4>Prescription Medications</h4>
+                <table class="grid">
+                    <thead>
+                        <tr>
+                            <th>Medication</th>
+                            <th>Dosage / Units</th>
+                            <th>Frequency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ~[tlist_sql;
+                        SELECT u_fb_medications.name, u_fb_medications.dosage || ' ' ||
+                        u_fb_medications.dosage_units,
+                        u_fb_medications.frequency_taken
+                        FROM u_fb_medications
+                        WHERE u_fb_medications.studentsdcid = ~(rn)
+                        ;alternatecolor;nonemessage=
+                        <tr nodata>
+                            <td colspan="100%">No Records Found.</td>
+                        </tr>]
+                        <tr>
+                            <td>~(medication)</td>
+                            <td>~(dosage)</td>
+                            <td>~(frequency)</td>
+                        </tr>
+                        [/tlist_sql]
+                    </tbody>
+                </table>
+                [/if#adminportal]
             </div>
             <div class="box-round">
-                <h4>Student Demographics</h4>
-                <table id="quick-sheet-demographics" class="linkDescList">
-                    <tr id="quick-sheet-student-preferred-name">
-                        <td class="bold">
-                            Student Preferred Name
-                        </td>
-                        <td>
-                            <div class="quick-sheet-person-name">
-                                <span>~(first_name)</span>
-                                <span>~(middle_name)</span>
-                                <span>~(last_name)</span>
-                                <span>~([students.studentcorefields]PSCORE_LEGAL_SUFFIX)</span>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr id="quick-sheet-student-name">
-                        <td class="bold">
-                            Student Legal Name
-                        </td>
-                        <td>
-                            <div class="quick-sheet-person-name">
-                                <span>~([students.studentcorefields]PSCORE_LEGAL_FIRST_NAME)</span>
-                                <span>~([students.studentcorefields]PSCORE_LEGAL_MIDDLE_NAME)</span>
-                                <span>~([students.studentcorefields]PSCORE_LEGAL_LAST_NAME)</span>
-                                <span>~([students.studentcorefields]PSCORE_LEGAL_SUFFIX)</span>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr id="quick-sheet-student-birthdate">
-                        <td class="bold">
-                            Date of Birth
-                        </td>
-                        <td>
-                            ~(dob) <span>~(age)</span>
-                        </td>
-                    </tr>
-                    <tr id="quick-sheet-student-gender">
-                        <td class="bold">
-                            Gender
-                        </td>
-                        <td>
-                            ~(decode;~(gender);M;Male;F;Female;Not Specified)
-                        </td>
-                    </tr>
-                    <tr id="quick-sheet-student-address">
-                        <td class="bold">
-                            Address
-                        </td>
-                        <td>
-                            ~(street)<br> ~(city), ~(state) ~(zip)
-                        </td>
-                    </tr>
-                    <tr id="quick-sheet-student-allergies">
-                        <td class="bold">
-                            Allergies
-                        </td>
-                        <td>~(allergies;if.blank.then=None Listed)
-                        </td>
-                    </tr>
-                    ~[if#medical-alert.~(alert_Medical)#]
-                    <tr id="quick-sheet-student-medical-alert">
-                        <td class="bold">
-                            Medical Alert
-                        </td>
-                        <td>
-                            ~(alert_Medical)
-                        </td>
-                    </tr>
-                    [/if#medical-alert]
-                    ~[if#ihp.~([students.U_STUDENT_ADDITIONAL_INFO]IHP_DESCRIPTION)#]<tr
-                        id="quick-sheet-student-ihp-alert">
-                        <td class="bold">
-                            Individualized Health Plan
-                        </td>
-                        <td>
-                            ~([students.U_STUDENT_ADDITIONAL_INFO]IHP_DESCRIPTION)
-                        </td>
-                    </tr>
-                    [/if#ihp]
+                <h4>Contacts</h4>
+                <table id="quick-sheet-contacts" border="1" class="linkDescList">
+                    <tr>
+                        <th width="175">Name/Email</th>
+                        <th width="40">Relationship</th>
+                        <th width="25">Phones (Type)</th>
+                        <th width="60">Addresses</th>
+                        <th width="30">Flags</th>
+                    </tr>~(*powerquery;query=net.cdolinc.custom.dats.students.contacts;tableformat)
                 </table>
-                <div id="quick-sheet-medications" class="box-round">
-                    <h4>OTC Medications</h4>
-                    <div id="quick-sheet-otc-list">
-                        <p> ~[if#acetaminophen.~([students.U_STUDENT_ADDITIONAL_INFO]acetaminophen)=1]<span
-                                class="quick-sheet-otc-medication">Acetaminophen <em><small>(ex.
-                                        Tylenol)</small></em></span>[/if#acetaminophen]
-                            ~[if#ibuprofen.~([students.U_STUDENT_ADDITIONAL_INFO]ibuprofen)=1]<span
-                                class="quick-sheet-otc-medication">Ibuprofen <em><small>(ex. Motrin or
-                                        Advil)</small></em></span>[/if#ibuprofen]
-                            ~[if#antihistamine.~([students.U_STUDENT_ADDITIONAL_INFO]antihistamine)=1]<span
-                                class="quick-sheet-otc-medication">Antihistamine <em><small>(ex. Benadryl, Zyrtec, or
-                                        Claritin)</small></em></span>[/if#antihistamine]
-                            ~[if#antacid.~([students.U_STUDENT_ADDITIONAL_INFO]antacid)=1]<span
-                                class="quick-sheet-otc-medication">Antacid <em><small>(ex.
-                                        TUMS)</small></em></span>[/if#antacid]
-                            ~[if#antibiotic.~([students.U_STUDENT_ADDITIONAL_INFO]antibiotic)=1]<span
-                                class="quick-sheet-otc-medication">Antibiotic ointment <em><small>(ex.
-                                        Neosporin)</small></em></span>[/if#antibiotic]
-                            ~[if#hydrocortisone.~([students.U_STUDENT_ADDITIONAL_INFO]hydrocortisone)=1]<span
-                                class="quick-sheet-otc-medication">Hydrocortisone cream</span>[/if#hydrocortisone]
-                            ~[if#coughdrop.~([students.U_STUDENT_ADDITIONAL_INFO]cough_drop)=1]<span
-                                class="quick-sheet-otc-medication">Cough drops or throat lozenges</span>[/if#coughdrop]
-                            <span class="quick-sheet-otc-none">None Listed</span>
-                        </p>
-                    </div>
-                    ~[if#adminportal.~[directory]=admin]
-                    <h4>Prescription Medications</h4>
-                    <table id="quick-sheet-prescription-table" class="grid">
-                        <thead>
-                            <tr>
-                                <th>Medication</th>
-                                <th>Dosage / Units</th>
-                                <th>Frequency</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ~[tlist_sql;
-                            SELECT u_fb_medications.name, u_fb_medications.dosage || ' ' ||
-                            u_fb_medications.dosage_units,
-                            u_fb_medications.frequency_taken
-                            FROM u_fb_medications
-                            WHERE u_fb_medications.studentsdcid = ~(rn)
-                            ;alternatecolor;nonemessage=
-                            <tr nodata>
-                                <td colspan="100%">No Records Found.</td>
-                            </tr>]
-                            <tr>
-                                <td>~(medication)</td>
-                                <td>~(dosage)</td>
-                                <td>~(frequency)</td>
-                            </tr>
-                            [/tlist_sql]
-                        </tbody>
-                    </table>
-                    [/if#adminportal]
-                </div>
-                <div class="box-round">
-                    <h4>Contacts</h4>
-                    <table id="quick-sheet-contacts" border="1" class="linkDescList">
-                        <tr>
-                            <th width="175">Name/Email</th>
-                            <th width="40">Relationship</th>
-                            <th width="25">Phones (Type)</th>
-                            <th width="60">Addresses</th>
-                            <th width="30">Flags</th>
-                        </tr>~(*powerquery;query=net.cdolinc.custom.dats.students.contacts;tableformat)
-                    </table>
-                </div>
             </div>
         </div>
         <script>
@@ -349,6 +245,16 @@
                 const visibleNamePart = namePart.textContent.replace(/[\s\u00a0\u200b-\u200d\ufeff]/g, '')
                 if (!visibleNamePart) namePart.remove()
             })
+
+            let quickSheetTitleAncestor = document.getElementById('quick-sheet-title-boundary')
+            while (quickSheetTitleAncestor && quickSheetTitleAncestor !== document.body) {
+                let precedingElement = quickSheetTitleAncestor.previousElementSibling
+                while (precedingElement) {
+                    precedingElement.classList.add('quick-sheet-hide-before-title')
+                    precedingElement = precedingElement.previousElementSibling
+                }
+                quickSheetTitleAncestor = quickSheetTitleAncestor.parentElement
+            }
         </script>
         ~[wc:admin_footer_frame_css]
     </body>
