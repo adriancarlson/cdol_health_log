@@ -6,82 +6,7 @@
         ~[wc:commonscripts]
         <link href="/images/css/screen.css" rel="stylesheet" media="screen">
         <link href="/images/css/print.css" rel="stylesheet" media="print">
-        <style>
-            .quick-sheet-person-name {
-                display: flex;
-                flex-wrap: wrap;
-                column-gap: 0.3em;
-            }
-
-            .quick-sheet-person-name>span:empty {
-                display: none;
-            }
-
-            #quick-sheet-otc-list {
-                line-height: 1.5;
-                padding: 0 10px;
-            }
-
-            .quick-sheet-otc-medication+.quick-sheet-otc-medication::before {
-                content: "; ";
-            }
-
-            .quick-sheet-otc-medication~.quick-sheet-otc-none {
-                display: none;
-            }
-
-            @media print {
-                .quick-sheet-hide-before-title,
-                #quick-sheet-title-boundary {
-                    display: none !important;
-                }
-
-                #quick-sheet-demographics td:first-child {
-                    width: 25% !important;
-                    white-space: nowrap;
-                }
-
-                #quick-sheet-contacts {
-                    width: 100% !important;
-                    table-layout: fixed;
-                }
-
-                #quick-sheet-contacts th,
-                #quick-sheet-contacts td {
-                    padding: 2px 4px !important;
-                    font-size: 8pt !important;
-                    line-height: 1.05 !important;
-                    vertical-align: top;
-                    overflow-wrap: normal;
-                    word-break: normal;
-                }
-
-                #quick-sheet-contacts th:nth-child(1),
-                #quick-sheet-contacts td:nth-child(1) {
-                    width: 34% !important;
-                }
-
-                #quick-sheet-contacts th:nth-child(2),
-                #quick-sheet-contacts td:nth-child(2) {
-                    width: 13% !important;
-                }
-
-                #quick-sheet-contacts th:nth-child(3),
-                #quick-sheet-contacts td:nth-child(3) {
-                    width: 15% !important;
-                }
-
-                #quick-sheet-contacts th:nth-child(4),
-                #quick-sheet-contacts td:nth-child(4) {
-                    width: 20% !important;
-                }
-
-                #quick-sheet-contacts th:nth-child(5),
-                #quick-sheet-contacts td:nth-child(5) {
-                    width: 18% !important;
-                }
-            }
-        </style>
+        <link href="/images/css/cdol.css?~[time]" rel="stylesheet">
     </head>
 
     <body>
@@ -90,7 +15,7 @@
         <div id="quick-sheet-title-boundary">
             ~[wc:title_student_begin_css]Emergency Quick Sheet~[wc:title_student_end_css]
         </div>
-        <div class="box-round">
+        <div id="cdol-emergency-quick-sheet" class="box-round">
             <h4>Student Demographics</h4>
             <table id="quick-sheet-demographics" class="linkDescList">
                 <tr id="quick-sheet-student-preferred-name">
