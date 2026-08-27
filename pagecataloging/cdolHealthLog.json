@@ -1,6 +1,16 @@
 {
 	"pages": [
 		{
+			"htmlID": "cdol-health-quick-sheet",
+			"title": "Emergency Quick Sheet🔹",
+			"version": "26.8.6.0",
+			"contextType": "student",
+			"districtLevelContext": 0,
+			"parentHTMLID": "navStudentHealthProfile",
+			"sortOrder": 900,
+			"pageURL": "/admin/students/health/quick_sheet.html?frn=~(studentfrn)"
+		},
+		{
 			"htmlID": "cdol-health-log-header",
 			"title": "Health Logs",
 			"version": "0",
