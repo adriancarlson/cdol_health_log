@@ -1,6 +1,16 @@
 {
 	"pages": [
 		{
+			"htmlID": "cdol-health-quick-sheet",
+			"title": "Emergency Quick Sheet🔹",
+			"version": "26.8.7.0",
+			"contextType": "student",
+			"districtLevelContext": 0,
+			"parentHTMLID": "navStudentHealthProfile",
+			"sortOrder": 900,
+			"pageURL": "/admin/students/health/quick_sheet.html?frn=~(studentfrn)"
+		},
+		{
 			"htmlID": "cdol-health-log-header",
 			"title": "Health Logs",
 			"version": "0",
@@ -105,7 +115,7 @@
 		{
 			"htmlID": "cdol-medication-administration-settings",
 			"title": "Medication Administration Settings",
-			"version": "26.8.5.1",
+			"version": "26.8.7.0",
 			"contextType": "main",
 			"districtLevelContext": 1,
 			"parentHTMLID": "navDataAndReportingDataManagement",
