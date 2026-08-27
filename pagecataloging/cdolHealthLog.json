@@ -105,7 +105,7 @@
 		{
 			"htmlID": "cdol-medication-administration-settings",
 			"title": "Medication Administration Settings",
-			"version": "26.8.5.0",
+			"version": "26.8.5.1",
 			"contextType": "main",
 			"districtLevelContext": 1,
 			"parentHTMLID": "navDataAndReportingDataManagement",
