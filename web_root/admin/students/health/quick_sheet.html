@@ -75,23 +75,18 @@
                     <td>~(allergies;if.blank.then=None Listed)
                     </td>
                 </tr>
-                ~[if#medical-alert.~(alert_Medical)#]
+                <!-- QUICK_SHEET_TEST_VERSION_1 -->
+                ~[if#medicalAlert.~([Students]Alert_Medical;if.not.blank.then=1)=1]
                 <tr id="quick-sheet-student-medical-alert">
-                    <td class="bold">
-                        Medical Alert
-                    </td>
-                    <td>
-                        ~(alert_Medical)
-                    </td>
+                    <td class="bold">Medical Alert</td>
+                    <td>~([Students]Alert_Medical)</td>
                 </tr>
-                [/if#medical-alert]
-                ~[if#ihp.~([students.U_STUDENT_ADDITIONAL_INFO]IHP_DESCRIPTION)#]<tr id="quick-sheet-student-ihp-alert">
-                    <td class="bold">
-                        Individualized Health Plan
-                    </td>
-                    <td>
-                        ~([students.U_STUDENT_ADDITIONAL_INFO]IHP_DESCRIPTION)
-                    </td>
+                [/if#medicalAlert]
+
+                ~[if#ihp.~([students.U_STUDENT_ADDITIONAL_INFO]IHP_ALERT)=1]
+                <tr id="quick-sheet-student-ihp-alert">
+                    <td class="bold">Individualized Health Plan</td>
+                    <td>~([students.U_STUDENT_ADDITIONAL_INFO]IHP_DESCRIPTION)</td>
                 </tr>
                 [/if#ihp]
             </table>
@@ -121,7 +116,6 @@
                         <span class="quick-sheet-otc-none">None Listed</span>
                     </p>
                 </div>
-                ~[if#adminportal.~[directory]=admin]
                 <h4>Prescription Medications</h4>
                 <table class="grid">
                     <thead>
@@ -150,7 +144,6 @@
                         [/tlist_sql]
                     </tbody>
                 </table>
-                [/if#adminportal]
             </div>
             <div class="box-round">
                 <h4>Contacts</h4>
