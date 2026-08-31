@@ -105,7 +105,7 @@ Existing Health Log records must preserve their stored values without migration 
 
 The Health Log page receives GET and POST access to `u_cdol_health_option`; option editing, activation, inactivation, and reordering remain district-admin functions. PowerSchool permission mappings authorize access to the shared table route and cannot restrict POST access to individual `codetype` categories.
 
-The approved Medication and Health Log import defaults are maintained in `docs/u_cdol_health_option_defaults.csv`. The existing Medication Removal Type values are maintained separately in `docs/u_cdol_health_option_removal_type_defaults.csv` so they can be imported when the configurable dropdown is introduced. The UI's italicized `Other` action is not a stored option; the removal template retains the existing `OTHER_REMOVAL` audit code and its `Other Removal` label for backward compatibility.
+The approved Medication and Health Log import defaults are maintained in `docs/u_cdol_health_option_defaults.csv`. The existing Medication Removal Type values are maintained separately in `docs/u_cdol_health_option_removal_type_defaults.csv` so they can be imported when the configurable dropdown is introduced. The initial Not Given reasons are also available separately in `docs/u_cdol_health_option_not_given_reason_defaults.csv` for focused test-server imports. The UI's italicized `Other` action is not a stored option; the removal template retains the existing `OTHER_REMOVAL` audit code and its `Other Removal` label for backward compatibility.
 
 ## 5. Inventory
 

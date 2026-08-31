@@ -7,6 +7,7 @@ define(function (require) {
 		'formatService',
 		function ($http, $q, formatService) {
 			let resData
+			const schemaPageSize = 100
 			const unwrapSchemaGetResponse = (responseData, tableName) => {
 				if (!responseData) return []
 				if (responseData.tables && responseData.tables[tableName] !== undefined) {
@@ -51,6 +52,7 @@ define(function (require) {
 				psApiCall: (tableName, method, payload, recId) => {
 					let deferredResponse = $q.defer()
 					tableName = tableName.toLowerCase()
+					const loadAllPages = method === 'GET' && Boolean(payload && payload.loadAllPages)
 					let path = `/ws/schema/table/${tableName}`
 					let url = `${path}${recId ? `/${recId}` : ''}`
 					let headers = {
@@ -64,6 +66,7 @@ define(function (require) {
 					}
 					// copying payload using spread, to keep original payload object in tact. apiPayload is what will be submitted with any API call below.
 					let apiPayload = { ...payload }
+					delete apiPayload.loadAllPages
 					// Unique Headers
 					switch (method) {
 						//Create
@@ -101,9 +104,49 @@ define(function (require) {
 						//READ
 						case 'GET':
 							httpObject['params'] = {
-								projection: '*'
+								projection: '*',
+								pagesize: schemaPageSize
 							}
 							break
+					}
+
+					if (method === 'GET') {
+						const loadPage = page => {
+							const pageRequest = Object.assign({}, httpObject, {
+								params: Object.assign({}, httpObject.params, { page })
+							})
+							return $http(pageRequest).then(res => {
+								const pageData = unwrapSchemaGetResponse(res.data, tableName)
+								const pageRecords = Array.isArray(pageData) ? pageData : (pageData ? [pageData] : [])
+								if (pageRecords.length < schemaPageSize) return pageRecords
+								return loadPage(page + 1).then(nextPageRecords => pageRecords.concat(nextPageRecords))
+							})
+						}
+
+						const recordsRequest = loadAllPages
+							? loadPage(1)
+							: $http(httpObject).then(res => {
+								const responseData = unwrapSchemaGetResponse(res.data, tableName)
+								return Array.isArray(responseData) ? responseData : (responseData ? [responseData] : [])
+							})
+
+						recordsRequest.then(
+							records => {
+								resData = records
+								if (apiPayload.dateKeys) {
+									resData = formatService.objIterator(resData, apiPayload.dateKeys, 'formatDateFromApi')
+								}
+								if (apiPayload.checkBoxKeys) {
+									resData = formatService.objIterator(resData, apiPayload.checkBoxKeys, 'formatChecksFromApi')
+								}
+								deferredResponse.resolve(resData)
+							},
+							res => {
+								psAlert({ message: `There was an error ${method}ing the data to ${tableName}`, title: `${method} Error` })
+								deferredResponse.reject(res)
+							}
+						)
+						return deferredResponse.promise
 					}
 
 					$http(httpObject).then(
@@ -125,16 +168,6 @@ define(function (require) {
 									deferredResponse.resolve(records)
 									break
 								}
-								case 'GET':
-									resData = unwrapSchemaGetResponse(res.data, tableName)
-									if (apiPayload.dateKeys) {
-										resData = formatService.objIterator(resData, apiPayload.dateKeys, 'formatDateFromApi')
-									}
-									if (apiPayload.checkBoxKeys) {
-										resData = formatService.objIterator(resData, apiPayload.checkBoxKeys, 'formatChecksFromApi')
-									}
-									deferredResponse.resolve(resData)
-									break
 								case 'DELETE':
 									deferredResponse.resolve(res)
 									break

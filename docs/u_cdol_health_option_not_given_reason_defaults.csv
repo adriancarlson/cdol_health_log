@@ -1,0 +1,4 @@
+u_cdol_health_option.codetype,u_cdol_health_option.code,u_cdol_health_option.displayvalue,u_cdol_health_option.description,u_cdol_health_option.isvisible,u_cdol_health_option.uidisplayorder
+MED_NOT_GIVEN_REASON,ill,Ill,Ill,1,10
+MED_NOT_GIVEN_REASON,refused,Refused,Refused,1,20
+MED_NOT_GIVEN_REASON,absent,Absent,Absent,1,30

@@ -217,7 +217,7 @@ define([
 			vm.appData.medicationOptionsLoading = true
 			vm.appData.medicationOptionLoadError = ''
 
-			return psApiService.psApiCall('u_cdol_health_option', 'GET', {})
+			return psApiService.psApiCall('u_cdol_health_option', 'GET', { loadAllPages: true })
 				.then(records => (Array.isArray(records) ? records : (records ? [records] : []))
 					.map(normalizeHealthOptionRecord))
 				.then(records => {
