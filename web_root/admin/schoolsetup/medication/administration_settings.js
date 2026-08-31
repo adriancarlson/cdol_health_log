@@ -36,15 +36,21 @@ define([
 		vm.cutoffTime = ''
 		vm.isValid = false
 		vm.saving = false
+		vm.loaded = false
+		vm.loadError = ''
 		vm.feedbackMessage = ''
 
 		vm.validate = () => {
 			vm.cutoffTime = String(vm.cutoffTime || '')
-			vm.isValid = !vm.isDistrictOffice && timeToSeconds(vm.cutoffTime) !== null && !vm.saving
+			vm.isValid = vm.loaded && !vm.isDistrictOffice && !vm.loadError &&
+				timeToSeconds(vm.cutoffTime) !== null && !vm.saving
 		}
 
 		const load = () => {
-			if (vm.isDistrictOffice) return
+			if (vm.isDistrictOffice) {
+				vm.loaded = true
+				return
+			}
 			loadingDialog()
 			psApiService.psApiCall('u_cdol_med_admin_setting', 'GET', {})
 				.then(records => {
@@ -56,9 +62,15 @@ define([
 						vm.settingId = Number(setting.id)
 						vm.cutoffTime = secondsToTime(setting.daily_cutoff_time)
 					}
-					vm.validate()
 				})
-				.finally(() => closeLoading())
+				.catch(() => {
+					vm.loadError = 'The current cutoff setting could not be loaded. Try again or contact an administrator.'
+				})
+				.finally(() => {
+					vm.loaded = true
+					vm.validate()
+					closeLoading()
+				})
 		}
 
 		vm.save = () => {
