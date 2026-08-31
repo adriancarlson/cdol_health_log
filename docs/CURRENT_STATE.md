@@ -55,8 +55,13 @@
 - Daily medication gap detection is implemented for the controlled `daily` frequency code. It derives expected rows
   from the medication school's year term, `Calendar_Day` in-session flag, weekday, student enrollment, first inventory
   date, and per-school daily cutoff. A missing cutoff displays a configuration warning and suppresses calculated gaps.
-- Unresolved gaps appear as red Action Required rows in Administration history. The resolution drawer can create a
-  backdated Given transaction or a stored Not Given transaction with a required controlled reason.
+- Unresolved gaps appear as red Action Required rows in Administration history. The weekday appears with the date,
+  the Status column shows a `Missed` pill, and the Action Required resolution button is in the Actions column. The
+  resolution drawer can create a backdated Given transaction or a stored Not Given transaction with a required
+  controlled reason. Not Given rows use one `Not Given: reason` status pill while event notes remain in the Notes
+  column. Correction-status pills are not repeated in the Medication column. Missed uses the light-red status style,
+  Entered in Error uses the stronger dark-red style, and Corrected uses a light-blue feedback-note style across the
+  entire row and its status pill.
 - `MED_NOT_GIVEN_REASON` is district-managed and uses the same italicized `Other` add-new action as other medication
   code sets. The approved import defaults are Ill, Refused, and Absent; no Student-prefixed values or stored Other
   value are included.
