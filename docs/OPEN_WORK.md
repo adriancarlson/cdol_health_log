@@ -16,6 +16,10 @@
 11. Add automated tests and PowerSchool plugin installation validation.
 12. Install and validate the append-only Corrected and Entered-in-Error administration workflows, including inventory deltas, audit metadata, repeated corrections, and action locking after void.
 13. Install and validate inventory-entry corrections with both `ADDED_IN_ERROR` and the existing/new Wrong Number Entered code forms, including partial corrections, fully hidden corrected lots, adjusted denominators, and preserved Inventory Activity history.
+14. Install Health Log 26.8.7.14 and CDOL CSS 26.8.0.3 and validate the school-level
+    header counter using `MISSED_MEDICATION_HEADER.md`, including live Oracle
+    execution/performance, permission-denied direct requests, cutoff changes,
+    classic/PDS navigation, and no District Office icon.
 
 ## Deployment cleanup
 
@@ -34,6 +38,9 @@ These should be resolved explicitly before Codex hard-codes behavior:
 - Should a future report include unresolved calculated gaps, stored effective Not Given events, or separate views for both?
 - How should medication discontinuation be represented so a daily definition no longer creates future expected rows?
 - Which PowerSchool security groups or roles have access?
+- Confirm whether view-only Medication Administration users should also receive
+  the header counter. The initial implementation conservatively requires the
+  existing page's modify permission; it does not create a new role grant.
 - How are controlled-medication counts reconciled?
 - Does each administration need a second-person verification option?
 - Should medication returned after parent pickup create a newly counted lot? Current recommendation: yes.

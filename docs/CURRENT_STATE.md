@@ -68,6 +68,21 @@
 - Not Given rows store stable reason codes and label snapshots. Reason corrections and later conversion to Given are
   append-only, and the Administration page computes the effective state while retaining audit history.
 
+## School-level header counter
+
+The school-level header counter is implemented in version 26.8.7.14. It counts
+distinct students with unresolved daily administrations using the existing
+calendar/cutoff/enrollment and effective transaction rules. It uses the selected
+school/year, is absent at District Office, has no report link yet, and reuses
+Medication Administration modify permission in both the footer and endpoint.
+The matching shared badge stylesheet is supplied by CDOL CSS 26.8.0.3, with a
+native-height icon container and a circular single-digit badge. Local
+SQL-behavior, student-reducer parity, and browser fixture checks pass; live
+PowerSchool authorization, Oracle execution, and toolbar integration still need
+test-server validation. See `MISSED_MEDICATION_HEADER.md`.
+The count now loads once per page, matching Enrollment Express; no timer, focus,
+visibility, or back/forward-cache refresh is registered.
+
 ## Prior implementation status reported in ChatGPT
 
 The most recent recovered implementation summary stated:

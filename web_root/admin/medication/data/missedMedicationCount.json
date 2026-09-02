@@ -1,0 +1,111 @@
+~[if#medicationCountAccess.security.pagemod=/admin/students/medication/administration.html]
+~[tlist_sql;
+    WITH scoped_medications AS (
+        SELECT medication.id, medication.studentsdcid, medication.schoolid, medication.yearid
+        FROM u_student_medication medication
+        WHERE medication.schoolid = ~(curschoolid)
+            AND medication.schoolid > 0
+            AND medication.yearid = ~(curyearid)
+            AND LOWER(TRIM(medication.frequency)) = 'daily'
+    ),
+    medication_start AS (
+        SELECT medication.id AS medication_id,
+            MIN(TRUNC(inventory.added_date)) AS first_inventory_date
+        FROM scoped_medications medication
+        INNER JOIN u_student_medication_inventory inventory
+            ON inventory.u_student_medication_id = medication.id
+        GROUP BY medication.id
+    ),
+    active_settings AS (
+        SELECT schoolid, daily_cutoff_time
+        FROM (
+            SELECT setting.schoolid, setting.daily_cutoff_time,
+                ROW_NUMBER() OVER (PARTITION BY setting.schoolid ORDER BY setting.id DESC) AS setting_rank
+            FROM u_cdol_med_admin_setting setting
+            WHERE setting.daily_cutoff_time IS NOT NULL
+        )
+        WHERE setting_rank = 1
+    ),
+    student_enrollment AS (
+        SELECT students.dcid AS studentsdcid, students.schoolid,
+            TRUNC(students.entrydate) AS entrydate, TRUNC(students.exitdate) AS exitdate
+        FROM students
+        UNION ALL
+        SELECT students.dcid AS studentsdcid, reenrollments.schoolid,
+            TRUNC(reenrollments.entrydate) AS entrydate, TRUNC(reenrollments.exitdate) AS exitdate
+        FROM students
+        INNER JOIN reenrollments ON reenrollments.studentid = students.id
+    ),
+    expected_rows AS (
+        SELECT DISTINCT medication.id AS medication_id, medication.studentsdcid,
+            TRUNC(calendar_day.date_value) AS expected_date
+        FROM scoped_medications medication
+        INNER JOIN medication_start ON medication_start.medication_id = medication.id
+        INNER JOIN active_settings ON active_settings.schoolid = medication.schoolid
+        INNER JOIN terms ON terms.schoolid = medication.schoolid
+            AND terms.yearid = medication.yearid AND terms.isyearrec = 1
+        INNER JOIN calendar_day ON calendar_day.schoolid = medication.schoolid
+            AND calendar_day.date_value BETWEEN terms.firstday AND terms.lastday
+        INNER JOIN student_enrollment ON student_enrollment.studentsdcid = medication.studentsdcid
+            AND student_enrollment.schoolid = medication.schoolid
+            AND calendar_day.date_value >= student_enrollment.entrydate
+            AND calendar_day.date_value < student_enrollment.exitdate
+        WHERE TRUNC(calendar_day.date_value) > medication_start.first_inventory_date
+            AND NVL(calendar_day.insession, 0) = 1
+            AND TRUNC(calendar_day.date_value) - TRUNC(calendar_day.date_value, 'IW') BETWEEN 0 AND 4
+            AND (
+                TRUNC(calendar_day.date_value) < TRUNC(SYSDATE)
+                OR (
+                    TRUNC(calendar_day.date_value) = TRUNC(SYSDATE)
+                    AND active_settings.daily_cutoff_time <= ROUND((SYSDATE - TRUNC(SYSDATE)) * 86400)
+                )
+            )
+    ),
+    scoped_transactions AS (
+        SELECT txn.id, txn.u_student_medication_id AS medication_id,
+            txn.transaction_type, txn.event_date, txn.reversal_of_transaction_id
+        FROM u_student_med_inv_txn txn
+        INNER JOIN scoped_medications medication ON medication.id = txn.u_student_medication_id
+    ),
+    ranked_given_corrections AS (
+        SELECT txn.*,
+            ROW_NUMBER() OVER (
+                PARTITION BY txn.reversal_of_transaction_id ORDER BY txn.id DESC
+            ) AS correction_rank
+        FROM scoped_transactions txn
+        WHERE txn.transaction_type IN ('ADMINISTRATION_CORRECTION', 'ADMINISTRATION_VOID')
+    ),
+    effective_given AS (
+        SELECT original.medication_id, original.reversal_of_transaction_id,
+            TRUNC(CASE WHEN correction.id IS NOT NULL THEN correction.event_date ELSE original.event_date END) AS event_date
+        FROM scoped_transactions original
+        LEFT JOIN ranked_given_corrections correction
+            ON correction.reversal_of_transaction_id = original.id AND correction.correction_rank = 1
+        WHERE original.transaction_type = 'ADMINISTRATION'
+            AND (correction.id IS NULL OR correction.transaction_type = 'ADMINISTRATION_CORRECTION')
+    ),
+    resolved_occurrences AS (
+        SELECT medication_id, event_date FROM effective_given
+        UNION ALL
+        SELECT not_given.medication_id, TRUNC(not_given.event_date) AS event_date
+        FROM scoped_transactions not_given
+        WHERE not_given.transaction_type = 'NON_ADMINISTRATION'
+            AND NOT EXISTS (
+                SELECT 1 FROM effective_given given
+                WHERE given.reversal_of_transaction_id = not_given.id
+            )
+    )
+    SELECT JSON_OBJECT(
+        'student_count' VALUE COUNT(DISTINCT expected.studentsdcid)
+        RETURNING CLOB
+    ) AS json_result
+    FROM expected_rows expected
+    WHERE NOT EXISTS (
+        SELECT 1 FROM resolved_occurrences resolved
+        WHERE resolved.medication_id = expected.medication_id
+            AND resolved.event_date = expected.expected_date
+    )
+;]~(data)[/tlist_sql]
+[else#medicationCountAccess]
+{"authorized":false}
+[/if#medicationCountAccess]

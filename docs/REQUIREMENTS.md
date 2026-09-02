@@ -217,6 +217,15 @@ The project should support:
 - A configurable daily cutoff time per school
 - Clear identification of records needing action
 
+The main header's missed-medication icon counts each student once when they have
+one or more unresolved eligible daily doses, regardless of missed days or number
+of medications. Use the selected school and school year and the same cutoff and
+calendar rules as the student page. Do not display this icon at District Office.
+For the first pass it displays a count only, with no click action until the
+student report is implemented. Keep its badge styles in the CDOL CSS plugin.
+Calculate the count once when the page loads, matching the Enrollment Express
+count. Do not poll or refresh on focus, visibility changes, or cached page restoration.
+
 ## 8. Auditability
 
 The system must retain who, what, and when information for:

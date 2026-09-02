@@ -93,6 +93,14 @@ future reports by identity while preserving historical wording after a district 
 `NON_ADMINISTRATION_CORRECTION`; a later Given row links to the original Not Given transaction. Effective reports omit
 converted Not Given events but retain the original and linked audit rows.
 
+81. The header missed-medication count counts distinct students, not doses or
+days. It is school-level only and does not appear at District Office. Initially
+the icon is informational; its report destination will be added later. It uses
+the existing CDOL header count format and shared CDOL CSS badge styles.
+82. The header count runs once on page load, like Enrollment Express. There is
+no background polling or focus/visibility refresh. A new page load or manual
+browser refresh recalculates the count using the school cutoff at that time.
+
 ## Superseded or rejected approaches
 
 - Do not create a new medication row for every refill.
