@@ -23,7 +23,11 @@
 - Never show at District Office. No combined district count is provided.
 - Hide when zero or unavailable. A request failure is not treated as a confirmed
   zero. No student identifiers, medication names, or reasons are returned.
-- This pass has no click action, report, student alert, or new notification setting.
+- The icon and badge link in the same tab to
+  `/admin/reports_pscb_dev_pro/health/cdol_missed_daily_administration.html`.
+  The report remains owned by the separate CDOL custom reports plugin. This
+  header navigation does not implement the report or a new notification setting.
+  Student alerts are documented separately in `MISSED_MEDICATION_STUDENT_ALERT.md`.
 
 ## Integration
 
@@ -66,26 +70,35 @@ only as needed. Its top aligns with the container top, like Enrollment Express.
 The former 20px container raised the artwork 6px above its neighbors; the former
 content-box minimum width plus padding made one digit 24px wide by about 15px high.
 
-Install **CDOL CSS 26.8.0.3** and **CDOL Health Log 26.8.7.14** on the test server.
-The build also creates **CDOL Health Log - Data Access 26.8.7.14**; its permission
+CDOL CSS 26.8.0.4 preserves the icon dimensions when rendered as a native link,
+removes PowerSchool's extra anchor padding, and adds pointer/focus feedback.
+
+Install **CDOL CSS 26.8.0.4** and **CDOL Health Log 26.8.7.18** on the test server.
+The build also creates **CDOL Health Log - Data Access 26.8.7.18**; its permission
 mappings are unchanged in this update. No new schema is required for the counter.
 Nothing is merged to main or deployed automatically.
 
 ## Local checks
 
-- `py docs/tests/test_missed_medication_count.py`: 19 tests against the shipped SQL
+- `py docs/tests/test_missed_medication_count.py`: 25 tests against the shipped SQL
   CTEs, including a 10-state comparison with the actual student-page JavaScript
-  history reducer. Node.js must be on PATH for that comparison.
+  history reducer, plus student-alert scoping and source contracts. Each school
+  count assertion also executes the student alert SQL for each fictional student
+  and checks that the number of visible student alerts equals the count.
+  Node.js must be on PATH for the reducer comparison.
 - The SQL test uses SQLite with ordinal dates and Oracle-compatible TRUNC/NVL
   substitutes, then removes only the JSON output envelope. This checks behavior,
   not live Oracle parsing, execution plans, or PowerSchool template rendering.
 - `py docs/tests/serve_toolbar.py`, then open
-  `http://127.0.0.1:8769/tests/toolbar.html` and choose **Run UI checks**: 23 checks
+  `http://127.0.0.1:8769/tests/toolbar.html` and choose **Run UI checks**: 25 checks
   cover numeric counts, encoded/array JSON, zero/invalid/denied/error responses,
   duplicate footer rendering, toolbar placement, accessible text, and absence of
   focus/visibility/restore refreshes. All fixture counts are fictional; there is
   no PowerSchool connection. The fixture mirrors native 32px toolbar containers
   and checks alignment and badge geometry for 1-, 2-, and 3-digit counts.
+  It also verifies the exact report URL, native same-tab keyboard link, and
+  pointer/padding styles. Clicking the local link opens a clearly labeled test
+  destination, not a copy of the report.
 - `node --test docs/tests/missed_medication_load_once.test.cjs`: eight lifecycle
   checks verify one request per page load, no background timers/event handlers,
   duplicate-footer suppression, and no automatic retries after failures.
@@ -110,7 +123,11 @@ Nothing is merged to main or deployed automatically.
    cutoff, and another school with a different cutoff. Those must match the
    existing student-page results, not invent new gaps.
 6. Switch to District Office: no medication icon or count request. Switch schools
-   and years: only the selected context is counted. No icon should be clickable.
+   and years: only the selected context is counted. Click the icon or badge, and
+   activate it with Enter from the keyboard: each must open
+   `/admin/reports_pscb_dev_pro/health/cdol_missed_daily_administration.html`
+   in the same tab. The report plugin must be installed and its own page
+   permissions granted separately; this link does not grant report access.
 7. Test an account denied Medication Administration access. It must receive no
    icon, and directly opening `/admin/medication/data/missedMedicationCount.json`
    must return access denied, not a count. Verify query parameters cannot change

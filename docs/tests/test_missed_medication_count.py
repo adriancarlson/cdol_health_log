@@ -13,9 +13,11 @@ import shutil
 import sqlite3
 import subprocess
 import unittest
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = (ROOT / "web_root/admin/medication/data/missedMedicationCount.json").read_text()
+STUDENT_SOURCE = (ROOT / "web_root/wildcards/title_student_end_css.missedmedication.student.alert.txt").read_text()
 
 
 def day(value):
@@ -65,7 +67,22 @@ class MissedMedicationCountTest(unittest.TestCase):
 
     def count(self, date="2026-08-31", seconds=54000, school=101, year=36):
         sql = self.query(date, seconds, school, year)
-        return self.db.execute(sql).fetchone()[0]
+        count = self.db.execute(sql).fetchone()[0]
+        # Every existing school-counter scenario also executes the student alert's
+        # actual SQL. One qualifying student must equal one header count.
+        if school > 0:
+            students = self.db.execute("SELECT DISTINCT dcid FROM students").fetchall()
+            self.assertEqual(count, sum(self.student_alert(student, date, seconds, school, year)
+                                        for (student,) in students))
+        return count
+
+    def student_alert(self, student=1, date="2026-08-31", seconds=54000, school=101, year=36):
+        sql = STUDENT_SOURCE.split("~[tlist_sql;", 1)[1].split(";]", 1)[0]
+        sql = sql.replace("~(rn)", str(student)).replace("~(curschoolid)", str(school))
+        sql = sql.replace("~(curyearid)", str(year)).replace("SYSDATE", str(day(date) + seconds / 86400))
+        rows = self.db.execute(sql).fetchall()
+        self.assertLessEqual(len(rows), 1, "The template must never emit duplicate student icons")
+        return bool(rows)
 
     def query(self, date="2026-08-31", seconds=54000, school=101, year=36):
         sql = SOURCE.split("~[tlist_sql;", 1)[1].split(";]~(data)", 1)[0]
@@ -80,6 +97,76 @@ class MissedMedicationCountTest(unittest.TestCase):
         self.assertEqual(0, self.count(seconds=53999))
         self.assertEqual(1, self.count(seconds=54000))
         self.assertEqual(1, self.count(seconds=54001))
+
+    def test_student_alert_scopes_to_selected_dcid_not_student_id(self):
+        self.db.execute("UPDATE students SET id=999 WHERE dcid=1")
+        self.assertTrue(self.student_alert(student=1))
+        self.assertFalse(self.student_alert(student=999))
+        self.assertFalse(self.student_alert(student=2))
+        self.medication(med=2, student=2)
+        self.transaction()
+        self.assertFalse(self.student_alert(student=1))
+        self.assertTrue(self.student_alert(student=2))
+
+    def test_student_alert_is_single_icon_for_multiple_days_and_medications(self):
+        self.medication(med=2)
+        self.calendar("2026-09-01")
+        self.assertTrue(self.student_alert(date="2026-09-01"))
+
+    def test_student_alert_school_and_district_match_administration_context(self):
+        self.assertFalse(self.student_alert(school=102))
+        self.assertTrue(self.student_alert(school=0))
+        self.assertFalse(self.student_alert(year=35))
+        # District context still uses each medication school's cutoff.
+        self.medication(med=2, student=2, school=102)
+        self.calendar("2026-08-31", school=102)
+        self.assertFalse(self.student_alert(student=2, school=0))
+        self.assertTrue(self.student_alert(student=2, school=0, seconds=57600))
+
+    def test_student_alert_common_sql_cannot_drift_from_header(self):
+        def shared_ctes(source):
+            return source.split("    medication_start AS (", 1)[1].split("\n    SELECT ", 1)[0]
+        self.assertEqual(shared_ctes(SOURCE), shared_ctes(STUDENT_SOURCE))
+        self.assertIn("HAVING COUNT(*) > 0", STUDENT_SOURCE)
+
+    def test_student_alert_permission_portal_and_native_link_contract(self):
+        self.assertIn("~[if#missedMedicationAdmin.~[directory]=admin]", STUDENT_SOURCE)
+        self.assertIn("~[if#missedMedicationStudentAccess.security.pagemod="
+                      "/admin/students/medication/administration.html]", STUDENT_SOURCE)
+        anchor = STUDENT_SOURCE.split(";]", 1)[1].split("[/tlist_sql]", 1)[0]
+        self.assertEqual(1, anchor.count("<a "))
+        self.assertIn('href="/admin/students/medication/administration.html?frn=~(studentfrn)"', anchor)
+        self.assertIn('aria-label="Missed daily medication administration"', anchor)
+        for forbidden in ("dialogM", "onclick", "target=", "<script"):
+            self.assertNotIn(forbidden, STUDENT_SOURCE)
+        # Gates enclose the SQL as well as the anchor, not just browser hiding.
+        self.assertLess(STUDENT_SOURCE.index("security.pagemod"), STUDENT_SOURCE.index("~[tlist_sql;"))
+        self.assertGreater(STUDENT_SOURCE.index("[/if#missedMedicationStudentAccess]"),
+                           STUDENT_SOURCE.index("[/tlist_sql]"))
+
+    def test_student_icon_palette_and_header_unchanged(self):
+        ns = {"svg": "http://www.w3.org/2000/svg"}
+        icon_dir = ROOT / "web_root/images/cdol_health_log"
+        svg = ET.parse(icon_dir / "icon-missed-medication.svg").getroot()
+        active_outline = svg.find("svg:g", ns)
+        self.assertEqual("none", active_outline.attrib["fill"])
+        self.assertEqual("#05729d", active_outline.attrib["stroke"])
+        self.assertEqual("#05729d", active_outline.find("svg:rect", ns).attrib["fill"])
+        self.assertEqual("#c22026", svg.find("svg:path", ns).attrib["fill"])
+        backup = ET.parse(icon_dir / "icon-missed-medication-outline.svg").getroot()
+        outline = backup.find("svg:g", ns)
+        self.assertEqual("#05729d", outline.attrib["stroke"])
+        self.assertEqual("none", outline.attrib["fill"])
+        self.assertEqual("#c22026", backup.find("svg:path", ns).attrib["fill"])
+        self.assertEqual("21", svg.attrib["width"])
+        self.assertEqual("28", svg.attrib["height"])
+        self.assertIn('width="21" height="28"', STUDENT_SOURCE)
+        self.assertEqual("15", backup.attrib["width"])
+        self.assertEqual("20", backup.attrib["height"])
+        self.assertNotIn("fill", outline.find("svg:rect", ns).attrib)
+        white = (icon_dir / "icon-missed-medication-white.svg").read_text()
+        self.assertNotIn("#05729d", white)
+        self.assertNotIn("#c22026", white)
 
     def test_old_gap_counts_before_todays_cutoff(self):
         self.assertEqual(1, self.count(date="2026-09-01", seconds=0))

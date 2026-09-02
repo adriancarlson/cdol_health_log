@@ -3,13 +3,14 @@
 <head>
     <meta charset="utf-8">
     <title>Missed medication toolbar fixture</title>
-    <link href="/images/css/cdol_toolbar_counts.css?v=26.8.0.3" rel="stylesheet">
+    <link href="/images/css/cdol_toolbar_counts.css?v=26.8.0.4" rel="stylesheet">
     <style>
         body { font: 14px Arial, sans-serif; margin: 0; color: #213547; }
         header { background: #20539a; color: white; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; }
         /* Native toolbar layout observed on the test server: 32px icon boxes in a flex row. */
         #tools2 { display: flex; list-style: none; align-items: normal; margin: 0; padding: 0; font-size: 14px; }
         .pds-app-action { display: block; }
+        #tools2 li a { padding: 0 5px; display: inline-block; width: 2em; }
         .reference-icon-box { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; }
         .reference-icon { display: block; width: 20px; height: 20px; }
         main { padding: 24px; }
@@ -73,7 +74,7 @@
         }
         const reloadWidget = () => new Promise(resolve => {
             const script = document.createElement('script')
-            script.src = '/scripts/cdol_health_log/missedMedicationCount.js?v=26.8.7.14'
+            script.src = '/scripts/cdol_health_log/missedMedicationCount.js?v=26.8.7.15'
             script.onload = resolve
             document.body.append(script)
         })
@@ -110,7 +111,10 @@
             await wait()
             check(document.querySelectorAll('#cdolMissedMedicationCountItem').length === 1, 'Repeated footer stays single')
             check(document.getElementById('help').previousElementSibling.id === 'cdolMissedMedicationCountItem', 'Before Help')
-            check(!document.querySelector('#cdolMissedMedicationCountItem a, #cdolMissedMedicationCountItem button'), 'No dead link')
+            const link = document.querySelector('#cdolMissedMedicationCountItem a')
+            check(link && link.getAttribute('href') === '/admin/reports_pscb_dev_pro/health/cdol_missed_daily_administration.html', 'Exact report link')
+            check(!link.hasAttribute('role') && !link.hasAttribute('target') && link.tabIndex === 0, 'Native same-tab keyboard link')
+            check(getComputedStyle(link).cursor === 'pointer' && getComputedStyle(link).padding === '0px', 'Clickable without added native padding')
             check(document.querySelector('.cdol-toolbar-count-display').getAttribute('aria-label').includes('12 students'), 'Accessible count')
             const before = requests
             await reloadWidget()
@@ -131,9 +135,9 @@
                 check(badge.height === 16 && Math.abs(badge.y - box.y) < .1, `Badge top and height for ${count}`)
                 check(count === 9 ? badge.width === badge.height : badge.width > badge.height, `Badge shape for ${count}`)
             }
-            results.textContent += 'All 23 UI checks passed.'
+            results.textContent += 'All 25 UI checks passed.'
         }
     </script>
-    <script src="/scripts/cdol_health_log/missedMedicationCount.js?v=26.8.7.14"></script>
+    <script src="/scripts/cdol_health_log/missedMedicationCount.js?v=26.8.7.15"></script>
 </body>
 </html>

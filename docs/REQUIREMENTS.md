@@ -221,10 +221,27 @@ The main header's missed-medication icon counts each student once when they have
 one or more unresolved eligible daily doses, regardless of missed days or number
 of medications. Use the selected school and school year and the same cutoff and
 calendar rules as the student page. Do not display this icon at District Office.
-For the first pass it displays a count only, with no click action until the
-student report is implemented. Keep its badge styles in the CDOL CSS plugin.
+The icon and badge must link to
+`/admin/reports_pscb_dev_pro/health/cdol_missed_daily_administration.html`
+in the same tab, with native keyboard-link support and the accessible count label.
+Keep its badge styles in the CDOL CSS plugin.
 Calculate the count once when the page loads, matching the Enrollment Express
 count. Do not poll or refresh on focus, visibility changes, or cached page restoration.
+
+The student header must show one distinct missed-medication alert when the selected
+student has at least one unresolved eligible daily administration. Follow the
+CDOL Custom Alerts student-header extension pattern, without changing its existing
+Medications Alert. The new alert opens
+`/admin/students/medication/administration.html?frn=~(studentfrn)` in the same tab,
+not a dialog. Use a blue (`#05729d`) outlined bottle with a solid blue cap and
+red (`#c22026`) plus, matching the existing `icon-meds.svg` palette.
+Display the student icon at 21 by 28 pixels, preserving its 3:4 proportions.
+Keep the white header icon unchanged and retain the original 15-by-20
+outlined-cap variant as an unused backup.
+Calculate visibility on page load, using the Administration page's school/year
+context and the same eligibility and effective-resolution rules as the header
+count. Gate the student alert server-side to the admin portal and the same
+Medication Administration permission as the header count.
 
 ## 8. Auditability
 

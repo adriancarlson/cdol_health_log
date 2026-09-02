@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="21" height="28" role="img" aria-labelledby="missedMedicationTitle">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="15" height="20" role="img" aria-labelledby="missedMedicationTitle">
   <!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) -->
   <!-- Source: https://github.com/FortAwesome/Font-Awesome/blob/5.15.4/svgs/solid/prescription-bottle-alt.svg -->
-  <!-- CDOL adaptation: solid blue cap, blue bottle outline, and red cross, using the CDOL Custom Alerts icon-meds.svg palette. Cap/body contours inset for strokes; original cross proportions retained. -->
+  <!-- CDOL adaptation: blue bottle outline and red cross, using the CDOL Custom Alerts icon-meds.svg palette. Cap/body contours inset for strokes; original cross proportions retained. -->
   <title id="missedMedicationTitle">Missed daily medication</title>
   <g fill="none" stroke="#05729d" stroke-width="32" stroke-linejoin="round">
-    <rect fill="#05729d" x="16" y="16" width="352" height="64" rx="8" />
+    <rect x="16" y="16" width="352" height="64" rx="8" />
     <path d="M48 144H336V480a16 16 0 0 1-16 16H64a16 16 0 0 1-16-16Z" />
   </g>
   <path fill="#c22026" d="M96 296c0-4.4 3.6-8 8-8h56v-56c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v56h56c4.4 0 8 3.6 8 8v48c0 4.4-3.6 8-8 8h-56v56c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8v-56h-56c-4.4 0-8-3.6-8-8v-48Z" />

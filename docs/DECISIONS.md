@@ -94,12 +94,23 @@ future reports by identity while preserving historical wording after a district 
 converted Not Given events but retain the original and linked audit rows.
 
 81. The header missed-medication count counts distinct students, not doses or
-days. It is school-level only and does not appear at District Office. Initially
-the icon is informational; its report destination will be added later. It uses
+days. It is school-level only and does not appear at District Office. The icon
+links to `/admin/reports_pscb_dev_pro/health/cdol_missed_daily_administration.html`. It uses
 the existing CDOL header count format and shared CDOL CSS badge styles.
 82. The header count runs once on page load, like Enrollment Express. There is
 no background polling or focus/visibility refresh. A new page load or manual
 browser refresh recalculates the count using the school cutoff at that time.
+83. The student missed-medication alert uses a separate `title_student_end_css`
+extension in Health Log, following CDOL Custom Alerts without editing that plugin.
+Render one icon only when this student has an unresolved daily gap; click opens
+the full Administration page with `studentfrn`. It does not use `dialogM`.
+84. As of 26.8.7.18, the student icon returns to the blue outline and red plus,
+with a solid blue cap, using `#05729d` and `#c22026` from Custom Alerts'
+`icon-meds.svg`. Its display size increases from 15 by 20 to 21 by 28 pixels,
+preserving proportions. This supersedes the 26.8.7.17 red-body variant.
+The original outlined-cap variant from 26.8.7.16 remains as
+`icon-missed-medication-outline.svg` for backup.
+The white school-header icon and its badge are unchanged.
 
 ## Superseded or rejected approaches
 

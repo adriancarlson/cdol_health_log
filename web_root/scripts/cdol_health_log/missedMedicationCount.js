@@ -47,9 +47,9 @@
             item.id = itemId
             item.className = 'pds-app-action cdol-toolbar-count-item'
 
-            const display = document.createElement('span')
-            display.className = 'cdol-toolbar-count-display'
-            display.setAttribute('role', 'img')
+            const display = document.createElement('a')
+            display.className = 'cdol-toolbar-count-display cdol-toolbar-count-link'
+            display.href = '/admin/reports_pscb_dev_pro/health/cdol_missed_daily_administration.html'
 
             const icon = document.createElement('img')
             icon.src = '/images/cdol_health_log/icon-missed-medication-white.svg'

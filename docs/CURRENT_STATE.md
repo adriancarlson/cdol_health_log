@@ -70,18 +70,36 @@
 
 ## School-level header counter
 
-The school-level header counter is implemented in version 26.8.7.14. It counts
+The school-level header counter is implemented in version 26.8.7.15. It counts
 distinct students with unresolved daily administrations using the existing
 calendar/cutoff/enrollment and effective transaction rules. It uses the selected
-school/year, is absent at District Office, has no report link yet, and reuses
+school/year, is absent at District Office, links to the missed daily administration
+report at `/admin/reports_pscb_dev_pro/health/cdol_missed_daily_administration.html`, and reuses
 Medication Administration modify permission in both the footer and endpoint.
-The matching shared badge stylesheet is supplied by CDOL CSS 26.8.0.3, with a
+The matching shared badge stylesheet is supplied by CDOL CSS 26.8.0.4, with a
 native-height icon container and a circular single-digit badge. Local
 SQL-behavior, student-reducer parity, and browser fixture checks pass; live
 PowerSchool authorization, Oracle execution, and toolbar integration still need
 test-server validation. See `MISSED_MEDICATION_HEADER.md`.
 The count now loads once per page, matching Enrollment Express; no timer, focus,
 visibility, or back/forward-cache refresh is registered.
+
+## Student missed-medication alert (26.8.7.18)
+
+The new `title_student_end_css.missedmedication.student.alert.txt` extension
+renders a single student alert only when its server-side query finds unresolved
+daily administrations for the selected student. It follows the Custom Alerts
+placement pattern, with a native same-tab link to Administration retaining the
+student FRN. No dialog, timer, AJAX request, persisted alert, or new schema is added.
+The student icon has a solid blue cap, blue-outlined body, and red plus. It displays
+at 21 by 28 pixels (previously 15 by 20). The original outlined-cap icon is saved as
+`icon-missed-medication-outline.svg`; the white header asset is unchanged.
+The existing admin-portal and Administration modify-permission gates enclose the
+query and markup. School/year filtering matches the student Administration page,
+including its District Office student context; the main header stays school-only.
+Local SQL/parity tests and small-icon/link browser checks pass. Live PowerSchool
+template expansion, security, placement, and query latency still need testing.
+See `MISSED_MEDICATION_STUDENT_ALERT.md`.
 
 ## Prior implementation status reported in ChatGPT
 
