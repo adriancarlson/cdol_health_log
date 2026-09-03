@@ -16,8 +16,13 @@
             ~[wc:title_student_begin_css]Emergency Quick Sheet~[wc:title_student_end_css]
         </div>
         <div id="cdol-emergency-quick-sheet" class="box-round">
-            <h4>Student Demographics</h4>
-            <table id="quick-sheet-demographics" class="linkDescList">
+            <div class="quick-sheet-demographics-layout">
+                ~[if#student-photo.~([students]PhotoFlag)=1]
+                <div class="quick-sheet-student-photo">~(studentphoto)</div>
+                [/if#student-photo]
+                <div class="quick-sheet-demographics-details">
+                    <h4>Student Demographics</h4>
+                    <table id="quick-sheet-demographics" class="linkDescList">
                 <tr id="quick-sheet-student-preferred-name">
                     <td class="bold">
                         Student Preferred Name
@@ -75,21 +80,28 @@
                     <td>~(allergies;if.blank.then=None Listed)
                     </td>
                 </tr>
-                <!-- QUICK_SHEET_TEST_VERSION_1 -->
-                ~[if#medicalAlert.~([Students]Alert_Medical;if.not.blank.then=1)=1]
+                ~[if#medical-alert.~(alert_Medical)#]
                 <tr id="quick-sheet-student-medical-alert">
-                    <td class="bold">Medical Alert</td>
-                    <td>~([Students]Alert_Medical)</td>
+                    <td class="bold">
+                        Medical Alert
+                    </td>
+                    <td>
+                        ~(alert_Medical)
+                    </td>
                 </tr>
-                [/if#medicalAlert]
-
-                ~[if#ihp.~([students.U_STUDENT_ADDITIONAL_INFO]IHP_ALERT)=1]
-                <tr id="quick-sheet-student-ihp-alert">
-                    <td class="bold">Individualized Health Plan</td>
-                    <td>~([students.U_STUDENT_ADDITIONAL_INFO]IHP_DESCRIPTION)</td>
+                [/if#medical-alert]
+                ~[if#ihp.~([students.U_STUDENT_ADDITIONAL_INFO]IHP_DESCRIPTION)#]<tr id="quick-sheet-student-ihp-alert">
+                    <td class="bold">
+                        Individualized Health Plan
+                    </td>
+                    <td>
+                        ~([students.U_STUDENT_ADDITIONAL_INFO]IHP_DESCRIPTION)
+                    </td>
                 </tr>
                 [/if#ihp]
-            </table>
+                    </table>
+                </div>
+            </div>
             <div class="box-round">
                 <h4>OTC Medications</h4>
                 <div id="quick-sheet-otc-list">
@@ -116,6 +128,7 @@
                         <span class="quick-sheet-otc-none">None Listed</span>
                     </p>
                 </div>
+                ~[if#adminportal.~[directory]=admin]
                 <h4>Prescription Medications</h4>
                 <table class="grid">
                     <thead>
@@ -144,6 +157,7 @@
                         [/tlist_sql]
                     </tbody>
                 </table>
+                [/if#adminportal]
             </div>
             <div class="box-round">
                 <h4>Contacts</h4>
