@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<psExtension xmlns="http://www.powerschool.com"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.powerschool.com psextension.xsd">
+    <extensionname>u_cdol_med_admin_setting</extensionname>
+    <extendedTable type="standalone" dbTableName="u_cdol_med_admin_setting" childName="u_cdol_med_admin_setting" comment="School-level medication administration settings">
+        <field name="schoolid" type="Integer" />
+        <field name="daily_cutoff_time" type="Integer" />
+    </extendedTable>
+</psExtension>

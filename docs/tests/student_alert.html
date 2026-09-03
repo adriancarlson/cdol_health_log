@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Student missed-medication alert fixture</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #333; margin: 24px; }
+    .preview { padding: 20px; border: 1px solid #ccc; border-radius: 4px; }
+    .icons { display: flex; align-items: center; gap: 16px; margin: 16px 0; }
+    .icons img { display: block; }
+    .samples { display: flex; gap: 40px; align-items: start; margin: 24px 0; }
+    figure { margin: 0; }
+    figcaption { margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Student missed-medication alert</h1>
+  <p>Local visual fixture only. Fictional student; not a live PowerSchool session.</p>
+  <div class="preview">
+    <strong>Sample Student</strong>
+    <div class="icons">
+      <img src="/tests/icon-meds-reference.svg" height="20" alt="Existing Medications Alert palette reference">
+      <!-- STUDENT_ALERT -->
+      <img src="/images/cdol_health_log/icon-missed-medication-outline.svg" width="15" height="20" alt="Backup outlined student alert">
+    </div>
+    <small>Existing Medications Alert · Active alert at 28 × 28 pixels (bottle stays 21 × 28) · Original outline backup at 15 × 20 pixels.</small>
+  </div>
+  <div class="samples">
+    <figure>
+      <img src="/images/cdol_health_log/icon-missed-medication.svg" width="120" height="120" alt="Enlarged student alert with orange warning badge">
+      <figcaption>Active: Larger warning · Transparent gap</figcaption>
+    </figure>
+    <figure>
+      <img src="/images/cdol_health_log/icon-missed-medication.svg" width="120" height="120"
+        style="background:#d9eef5" alt="Warning gap on a pale-blue background">
+      <figcaption>Gap shows the page background</figcaption>
+    </figure>
+    <figure>
+      <img src="/images/cdol_health_log/icon-missed-medication-outline.svg" width="90" height="120" alt="Backup outlined student alert">
+      <figcaption>Backup: Blue outline · Red plus</figcaption>
+    </figure>
+    <figure>
+      <img src="/images/cdol_health_log/icon-missed-medication-white.svg" width="90" height="120"
+        style="background:#397975" alt="Existing header icon">
+      <figcaption>Header icon unchanged</figcaption>
+    </figure>
+  </div>
+  <p><a href="/tests/student_alert.html?show=yes">Show unresolved alert</a> ·
+     <a href="/tests/student_alert.html?show=no">Show resolved state</a></p>
+</body>
+</html>

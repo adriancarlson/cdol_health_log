@@ -3,7 +3,7 @@
 		{
 			"htmlID": "cdol-health-quick-sheet",
 			"title": "Emergency Quick Sheet🔹",
-			"version": "26.8.6.14",
+			"version": "26.8.7.26",
 			"contextType": "student",
 			"districtLevelContext": 0,
 			"parentHTMLID": "navStudentHealthProfile",
@@ -105,12 +105,22 @@
 		{
 			"htmlID": "cdol-health-code-sets",
 			"title": "CDOL Health Code Sets",
-			"version": "26.7.0.101",
+			"version": "26.8.7.26",
 			"contextType": "main",
 			"districtLevelContext": 2,
 			"parentHTMLID": "navDistrictManagementHealth",
 			"sortOrder": 350,
 			"pageURL": "/admin/district/healthsetup/cdolhealthoptions.html"
+		},
+		{
+			"htmlID": "cdol-medication-administration-settings",
+			"title": "Medication Administration Settings",
+			"version": "26.8.7.26",
+			"contextType": "main",
+			"districtLevelContext": 1,
+			"parentHTMLID": "navHealthSection",
+			"sortOrder": 975,
+			"pageURL": "/admin/schoolsetup/medication/administration_settings.html"
 		}
 	]
 }

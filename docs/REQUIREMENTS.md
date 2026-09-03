@@ -48,6 +48,7 @@ Dose unit, inventory unit, route, and frequency options must come from the share
 - `MED_ROUTE`
 - `MED_FREQUENCY`
 - `MED_REMOVAL_TYPE`
+- `MED_NOT_GIVEN_REASON`
 
 The table is shared with the Health Log complaint, destination, and conversation-type lists. Sport continues to use PowerSchool's native `Sports` Code Set. Removal rows store the stable code selected from `MED_REMOVAL_TYPE`; system-owned administration and correction transaction types remain application-controlled.
 
@@ -104,7 +105,7 @@ Existing Health Log records must preserve their stored values without migration 
 
 The Health Log page receives GET and POST access to `u_cdol_health_option`; option editing, activation, inactivation, and reordering remain district-admin functions. PowerSchool permission mappings authorize access to the shared table route and cannot restrict POST access to individual `codetype` categories.
 
-The approved Medication and Health Log import defaults are maintained in `docs/u_cdol_health_option_defaults.csv`. The existing Medication Removal Type values are maintained separately in `docs/u_cdol_health_option_removal_type_defaults.csv` so they can be imported when the configurable dropdown is introduced. The UI's italicized `Other` action is not a stored option; the removal template retains the existing `OTHER_REMOVAL` audit code and its `Other Removal` label for backward compatibility.
+The approved Medication and Health Log import defaults are maintained in `docs/u_cdol_health_option_defaults.csv`. The existing Medication Removal Type values are maintained separately in `docs/u_cdol_health_option_removal_type_defaults.csv` so they can be imported when the configurable dropdown is introduced. The initial Not Given reasons are also available separately in `docs/u_cdol_health_option_not_given_reason_defaults.csv` for focused test-server imports. The UI's italicized `Other` action is not a stored option; the removal template retains the existing `OTHER_REMOVAL` audit code and its `Other Removal` label for backward compatibility.
 
 ## 5. Inventory
 
@@ -145,6 +146,11 @@ Rules:
 
 The administration interface must be table-based, not calendar-based.
 
+The Administration table's Quantity Administered column uses a singular inventory
+unit when the effective quantity is 1 or less (for example, `1 Pill`, `0.5 Pill`,
+or `0.25 Pill`), and the existing plural form above 1. This is display-only; stored quantities, option
+codes, and historical snapshots remain unchanged.
+
 The student Administration page should remain simple: one Administer Medication button followed by the administration-history table, without an additional section heading or an inventory table. The medication selector in the drawer must include only medications with available inventory. Administration history may contain multiple medications and should be filterable by medication when needed.
 
 Each administration event should capture:
@@ -161,20 +167,40 @@ Each administration event should capture:
 - Notes
 - Inventory deduction
 
-Expected statuses include at least:
+Administration history includes these effective statuses:
 
 - Given
-- Missed
-- Refused
-- Absent
-- Sick or ill
-- Other
+- Not Given
+- Action Required for an unresolved expected daily administration
+- Corrected
+- Entered in Error
+
+For a medication whose controlled Frequency code is `daily`, the system must derive one expected administration for
+each weekday marked in session in the medication school's PowerSchool calendar. An expected day begins strictly after
+the medication's first inventory-added date and must also fall within the student's enrollment at that school and the
+medication's school year. Saturdays, Sundays, and calendar days not marked in session are excluded. PRN and all other
+frequencies do not create expected rows.
+
+Each school must configure a daily medication cutoff time. The current day becomes Action Required only after that
+cutoff; earlier qualifying days become Action Required immediately. A missing school cutoff must produce a visible
+configuration warning and must not create speculative Action Required rows.
+
+An unresolved expected row is calculated at page load and is not stored. It is displayed in red as a missed daily
+administration requiring action. The nurse resolves it by either recording the medication as Given for that expected
+school day or recording a Not Given reason.
 
 When a scheduled dose is not given:
 
-- A reason is required.
-- `Other` requires an explanatory note.
-- The system should highlight gaps or missed expected administrations.
+- A reason from `MED_NOT_GIVEN_REASON` is required.
+- The initial import values are `Ill`, `Refused`, and `Absent`.
+- `Other` is the shared italicized add-new action. It creates and selects a reusable reason; `Other` is never stored as
+  the transaction reason.
+- The transaction stores both the stable reason code and a label snapshot so future reports can group by stable code
+  while retaining the wording shown when the event was documented.
+- Notes remain available for event-specific details.
+- A later reason correction creates an append-only correction row rather than updating the original.
+- If the medication was actually given, converting a Not Given entry to Given creates a linked administration row,
+  deducts inventory, preserves the original Not Given audit record, and removes that Not Given from effective reports.
 
 For administration:
 
@@ -184,6 +210,35 @@ For administration:
 - The entered inventory quantity, including decimals such as `0.5 Pill`, becomes the actual inventory deduction; the medication definition does not store a fixed inventory quantity per dose.
 - The system should include a spelling and dose double-check step or confirmation prompt before committing sensitive medication details.
 - PRN administrations must be supported without creating false missed-dose alerts.
+- Backdated administrations created from an Action Required row use that expected school date and capture the actual
+  administration time and staff member.
+
+### Attendance-based automatic absence processing (planned)
+
+For unresolved expected daily medication administrations, the requested workflow automatically records Not Given:
+Absent when the student's attendance qualifies. Daily attendance uses the code's Absent classification. Meeting
+attendance uses the student's applicable converted day value and a school-configurable threshold, not a raw ratio
+of absent periods to all periods. Actual query results and the threshold's units still require validation.
+
+Next-morning processing was approved on September 3, 2026:
+
+- Process a dose date only on a later date, after the required overnight attendance refresh has completed successfully.
+- Do not use the school's Daily Medication Cutoff Time to schedule the automatic process.
+- Preserve the cutoff's existing role in Action Required alerts. This approval does not change the current alert queries.
+- Retain the original expected school date on the Not Given record and distinguish it from when automation records it.
+- Explain the timing beside the automatic-absence controls on the school Medication Administration Settings page.
+  Do not present automatic processing as available before the scheduled worker is implemented and validated.
+
+Required settings-page explanation for the implemented feature:
+
+> Automatic attendance-based absence processing runs the next morning, after PowerSchool's overnight attendance
+> refresh. It records qualifying missed daily medication administrations for the prior school day as Not Given:
+> Absent. The Daily Medication Cutoff Time controls when unresolved daily medications become Action Required;
+> it does not control automatic absence processing.
+
+The execution host, exact morning schedule, refresh-completion check, and behavior after a missed run remain open
+implementation decisions. Automatic submissions must preserve the append-only audit trail and avoid replacing an
+effective Given or Not Given entry or creating duplicate resolutions.
 
 ## 7. Alerts and reminders
 
@@ -191,10 +246,43 @@ The project should support:
 
 - Low-inventory indicators
 - Alerts when expected daily administrations are missing
-- A configurable daily reminder time
+- A configurable daily cutoff time per school
 - Clear identification of records needing action
 
-The storage level for reminder settings, such as per user, school, or medication, remains an open design decision.
+The main header's missed-medication icon counts each student once when they have
+one or more unresolved eligible daily doses, regardless of missed days or number
+of medications. Use the selected school and school year and the same cutoff and
+calendar rules as the student page. Do not display this icon at District Office.
+The icon and badge must link to
+`/admin/reports_pscb_dev_pro/health/cdol_missed_daily_administration.html`
+in the same tab, with native keyboard-link support and the accessible count label.
+Keep its badge styles in the CDOL CSS plugin.
+Calculate the count once when the page loads, matching the Enrollment Express
+count. Do not poll or refresh on focus, visibility changes, or cached page restoration.
+
+The student header must show one distinct missed-medication alert when the selected
+student has at least one unresolved eligible daily administration. Follow the
+CDOL Custom Alerts student-header extension pattern, without changing its existing
+Medications Alert. The new alert opens
+`/admin/students/medication/administration.html?frn=~(studentfrn)` in the same tab,
+not a dialog. Use a blue (`#05729d`) outlined bottle with a solid blue cap and
+red (`#c22026`) plus, matching the existing `icon-meds.svg` palette.
+Add a solid orange warning triangle with a white exclamation mark overlapping
+the lower-right corner. Make it slightly larger and farther left than the initial
+badge, with a transparent separation gap between it and the underlying bottle.
+The gap must show the page background, like the gap below the cap, not a painted
+white border. Keep the red plus recognizable.
+Use a 28-by-28 canvas while retaining the bottle's 21-by-28 scale and proportions.
+Keep the white header icon unchanged and retain the original 15-by-20
+outlined-cap variant as an unused backup.
+Calculate visibility on page load, using the Administration page's school/year
+context and the same eligibility and effective-resolution rules as the header
+count. Gate the student alert server-side to the admin portal and the same
+Medication Administration permission as the header count.
+Within the student alert's SQL row body, construct and return the complete FRN
+(`001` plus the student DCID) as the first and only column. The link consumes
+that column positionally; a row-body `~(studentfrn)` label does not read the
+session FRN. Never return the missed count into the link's FRN placeholder.
 
 ## 8. Auditability
 

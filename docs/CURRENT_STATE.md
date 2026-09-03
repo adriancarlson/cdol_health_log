@@ -47,9 +47,113 @@
 - The internal schema API permission mappings formerly supplied by `cdol_health_log_pqs` are maintained in this repository. Medication custom-page writes do not require external API field access requests.
 - The default VS Code build creates two installable plugins from the one repository and source `plugin.xml`: the main plugin without `permissions_root`, and a `CDOL Health Log - Data Access` plugin containing the permission mappings without `user_schema_root` or application files.
 - PowerSchool rejects `/ws/district/codeset` as a target in a plugin permission-mapping file because that file cannot grant access to core-resource routes. Medication and Health Log option reads and additions use the internal schema API for `u_cdol_health_option`. The Health Log page receives only GET and POST access; option maintenance remains on the district manager.
+- Shared schema API reads request every 100-record page so imported and newly added options remain visible after the option table exceeds PowerSchool's default first-page limit.
+- Medication Administration Settings uses the standard PowerSchool admin page structure with School Setup breadcrumbs, a visible page heading, a rounded cutoff section, and an explicit unconfigured state. The cutoff appears in PowerSchool's two-column settings-table pattern with a bold label and separate value column. The time field uses an `HH:MM AM/PM` placeholder so an example value cannot be mistaken for a saved cutoff, and the controls do not depend on a newly introduced controller property that can be absent when PowerSchool retains an older cached script.
 - New Health Log records use Active options from `HEALTH_COMPLAINT`, `HEALTH_DESTINATION`, and `HEALTH_CONVERSATION`. Complaint and Destination store one code and retain the italicized `Other` workflow. Communication Methods display active options as checkboxes, require at least one choice, and store selected codes comma-separated in `conversation_type`; `+ Add communication method` creates and immediately checks a reusable method. All three inline add controls display the shared advisory reuse warning for similar existing options while the user types. History resolves combined codes to comma-and-space-separated labels. Save remains disabled while any add is open, pending, or failed. Treatment remains free text, Sport continues to use PowerSchool's native `Sports` Code Set, and `HEALTH_SPORT` is not exposed by the custom manager.
 - Existing Health Log values are resolved by code or case-insensitive display value without bulk conversion. Active matches show the dropdown or checked communication methods while preserving the original stored value unless a selection is deliberately changed. A communication value is split on commas only when every segment resolves to a known method. Inactive matches and unmatched historical values display read-only and remain unchanged when another field is edited. History falls back to the original text when a value cannot be resolved.
-- `docs/u_cdol_health_option_defaults.csv` contains the approved Medication and Health Log import values, including the expanded complaint list and Recess. Conversation Type defaults are Email, Phone, and In Person. `docs/u_cdol_health_option_removal_type_defaults.csv` separately contains the five former hard-coded removal choices with their original stable transaction codes plus `WRONG_NUMBER_ENTERED`. The italicized `Other` UI action is not stored.
+- `docs/u_cdol_health_option_defaults.csv` contains the approved Medication and Health Log import values, including the expanded complaint list and Recess. Conversation Type defaults are Email, Phone, and In Person. `docs/u_cdol_health_option_removal_type_defaults.csv` separately contains the five former hard-coded removal choices with their original stable transaction codes plus `WRONG_NUMBER_ENTERED`. `docs/u_cdol_health_option_not_given_reason_defaults.csv` provides a focused import of Ill, Refused, and Absent for missed-administration testing. The italicized `Other` UI action is not stored.
+- Daily medication gap detection is implemented for the controlled `daily` frequency code. It derives expected rows
+  from the medication school's year term, `Calendar_Day` in-session flag, weekday, student enrollment, first inventory
+  date, and per-school daily cutoff. A missing cutoff displays a configuration warning and suppresses calculated gaps.
+- Unresolved gaps appear as red Action Required rows in Administration history. The weekday appears with the date,
+  the Status column shows a `Missed` pill, and the Action Required resolution button is in the Actions column. The
+  resolution drawer can create a backdated Given transaction or a stored Not Given transaction with a required
+  controlled reason. Not Given rows use one `Not Given: reason` status pill while event notes remain in the Notes
+  column. Correction-status pills are not repeated in the Medication column. Missed uses the light-red status style,
+  Entered in Error uses the stronger dark-red style, and Corrected uses a light-blue feedback-note style across the
+  entire row and its status pill.
+- `MED_NOT_GIVEN_REASON` is district-managed and uses the same italicized `Other` add-new action as other medication
+  code sets. The approved import defaults are Ill, Refused, and Absent; no Student-prefixed values or stored Other
+  value are included.
+- Not Given rows store stable reason codes and label snapshots. Reason corrections and later conversion to Given are
+  append-only, and the Administration page computes the effective state while retaining audit history.
+
+## Attendance-based automatic absence processing (planned)
+
+The user approved next-morning processing after the overnight attendance refresh on September 3, 2026. This process
+will be independent of the school's Daily Medication Cutoff Time, and the school settings page must state that
+distinction clearly. The existing cutoff-based alerts remain unchanged.
+
+Read-only test-server Data Dictionary inspection confirmed `PS_ATTENDANCE_DAILY.PRESENCE_STATUS_CD` and
+`PS_ADAADM_DEFAULTS_ALL` fields for student/date/school, default attendance and conversion modes, `ATTENDANCEVALUE`,
+and `POTENTIAL_ATTENDANCEVALUE`. Definitions alone do not validate the percentage calculation, current data freshness,
+or query execution. The reporting-view and backing-table descriptions of potential attendance require reconciliation
+against sample results.
+
+The scheduled worker, automatic-absence settings controls, and automatic submissions are not implemented. Required
+future settings-page wording is recorded in `REQUIREMENTS.md`; remaining decisions and validation gates are in
+`OPEN_WORK.md`. No new processing time, external service, or medication write has been configured.
+
+## Administration quantity label (26.8.7.26)
+
+The Administration table passes the effective administered quantity to the
+`pluralize` filter. Quantities of 1 or less display the singular unit (`1 Pill`,
+`0.5 Pill`, `0.25 Pill`); quantities above 1 retain the existing plural behavior.
+This supersedes the 26.8.7.25 rule that only singularized exactly 1. Numeric strings
+such as `1.0` and `0.25` are supported; missing or invalid counts keep the legacy behavior.
+The default inventory labels Pill, Tablet, Capsule, Milliliters, Milligrams, and
+Units also work when their display label is already plural. Custom labels and
+abbreviations are preserved for singular quantities rather than guessing their grammar.
+Other callers that omit the quantity keep their existing behavior. No stored
+records, prescribed dosage labels, missed/not-given dashes, or inventory math change.
+Regression coverage: `tests/medication_quantity_label.test.cjs`.
+
+## Resolve drawer time input (26.8.7.24)
+
+Time Given uses PowerSchool's `pss-time-widget` directive and keeps its Given
+row mounted with `ng-show`. The legacy class-only input was created after drawer
+initialization, so it missed the native widget wrapper, compact width, and clock
+padding. Keeping the input mounted alone was insufficient; the native directive
+explicitly initializes the widget.
+
+A browser-only template override on the test server confirmed the same 86px
+content width and 20px left padding as Administer Medication. Given/Not Given
+toggles preserve the typed time and one widget wrapper. No records were saved and
+no server files were changed. Time conversion, validation, date, staff, and
+inventory logic are unchanged. Template regression checks are in
+`tests/test_resolve_time_input.py`; install the package for final acceptance.
+
+## School-level header counter
+
+The school-level header counter is implemented in version 26.8.7.15. It counts
+distinct students with unresolved daily administrations using the existing
+calendar/cutoff/enrollment and effective transaction rules. It uses the selected
+school/year, is absent at District Office, links to the missed daily administration
+report at `/admin/reports_pscb_dev_pro/health/cdol_missed_daily_administration.html`, and reuses
+Medication Administration modify permission in both the footer and endpoint.
+The matching shared badge stylesheet is supplied by CDOL CSS 26.8.0.4, with a
+native-height icon container and a circular single-digit badge. Local
+SQL-behavior, student-reducer parity, and browser fixture checks pass; live
+PowerSchool authorization, Oracle execution, and toolbar integration still need
+test-server validation. See `MISSED_MEDICATION_HEADER.md`.
+The count now loads once per page, matching Enrollment Express; no timer, focus,
+visibility, or back/forward-cache refresh is registered.
+
+## Student missed-medication alert (26.8.7.23)
+
+The new `title_student_end_css.missedmedication.student.alert.txt` extension
+renders a single student alert only when its server-side query finds unresolved
+daily administrations for the selected student. It follows the Custom Alerts
+placement pattern, with a native same-tab link to Administration retaining the
+student FRN. No dialog, timer, AJAX request, persisted alert, or new schema is added.
+The student icon has a solid blue cap, blue-outlined body, red plus, and overlapping
+orange warning triangle with a white exclamation. The triangle is 21% larger than its initial size and
+shifted left, with a transparent knockout gap separating it from the bottle. It displays
+at 28 by 28 pixels while keeping the bottle's 21-by-28 scale. The original outlined-cap icon is saved as
+`icon-missed-medication-outline.svg`; the white header asset is unchanged.
+The existing admin-portal and Administration modify-permission gates enclose the
+query and markup. School/year filtering matches the student Administration page,
+including its District Office student context; the main header stays school-only.
+Local SQL/parity tests and small-icon/link browser checks pass. Live PowerSchool
+template expansion, security, placement, and query latency still need testing.
+See `MISSED_MEDICATION_STUDENT_ALERT.md`.
+
+The SQL row returns the complete FRN as its first/only column, constructed as
+`'001' || TO_CHAR(MIN(expected.studentsdcid))`. The row's `~(student_frn)`
+placeholder consumes that value positionally; it does not read a session tag.
+The former count output could incorrectly create `frn=3` for three missed days.
+The href's missing closing quote is also fixed. The local fixture now executes
+the actual SQL and substitutes positional values instead of hard-coding an FRN.
 
 ## Prior implementation status reported in ChatGPT
 
@@ -67,9 +171,7 @@ The most recent recovered implementation summary stated:
 The available project files do not prove completion of:
 
 - Live PowerSchool installation and validation of the initial Medication Administration page and `ADMINISTRATION` transaction fields
-- Missed-dose workflow
-- Required missed-dose reasons
-- Gap detection
+- Live PowerSchool validation of the missed-dose calendar query, school cutoff settings, and Not Given workflows
 - Reminder scheduling
 - Controlled-medication reconciliation
 - Authorization enforcement

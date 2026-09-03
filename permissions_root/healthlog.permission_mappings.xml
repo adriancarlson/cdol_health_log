@@ -62,6 +62,16 @@
 		<implies allow="post">/ws/schema/table/u_cdol_health_option</implies>
 		<implies allow="put">/ws/schema/table/u_cdol_health_option/#</implies>
 		<implies allow="delete">/ws/schema/table/u_cdol_health_option/#</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_med_admin_setting</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_med_admin_setting/#</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_med_admin_setting/count</implies>
+	</permission>
+	<permission name="/admin/schoolsetup/medication/administration_settings.html">
+		<implies allow="get">/ws/schema/table/u_cdol_med_admin_setting</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_med_admin_setting/#</implies>
+		<implies allow="get">/ws/schema/table/u_cdol_med_admin_setting/count</implies>
+		<implies allow="post">/ws/schema/table/u_cdol_med_admin_setting</implies>
+		<implies allow="put">/ws/schema/table/u_cdol_med_admin_setting/#</implies>
 	</permission>
 	<permission name="/admin/district/healthsetup/cdolhealthoptions.html">
 		<implies allow="get">/ws/schema/table/u_cdol_health_option</implies>

@@ -14,6 +14,10 @@
                 white-space: nowrap;
             }
 
+            .administration-date-time {
+                white-space: nowrap;
+            }
+
             .administration-toolbar {
                 display: grid;
                 grid-template-columns: 1fr auto 1fr;
@@ -61,9 +65,50 @@
             }
 
             .administration-entered-in-error .administration-history-status {
+                color: #fff;
+                background-color: #b3261e;
+                border-color: #8c1d18;
+            }
+
+            .administration-action-required td {
+                color: #721c18;
+                background-color: #fde8e7 !important;
+                border-top-color: #d9534f;
+                border-bottom-color: #d9534f;
+            }
+
+            .administration-action-required .administration-history-status {
                 color: #a12622;
                 background-color: #faeeee;
                 border-color: #c84a4a;
+            }
+
+            .administration-corrected:not(.administration-not-given) td {
+                color: #145a7a;
+                background-color: #e8f4fa !important;
+                border-top-color: #72afd0;
+                border-bottom-color: #72afd0;
+            }
+
+            .administration-corrected:not(.administration-not-given) .administration-history-status {
+                color: #145a7a;
+                background-color: #e8f4fa;
+                border-color: #72afd0;
+            }
+
+            .administration-not-given td {
+                background-color: #fff4ce !important;
+            }
+
+            .administration-not-given .administration-history-status {
+                color: #5f4700;
+                background-color: #fff4ce;
+                border-color: #b89018;
+            }
+
+            .administration-status-button {
+                min-width: 112px;
+                font-weight: bold;
             }
 
             .administration-correction-audit {
@@ -100,6 +145,10 @@
                     ng-if="vm.appData.administrationFeedback">
                     {{vm.appData.administrationFeedback}}
                 </div>
+                <div class="feedback-alert" role="alert" ng-if="vm.hasMissingDailyCutoff">
+                    Daily medication gaps cannot be calculated for this school until a cutoff time is configured.
+                    <a href="/admin/schoolsetup/medication/administration_settings.html">Configure Medication Administration Settings</a>.
+                </div>
                 <div class="administration-toolbar">
                     <a id="student-medication-inventory-link"
                         href="/admin/students/medication/inventory.html?frn=~(studentfrn)"
@@ -122,42 +171,54 @@
                 <table class="grid">
                     <thead>
                         <tr>
-                            <th style="width: 150px;" data-pss-sort-fields="event_date,event_time"
+                            <th style="width: 190px;" data-pss-sort-fields="event_date,event_time"
                                 data-primary-sort="descending">Date/Time</th>
+                            <th data-pss-sort-fields="status_label">Status</th>
                             <th data-pss-sort-fields="medication_name">Medication</th>
                             <th data-pss-sort-fields="dose_amount">Prescribed Dosage</th>
                             <th data-pss-sort-fields="quantity_administered">Quantity Administered</th>
                             <th data-pss-sort-fields="route">Route</th>
-                            <th data-pss-sort-fields="user_name">Administered By</th>
+                            <th data-pss-sort-fields="user_name">Staff</th>
                             <th>Notes</th>
-                            <th style="width: 65px;">Actions</th>
+                            <th style="width: 130px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr
                             ng-show="!(vm.filteredAdministrationList | filter:vm.filterAdministrationByMedication).length">
-                            <td colspan="8">No medication administrations have been recorded for ~(first_name) ~(last_name).
+                            <td colspan="9">No medication administrations or daily action items are available for ~(first_name) ~(last_name).
                             </td>
                         </tr>
                         <tr ng-repeat="administration in (vm.filteredAdministrationList | filter:vm.filterAdministrationByMedication)"
                             data-id="{{administration.root_transaction_id}}"
-                            ng-class="{ 'administration-entered-in-error': administration.is_entered_in_error }">
-                            <td class="center">{{administration.event_date | date:'MM/dd/yyyy'}}
-                                {{administration.event_time | medTime12}}</td>
-                            <td>
-                                <div>{{administration.medication_name}}</div>
+                            ng-class="{ 'administration-entered-in-error': administration.is_entered_in_error, 'administration-action-required': administration.is_action_required, 'administration-not-given': administration.is_not_given, 'administration-corrected': administration.is_corrected }">
+                            <td class="center administration-date-time">{{administration.event_date | date:'EEE, MM/dd/yyyy'}}
+                                <span ng-if="administration.event_time">{{administration.event_time | medTime12}}</span>
+                            </td>
+                            <td class="center">
+                                <span class="administration-history-status" ng-if="administration.is_action_required">
+                                    Missed
+                                </span>
                                 <span class="administration-history-status"
-                                    ng-if="administration.correction_status_label">
-                                    {{administration.correction_status_label}}
+                                    ng-if="!administration.is_action_required && !administration.is_not_given">
+                                    {{administration.status_label}}
+                                </span>
+                                <span class="administration-history-status" ng-if="administration.is_not_given">
+                                    Not Given<span ng-if="administration.not_given_reason_label">:
+                                        {{administration.not_given_reason_label}}</span>
                                 </span>
                             </td>
+                            <td>{{administration.medication_name}}</td>
                             <td class="center">{{administration.dose_amount}}
                                 {{$root.medicationOptionDisplayValue('dose_unit', administration.dose_unit)}}</td>
-                            <td class="center administration-quantity">{{administration.quantity_administered}}
+                            <td class="center administration-quantity">
+                                <span ng-if="administration.is_given">{{administration.quantity_administered}}
                                 {{$root.medicationOptionDisplayValue('inventory_unit', administration.inventory_unit) |
-                                pluralize}}</td>
+                                pluralize:administration.quantity_administered}}</span>
+                                <span ng-if="!administration.is_given">&mdash;</span>
+                            </td>
                             <td class="center">{{$root.medicationOptionDisplayValue('route', administration.route)}}</td>
-                            <td class="center">{{administration.user_name}}</td>
+                            <td class="center">{{administration.user_name || '—'}}</td>
                             <td>
                                 <div>{{administration.notes}}</div>
                                 <div class="administration-correction-audit"
@@ -174,7 +235,16 @@
                                 </div>
                             </td>
                             <td class="actions center">
-                                <span ng-if="!administration.is_entered_in_error">
+                                <button type="button" class="administration-status-button"
+                                    ng-if="administration.is_action_required"
+                                    pss-dialog-drawer width="900" drawer-title="Resolve Missed Administration"
+                                    data-data="{ expected: administration }"
+                                    template-url="resolveExpectedAdministration.html"
+                                    ng-click="vm.clearAdministrationFeedback()"
+                                    aria-label="Resolve {{administration.medication_name}} action required for {{administration.event_date | date:'MM/dd/yyyy'}}">
+                                    {{administration.status_label}}
+                                </button>
+                                <span ng-if="administration.is_given && !administration.is_entered_in_error">
                                     <button type="button"
                                         id="correct-administration-btn-{{administration.root_transaction_id}}"
                                         pss-dialog-drawer width="900" edit-button-icon="true"
@@ -195,6 +265,15 @@
                                         <span class="administration-minus-symbol" aria-hidden="true">&minus;</span>
                                     </button>
                                 </span>
+                                <button type="button" ng-if="administration.is_not_given"
+                                    id="correct-not-given-btn-{{administration.root_transaction_id}}"
+                                    pss-dialog-drawer width="900" edit-button-icon="true"
+                                    drawer-title="Correct Not-Given Entry"
+                                    data-data="{ notGiven: administration }"
+                                    template-url="resolveExpectedAdministration.html"
+                                    ng-click="vm.clearAdministrationFeedback()"
+                                    aria-label="Correct Not-Given Entry"
+                                    title="Correct Not-Given Entry"></button>
                                 <span ng-if="administration.is_entered_in_error"
                                     aria-label="No actions available">—</span>
                             </td>

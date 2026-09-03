@@ -138,7 +138,7 @@ define([
 					return null
 				})
 			return $q.all([
-				psApiService.psApiCall('u_cdol_health_option', 'GET', {}),
+				psApiService.psApiCall('u_cdol_health_option', 'GET', { loadAllPages: true }),
 				usageRequest
 			])
 				.then(results => {

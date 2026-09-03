@@ -152,7 +152,7 @@ define(function (require) {
 			}
 			const loadHealthOptions = () =>
 				psApiService
-					.psApiCall('u_cdol_health_option', 'GET', {})
+					.psApiCall('u_cdol_health_option', 'GET', { loadAllPages: true })
 					.then(records => {
 						$rootScope.appData.healthOptionLoadError = ''
 						return records

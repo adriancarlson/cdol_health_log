@@ -1,0 +1,11 @@
+~[if#medicationCountSchool.~(curschoolid)=0]
+<!-- Missed medication counts are school-level only. -->
+<script>if (window.CDOLMissedMedicationCount) window.CDOLMissedMedicationCount.stop()</script>
+[else#medicationCountSchool]
+~[if#medicationCountAccess.security.pagemod=/admin/students/medication/administration.html]
+<link href="/images/css/cdol_toolbar_counts.css?v=26.8.0.4" rel="stylesheet" media="screen">
+<script src="/scripts/cdol_health_log/missedMedicationCount.js?v=26.8.7.26"></script>
+[else#medicationCountAccess]
+<script>if (window.CDOLMissedMedicationCount) window.CDOLMissedMedicationCount.stop()</script>
+[/if#medicationCountAccess]
+[/if#medicationCountSchool]

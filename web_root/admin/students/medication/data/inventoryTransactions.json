@@ -24,7 +24,11 @@
                     'correction_time' VALUE u_student_med_inv_txn.correction_time,
                     'correction_users_dcid' VALUE u_student_med_inv_txn.correction_users_dcid,
                     'correction_user_name' VALUE correction_users.first_name || ' ' || correction_users.last_name,
-                    'correction_reason' VALUE u_student_med_inv_txn.correction_reason
+                    'correction_reason' VALUE u_student_med_inv_txn.correction_reason,
+                    'not_given_reason_code' VALUE u_student_med_inv_txn.not_given_reason_code,
+                    'not_given_reason_label' VALUE u_student_med_inv_txn.not_given_reason_label,
+                    'recorded_date' VALUE TO_CHAR(u_student_med_inv_txn.recorded_date, 'YYYY-MM-DD'),
+                    'recorded_time' VALUE u_student_med_inv_txn.recorded_time
                     NULL ON NULL
                     RETURNING CLOB
                 )

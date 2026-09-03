@@ -43,5 +43,9 @@
         <field name="correction_time" type="Integer" />
         <field name="correction_users_dcid" type="Integer" />
         <field name="correction_reason" type="String" length="4000" />
+        <field name="not_given_reason_code" type="String" length="40" />
+        <field name="not_given_reason_label" type="String" length="100" />
+        <field name="recorded_date" type="Date" />
+        <field name="recorded_time" type="Integer" />
     </extendedTable>
 </psExtension>

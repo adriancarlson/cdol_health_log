@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Medication Administration Settings</title>
+        ~[wc:commonscripts]
+        <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+        <link href="/images/css/print.css" rel="stylesheet" media="print">
+    </head>
+
+    <body>
+        ~[wc:admin_header_css]
+        <!-- breadcrumb start --><a href="/admin/home.html" target="_top">Start Page</a> &gt;
+        <a href="/admin/schoolsetup/home.html" target="_top">School Setup</a> &gt; Medication Administration
+        Settings<!-- breadcrumb end -->
+        ~[wc:admin_navigation_css]
+        ~[wc:changes_saved_or_deleted_header]
+
+        <h1>Medication Administration Settings</h1>
+
+        <div data-require-path="./administration_settings.js" data-module-name="medicationSettingsModule"
+            ng-controller="medicationSettingsController as settings" data-bootstrap-local="true"
+            ng-cur-school-id="~(curschoolid)" ng-cloak>
+            <div class="box-round">
+
+                <div class="feedback-alert" role="alert" ng-if="settings.isDistrictOffice">
+                    Select a school before configuring its medication administration cutoff time.
+                </div>
+
+                <div class="feedback-alert" role="alert" ng-if="settings.loadError">
+                    {{settings.loadError}}
+                </div>
+
+                <div ng-if="!settings.isDistrictOffice">
+                    <div class="feedback-confirm" role="status" aria-live="polite" ng-if="settings.feedbackMessage">
+                        {{settings.feedbackMessage}}
+                    </div>
+
+                    <p>
+                        Set the time after which an unresolved daily medication becomes Action Required on an
+                        in-session school day.
+                    </p>
+
+                    <div class="feedback-info" role="status"
+                        ng-if="settings.loaded && !settings.settingId && !settings.loadError">
+                        No daily medication cutoff is currently configured for this school.
+                    </div>
+
+                    <table cellspacing="0" cellpadding="4">
+                        <tr class="~[evenoddrow]">
+                            <td class="bold">
+                                <label for="daily-medication-cutoff">Daily Medication Cutoff Time
+                                    <span class="req"><em>*</em></span>
+                                </label>
+                            </td>
+                            <td>
+                                <input id="daily-medication-cutoff" class="timeEntry" type="text" size="12"
+                                    ng-model="settings.cutoffTime" ng-change="settings.validate()"
+                                    ng-disabled="settings.saving" placeholder="HH:MM AM/PM"
+                                    aria-describedby="daily-medication-cutoff-help">
+                                <span id="daily-medication-cutoff-help">Enter a time such as 03:00 PM.</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <br>
+
+                    <div class="button-row">
+                        <button type="button" ng-click="settings.save()"
+                            ng-disabled="!settings.isValid || settings.saving">
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        ~[wc:admin_footer_css]
+    </body>
+
+</html>

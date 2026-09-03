@@ -17,6 +17,9 @@ MED_ROUTE,subcutaneous,Subcutaneous,Subcutaneous,1,50
 MED_ROUTE,rectal,Rectal,Rectal,1,60
 MED_FREQUENCY,daily,Daily,Daily,1,10
 MED_FREQUENCY,prn,As Needed (PRN),As Needed (PRN),1,20
+MED_NOT_GIVEN_REASON,ill,Ill,Ill,1,10
+MED_NOT_GIVEN_REASON,refused,Refused,Refused,1,20
+MED_NOT_GIVEN_REASON,absent,Absent,Absent,1,30
 HEALTH_COMPLAINT,abrasionorscrape,Abrasion or Scrape,Abrasion or Scrape,1,10
 HEALTH_COMPLAINT,allergysymptoms,Allergy Symptoms,Allergy Symptoms,1,20
 HEALTH_COMPLAINT,anklepain,Ankle Pain,Ankle Pain,1,30

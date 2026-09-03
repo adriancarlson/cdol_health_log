@@ -75,6 +75,60 @@
 71. `Added in Error` and `Wrong Number Entered` removals correct the effective quantity received rather than behaving like ordinary consumption. They remain append-only transactions, are allocated FIFO, never overwrite or delete the original lot, and cap the low-inventory replenishment baseline at the corrected effective quantity.
 72. The Inventory page uses the effective received quantity as the denominator and hides only lots fully eliminated by an inventory-entry correction. Ordinarily depleted lots remain visible, and a medication whose lots are all corrected away remains visible as Out of Inventory.
 73. Inventory-entry correction matching normalizes transaction codes so `ADDED_IN_ERROR`, `WRONG_NUMBER_ENTERED`, and the previously generated `wrongnumberentered` code remain compatible without migrating stored transactions.
+74. Daily expected administrations are calculated from PowerSchool's school calendar and student enrollment rather
+than pre-created as database rows. Only the controlled `daily` frequency code participates; weekends and days where
+the school's calendar is not in session are excluded.
+75. Gap calculation begins on the day after the medication's first inventory-added date. The current day does not
+become Action Required until the medication school's configured cutoff time.
+76. The cutoff is stored per school in `u_cdol_med_admin_setting`. Without an effective cutoff row, the Administration
+page warns the user and does not create speculative gaps for that school.
+77. An unresolved gap is a red calculated Action Required row. Resolving it as Given creates the normal inventory-
+deducting `ADMINISTRATION` transaction on the expected date. Resolving it as Not Given creates a zero-quantity
+`NON_ADMINISTRATION` transaction.
+78. Not Given reasons use `MED_NOT_GIVEN_REASON`. The approved initial import values are `Ill`, `Refused`, and `Absent`.
+The italicized `Other` item remains the standard add-new action and is never stored as a reason.
+79. Each Not Given transaction stores the stable reason code and the then-current reason label. This supports grouping
+future reports by identity while preserving historical wording after a district label change.
+80. Not Given corrections and conversions are append-only. A reason correction uses
+`NON_ADMINISTRATION_CORRECTION`; a later Given row links to the original Not Given transaction. Effective reports omit
+converted Not Given events but retain the original and linked audit rows.
+
+81. The header missed-medication count counts distinct students, not doses or
+days. It is school-level only and does not appear at District Office. The icon
+links to `/admin/reports_pscb_dev_pro/health/cdol_missed_daily_administration.html`. It uses
+the existing CDOL header count format and shared CDOL CSS badge styles.
+82. The header count runs once on page load, like Enrollment Express. There is
+no background polling or focus/visibility refresh. A new page load or manual
+browser refresh recalculates the count using the school cutoff at that time.
+83. The student missed-medication alert uses a separate `title_student_end_css`
+extension in Health Log, following CDOL Custom Alerts without editing that plugin.
+Render one icon only when this student has an unresolved daily gap; click opens
+the full Administration page with `studentfrn`. It does not use `dialogM`.
+84. As of 26.8.7.18, the student icon returns to the blue outline and red plus,
+with a solid blue cap, using `#05729d` and `#c22026` from Custom Alerts'
+`icon-meds.svg`. Its display size increases from 15 by 20 to 21 by 28 pixels,
+preserving proportions. This supersedes the 26.8.7.17 red-body variant.
+The original outlined-cap variant from 26.8.7.16 remains as
+`icon-missed-medication-outline.svg` for backup.
+The white school-header icon and its badge are unchanged.
+In 26.8.7.21, a borderless orange warning triangle with a white exclamation
+overlaps the student bottle's lower-right edge. A square 28-by-28 canvas adds
+space on the right without shrinking the existing 21-by-28 bottle artwork.
+In 26.8.7.22 the badge increases 10%, shifts left, and gains a transparent
+knockout gap separating it from the bottle, including on nonwhite backgrounds.
+In 26.8.7.23 it grows another 10% (21% total), preserving its bottom-center anchor
+and matching knockout gap. Bottle and composite display dimensions stay unchanged.
+85. In a `tlist_sql` row body, `~()` placeholders consume selected columns by
+position, regardless of their labels. The student alert returns the full
+`001`-prefixed student DCID as its only selected column. The aggregate count
+remains only in the HAVING condition so it cannot become the link's FRN.
+
+86. Attendance-based automatic Not Given: Absent processing is a planned workflow. On September 3, 2026, the user
+approved next-morning processing after the overnight attendance refresh, independent of the school's Daily Medication
+Cutoff Time. The cutoff continues to control existing Action Required alerts; it does not schedule automatic absence
+submission. The school Medication Administration Settings page must explain both timings clearly when the feature
+is implemented. No exact morning clock time or execution host has been selected, and this decision does not enable
+automatic writes.
 
 ## Superseded or rejected approaches
 
