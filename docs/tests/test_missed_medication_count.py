@@ -14,6 +14,8 @@ import sqlite3
 import subprocess
 import unittest
 import xml.etree.ElementTree as ET
+from html.parser import HTMLParser
+from student_alert_fixture import render_student_alert
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = (ROOT / "web_root/admin/medication/data/missedMedicationCount.json").read_text()
@@ -29,6 +31,7 @@ class MissedMedicationCountTest(unittest.TestCase):
         self.db = sqlite3.connect(":memory:")
         self.addCleanup(self.db.close)
         self.db.create_function("NVL", 2, lambda a, b: b if a is None else a)
+        self.db.create_function("TO_CHAR", 1, lambda value: None if value is None else str(value))
         self.db.create_function("TRUNC", -1, lambda value, *fmt: None if value is None else (
             math.floor(value) - dt.date.fromordinal(math.floor(value)).weekday()
             if fmt else math.floor(value)))
@@ -77,12 +80,17 @@ class MissedMedicationCountTest(unittest.TestCase):
         return count
 
     def student_alert(self, student=1, date="2026-08-31", seconds=54000, school=101, year=36):
+        rows = self.student_alert_rows(student, date, seconds, school, year)
+        self.assertLessEqual(len(rows), 1, "The template must never emit duplicate student icons")
+        if rows:
+            self.assertEqual([(f"001{student}",)], rows, "Return the FRN, never the missed count")
+        return bool(rows)
+
+    def student_alert_rows(self, student=1, date="2026-08-31", seconds=54000, school=101, year=36):
         sql = STUDENT_SOURCE.split("~[tlist_sql;", 1)[1].split(";]", 1)[0]
         sql = sql.replace("~(rn)", str(student)).replace("~(curschoolid)", str(school))
         sql = sql.replace("~(curyearid)", str(year)).replace("SYSDATE", str(day(date) + seconds / 86400))
-        rows = self.db.execute(sql).fetchall()
-        self.assertLessEqual(len(rows), 1, "The template must never emit duplicate student icons")
-        return bool(rows)
+        return self.db.execute(sql).fetchall()
 
     def query(self, date="2026-08-31", seconds=54000, school=101, year=36):
         sql = SOURCE.split("~[tlist_sql;", 1)[1].split(";]~(data)", 1)[0]
@@ -135,7 +143,7 @@ class MissedMedicationCountTest(unittest.TestCase):
                       "/admin/students/medication/administration.html]", STUDENT_SOURCE)
         anchor = STUDENT_SOURCE.split(";]", 1)[1].split("[/tlist_sql]", 1)[0]
         self.assertEqual(1, anchor.count("<a "))
-        self.assertIn('href="/admin/students/medication/administration.html?frn=~(studentfrn)"', anchor)
+        self.assertIn('href="/admin/students/medication/administration.html?frn=~(student_frn)"', anchor)
         self.assertIn('aria-label="Missed daily medication administration"', anchor)
         for forbidden in ("dialogM", "onclick", "target=", "<script"):
             self.assertNotIn(forbidden, STUDENT_SOURCE)
@@ -158,9 +166,29 @@ class MissedMedicationCountTest(unittest.TestCase):
         self.assertEqual("#05729d", outline.attrib["stroke"])
         self.assertEqual("none", outline.attrib["fill"])
         self.assertEqual("#c22026", backup.find("svg:path", ns).attrib["fill"])
-        self.assertEqual("21", svg.attrib["width"])
+        self.assertEqual("28", svg.attrib["width"])
         self.assertEqual("28", svg.attrib["height"])
-        self.assertIn('width="21" height="28"', STUDENT_SOURCE)
+        self.assertEqual("0 0 512 512", svg.attrib["viewBox"])
+        warning = svg.find("svg:g[@id='missedMedicationWarning']", ns)
+        self.assertEqual("none", warning.attrib["stroke"])
+        self.assertEqual("#e87518", warning.find("svg:use", ns).attrib["fill"])
+        self.assertEqual("#fff", warning.find("svg:rect", ns).attrib["fill"])
+        self.assertEqual("#fff", warning.find("svg:circle", ns).attrib["fill"])
+        self.assertTrue(all("stroke" not in shape.attrib for shape in warning))
+        gap = svg.find("svg:defs/svg:mask", ns)
+        self.assertEqual("userSpaceOnUse", gap.attrib["maskUnits"])
+        knockout = gap.find("svg:use", ns)
+        self.assertEqual("#000", knockout.attrib["fill"])
+        self.assertEqual("#000", knockout.attrib["stroke"])
+        self.assertEqual("48", knockout.attrib["stroke-width"])
+        self.assertEqual(warning.attrib["transform"], knockout.attrib["transform"])
+        self.assertEqual("translate(-112.24 -107.52) scale(1.21)", warning.attrib["transform"])
+        self.assertEqual(warning.find("svg:use", ns).attrib["href"], knockout.attrib["href"])
+        self.assertEqual("url(#missedMedicationBottleGap)", active_outline.attrib["mask"])
+        self.assertEqual("url(#missedMedicationBottleGap)", svg.find("svg:path", ns).attrib["mask"])
+        # Widen the canvas without shrinking or stretching the bottle.
+        self.assertEqual(21, int(svg.attrib["width"]) * 384 / 512)
+        # The user removed HTML dimensions; the SVG keeps its intrinsic size.
         self.assertEqual("15", backup.attrib["width"])
         self.assertEqual("20", backup.attrib["height"])
         self.assertNotIn("fill", outline.find("svg:rect", ns).attrib)
@@ -170,6 +198,30 @@ class MissedMedicationCountTest(unittest.TestCase):
 
     def test_old_gap_counts_before_todays_cutoff(self):
         self.assertEqual(1, self.count(date="2026-09-01", seconds=0))
+
+    def test_three_missed_days_return_full_dcid_frn_in_link_not_count(self):
+        self.db.execute("UPDATE students SET id=7, dcid=900001")
+        self.db.execute("UPDATE u_student_medication SET studentsdcid=900001")
+        self.calendar("2026-09-01")
+        self.calendar("2026-09-02")
+        rows = self.student_alert_rows(student=900001, date="2026-09-02")
+        self.assertEqual([("001900001",)], rows)
+        markup = render_student_alert(STUDENT_SOURCE, rows)
+        class AnchorParser(HTMLParser):
+            def handle_starttag(self, tag, attrs):
+                if tag == "a":
+                    self.anchor = dict(attrs)
+        parser = AnchorParser()
+        parser.feed(markup)
+        self.assertEqual("/admin/students/medication/administration.html?frn=001900001",
+                         parser.anchor["href"])
+        self.assertEqual("Missed daily medication administration", parser.anchor["title"])
+        self.assertNotIn("~(", markup)
+        self.assertEqual("", render_student_alert(STUDENT_SOURCE, []))
+        # Placeholder names are labels only; returned column order controls the URL.
+        renamed = STUDENT_SOURCE.replace("~(student_frn)", "~(arbitrary_label)")
+        self.assertEqual(markup, render_student_alert(renamed, rows))
+        self.assertIn('frn=3"', render_student_alert(STUDENT_SOURCE, [(3,)]))
 
     def test_student_count_not_dose_count(self):
         self.medication(med=2)

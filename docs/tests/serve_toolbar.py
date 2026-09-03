@@ -6,6 +6,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from html import escape
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
+from student_alert_fixture import render_student_alert
+from test_missed_medication_count import MissedMedicationCountTest
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -16,12 +18,23 @@ class Handler(SimpleHTTPRequestHandler):
         if url.path == "/tests/student_alert.html":
             template = (ROOT / "docs/tests/student_alert.html").read_text(encoding="utf-8")
             source = (ROOT / "web_root/wildcards/title_student_end_css.missedmedication.student.alert.txt").read_text()
-            anchor = source.split(";]", 1)[1].split("[/tlist_sql]", 1)[0]
-            # The SQL and server authorization gates are tested separately. This
-            # fixture renders the actual anchor with a fictional student FRN.
+            # Execute the shipped SQL against fictional data, then substitute
+            # row fields by position, as PowerSchool does inside tlist_sql.
             shown = parse_qs(url.query).get("show", ["yes"])[0] == "yes"
-            body = template.replace("<!-- STUDENT_ALERT -->",
-                                    anchor.replace("~(studentfrn)", "001900001") if shown else "")
+            fixture = MissedMedicationCountTest()
+            fixture.setUp()
+            try:
+                fixture.db.execute("UPDATE students SET id=7, dcid=900001")
+                fixture.db.execute("UPDATE u_student_medication SET studentsdcid=900001")
+                fixture.calendar("2026-09-01")
+                fixture.calendar("2026-09-02")
+                if not shown:
+                    for txn, date in enumerate(("2026-08-31", "2026-09-01", "2026-09-02"), start=1):
+                        fixture.transaction(txn=txn, date=date)
+                rows = fixture.student_alert_rows(student=900001, date="2026-09-02")
+                body = template.replace("<!-- STUDENT_ALERT -->", render_student_alert(source, rows))
+            finally:
+                fixture.doCleanups()
         elif url.path == "/admin/students/medication/administration.html":
             frn = escape(parse_qs(url.query).get("frn", [""])[0])
             body = ("<!doctype html><html lang='en'><meta charset='utf-8'>"

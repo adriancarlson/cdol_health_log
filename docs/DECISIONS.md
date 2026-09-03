@@ -111,6 +111,24 @@ preserving proportions. This supersedes the 26.8.7.17 red-body variant.
 The original outlined-cap variant from 26.8.7.16 remains as
 `icon-missed-medication-outline.svg` for backup.
 The white school-header icon and its badge are unchanged.
+In 26.8.7.21, a borderless orange warning triangle with a white exclamation
+overlaps the student bottle's lower-right edge. A square 28-by-28 canvas adds
+space on the right without shrinking the existing 21-by-28 bottle artwork.
+In 26.8.7.22 the badge increases 10%, shifts left, and gains a transparent
+knockout gap separating it from the bottle, including on nonwhite backgrounds.
+In 26.8.7.23 it grows another 10% (21% total), preserving its bottom-center anchor
+and matching knockout gap. Bottle and composite display dimensions stay unchanged.
+85. In a `tlist_sql` row body, `~()` placeholders consume selected columns by
+position, regardless of their labels. The student alert returns the full
+`001`-prefixed student DCID as its only selected column. The aggregate count
+remains only in the HAVING condition so it cannot become the link's FRN.
+
+86. Attendance-based automatic Not Given: Absent processing is a planned workflow. On September 3, 2026, the user
+approved next-morning processing after the overnight attendance refresh, independent of the school's Daily Medication
+Cutoff Time. The cutoff continues to control existing Action Required alerts; it does not schedule automatic absence
+submission. The school Medication Administration Settings page must explain both timings clearly when the feature
+is implemented. No exact morning clock time or execution host has been selected, and this decision does not enable
+automatic writes.
 
 ## Superseded or rejected approaches
 

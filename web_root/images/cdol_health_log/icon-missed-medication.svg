@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="21" height="28" role="img" aria-labelledby="missedMedicationTitle">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28" height="28" role="img" aria-labelledby="missedMedicationTitle">
   <!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) -->
   <!-- Source: https://github.com/FortAwesome/Font-Awesome/blob/5.15.4/svgs/solid/prescription-bottle-alt.svg -->
-  <!-- CDOL adaptation: solid blue cap, blue bottle outline, and red cross, using the CDOL Custom Alerts icon-meds.svg palette. Cap/body contours inset for strokes; original cross proportions retained. -->
+  <!-- CDOL adaptation: solid blue cap, blue bottle outline, red cross, and original orange warning overlay. Enlarged/left-shifted warning uses a transparent knockout gap; bottle geometry and displayed scale are unchanged. -->
   <title id="missedMedicationTitle">Missed daily medication</title>
-  <g fill="none" stroke="#05729d" stroke-width="32" stroke-linejoin="round">
+  <defs>
+    <path id="missedMedicationWarningShape" d="M374 304a12 12 0 0 1 21 0l113 188c5 8-1 20-11 20H268c-10 0-16-12-11-20Z" />
+    <mask id="missedMedicationBottleGap" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="512" height="512" style="mask-type:luminance">
+      <rect width="512" height="512" fill="#fff" />
+      <use href="#missedMedicationWarningShape" transform="translate(-112.24 -107.52) scale(1.21)"
+          fill="#000" stroke="#000" stroke-width="48" stroke-linejoin="round" />
+    </mask>
+  </defs>
+  <g fill="none" stroke="#05729d" stroke-width="32" stroke-linejoin="round" mask="url(#missedMedicationBottleGap)">
     <rect fill="#05729d" x="16" y="16" width="352" height="64" rx="8" />
     <path d="M48 144H336V480a16 16 0 0 1-16 16H64a16 16 0 0 1-16-16Z" />
   </g>
-  <path fill="#c22026" d="M96 296c0-4.4 3.6-8 8-8h56v-56c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v56h56c4.4 0 8 3.6 8 8v48c0 4.4-3.6 8-8 8h-56v56c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8v-56h-56c-4.4 0-8-3.6-8-8v-48Z" />
+  <path fill="#c22026" mask="url(#missedMedicationBottleGap)" d="M96 296c0-4.4 3.6-8 8-8h56v-56c0-4.4 3.6-8 8-8h48c4.4 0 8 3.6 8 8v56h56c4.4 0 8 3.6 8 8v48c0 4.4-3.6 8-8 8h-56v56c0 4.4-3.6 8-8 8h-48c-4.4 0-8-3.6-8-8v-56h-56c-4.4 0-8-3.6-8-8v-48Z" />
+  <g id="missedMedicationWarning" stroke="none" transform="translate(-112.24 -107.52) scale(1.21)">
+    <use href="#missedMedicationWarningShape" fill="#e87518" />
+    <rect fill="#fff" x="370" y="367" width="28" height="70" rx="8" />
+    <circle fill="#fff" cx="384" cy="472" r="16" />
+  </g>
 </svg>

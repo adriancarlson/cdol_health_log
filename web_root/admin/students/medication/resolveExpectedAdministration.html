@@ -131,7 +131,8 @@
             </div>
         </div>
 
-        <div id="expected-administration-given" ng-if="expectedAdmin.record.resolution_type === 'given'">
+        <!-- Initialize the native time widget when the drawer opens and retain it across resolution changes. -->
+        <div id="expected-administration-given" ng-show="expectedAdmin.record.resolution_type === 'given'">
             <div>
                 <label for="expected-administration-quantity">Quantity Administered
                     <span class="req"><em>*</em></span></label>
@@ -146,7 +147,7 @@
             </div>
             <div>
                 <label>Time Given <span class="req"><em>*</em></span></label>
-                <input type="text" class="timeEntry" size="8" ng-model="expectedAdmin.record.event_time"
+                <input type="text" class="timeEntry" size="8" pss-time-widget ng-model="expectedAdmin.record.event_time"
                     ng-change="expectedAdmin.checkReqFields()">
             </div>
             <div>

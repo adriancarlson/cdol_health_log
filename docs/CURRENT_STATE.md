@@ -68,6 +68,51 @@
 - Not Given rows store stable reason codes and label snapshots. Reason corrections and later conversion to Given are
   append-only, and the Administration page computes the effective state while retaining audit history.
 
+## Attendance-based automatic absence processing (planned)
+
+The user approved next-morning processing after the overnight attendance refresh on September 3, 2026. This process
+will be independent of the school's Daily Medication Cutoff Time, and the school settings page must state that
+distinction clearly. The existing cutoff-based alerts remain unchanged.
+
+Read-only test-server Data Dictionary inspection confirmed `PS_ATTENDANCE_DAILY.PRESENCE_STATUS_CD` and
+`PS_ADAADM_DEFAULTS_ALL` fields for student/date/school, default attendance and conversion modes, `ATTENDANCEVALUE`,
+and `POTENTIAL_ATTENDANCEVALUE`. Definitions alone do not validate the percentage calculation, current data freshness,
+or query execution. The reporting-view and backing-table descriptions of potential attendance require reconciliation
+against sample results.
+
+The scheduled worker, automatic-absence settings controls, and automatic submissions are not implemented. Required
+future settings-page wording is recorded in `REQUIREMENTS.md`; remaining decisions and validation gates are in
+`OPEN_WORK.md`. No new processing time, external service, or medication write has been configured.
+
+## Administration quantity label (26.8.7.26)
+
+The Administration table passes the effective administered quantity to the
+`pluralize` filter. Quantities of 1 or less display the singular unit (`1 Pill`,
+`0.5 Pill`, `0.25 Pill`); quantities above 1 retain the existing plural behavior.
+This supersedes the 26.8.7.25 rule that only singularized exactly 1. Numeric strings
+such as `1.0` and `0.25` are supported; missing or invalid counts keep the legacy behavior.
+The default inventory labels Pill, Tablet, Capsule, Milliliters, Milligrams, and
+Units also work when their display label is already plural. Custom labels and
+abbreviations are preserved for singular quantities rather than guessing their grammar.
+Other callers that omit the quantity keep their existing behavior. No stored
+records, prescribed dosage labels, missed/not-given dashes, or inventory math change.
+Regression coverage: `tests/medication_quantity_label.test.cjs`.
+
+## Resolve drawer time input (26.8.7.24)
+
+Time Given uses PowerSchool's `pss-time-widget` directive and keeps its Given
+row mounted with `ng-show`. The legacy class-only input was created after drawer
+initialization, so it missed the native widget wrapper, compact width, and clock
+padding. Keeping the input mounted alone was insufficient; the native directive
+explicitly initializes the widget.
+
+A browser-only template override on the test server confirmed the same 86px
+content width and 20px left padding as Administer Medication. Given/Not Given
+toggles preserve the typed time and one widget wrapper. No records were saved and
+no server files were changed. Time conversion, validation, date, staff, and
+inventory logic are unchanged. Template regression checks are in
+`tests/test_resolve_time_input.py`; install the package for final acceptance.
+
 ## School-level header counter
 
 The school-level header counter is implemented in version 26.8.7.15. It counts
@@ -84,15 +129,17 @@ test-server validation. See `MISSED_MEDICATION_HEADER.md`.
 The count now loads once per page, matching Enrollment Express; no timer, focus,
 visibility, or back/forward-cache refresh is registered.
 
-## Student missed-medication alert (26.8.7.18)
+## Student missed-medication alert (26.8.7.23)
 
 The new `title_student_end_css.missedmedication.student.alert.txt` extension
 renders a single student alert only when its server-side query finds unresolved
 daily administrations for the selected student. It follows the Custom Alerts
 placement pattern, with a native same-tab link to Administration retaining the
 student FRN. No dialog, timer, AJAX request, persisted alert, or new schema is added.
-The student icon has a solid blue cap, blue-outlined body, and red plus. It displays
-at 21 by 28 pixels (previously 15 by 20). The original outlined-cap icon is saved as
+The student icon has a solid blue cap, blue-outlined body, red plus, and overlapping
+orange warning triangle with a white exclamation. The triangle is 21% larger than its initial size and
+shifted left, with a transparent knockout gap separating it from the bottle. It displays
+at 28 by 28 pixels while keeping the bottle's 21-by-28 scale. The original outlined-cap icon is saved as
 `icon-missed-medication-outline.svg`; the white header asset is unchanged.
 The existing admin-portal and Administration modify-permission gates enclose the
 query and markup. School/year filtering matches the student Administration page,
@@ -100,6 +147,13 @@ including its District Office student context; the main header stays school-only
 Local SQL/parity tests and small-icon/link browser checks pass. Live PowerSchool
 template expansion, security, placement, and query latency still need testing.
 See `MISSED_MEDICATION_STUDENT_ALERT.md`.
+
+The SQL row returns the complete FRN as its first/only column, constructed as
+`'001' || TO_CHAR(MIN(expected.studentsdcid))`. The row's `~(student_frn)`
+placeholder consumes that value positionally; it does not read a session tag.
+The former count output could incorrectly create `frn=3` for three missed days.
+The href's missing closing quote is also fixed. The local fixture now executes
+the actual SQL and substitutes positional values instead of hard-coding an FRN.
 
 ## Prior implementation status reported in ChatGPT
 

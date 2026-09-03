@@ -97,7 +97,7 @@
                 WHERE given.reversal_of_transaction_id = not_given.id
             )
     )
-    SELECT COUNT(*) AS missed_count
+    SELECT '001' || TO_CHAR(MIN(expected.studentsdcid)) AS student_frn
     FROM expected_rows expected
     WHERE NOT EXISTS (
         SELECT 1 FROM resolved_occurrences resolved
@@ -106,12 +106,10 @@
     )
     HAVING COUNT(*) > 0
 ;]
-<a id="alert_missed_medication" class="dialogM"
-    href="/admin/students/medication/administration.html?frn=~(studentfrn)
+<a id="alert_missed_medication" href="/admin/students/medication/administration.html?frn=~(student_frn)"
     title="Missed daily medication administration"
     aria-label="Missed daily medication administration">
-    <img src="/images/cdol_health_log/icon-missed-medication.svg?v=26.8.7.18"
-        width="21" height="28" alt="" aria-hidden="true">
+    <img src="/images/cdol_health_log/icon-missed-medication.svg?v=26.8.7.26" aria-hidden="true">
 </a>
 [/tlist_sql]
 [/if#missedMedicationStudentAccess]

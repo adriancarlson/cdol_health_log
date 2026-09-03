@@ -73,14 +73,14 @@ content-box minimum width plus padding made one digit 24px wide by about 15px hi
 CDOL CSS 26.8.0.4 preserves the icon dimensions when rendered as a native link,
 removes PowerSchool's extra anchor padding, and adds pointer/focus feedback.
 
-Install **CDOL CSS 26.8.0.4** and **CDOL Health Log 26.8.7.18** on the test server.
-The build also creates **CDOL Health Log - Data Access 26.8.7.18**; its permission
+Install **CDOL CSS 26.8.0.4** and **CDOL Health Log 26.8.7.23** on the test server.
+The build also creates **CDOL Health Log - Data Access 26.8.7.23**; its permission
 mappings are unchanged in this update. No new schema is required for the counter.
 Nothing is merged to main or deployed automatically.
 
 ## Local checks
 
-- `py docs/tests/test_missed_medication_count.py`: 25 tests against the shipped SQL
+- `py docs/tests/test_missed_medication_count.py`: 26 tests against the shipped SQL
   CTEs, including a 10-state comparison with the actual student-page JavaScript
   history reducer, plus student-alert scoping and source contracts. Each school
   count assertion also executes the student alert SQL for each fictional student

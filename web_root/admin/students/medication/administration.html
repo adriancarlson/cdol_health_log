@@ -214,7 +214,7 @@
                             <td class="center administration-quantity">
                                 <span ng-if="administration.is_given">{{administration.quantity_administered}}
                                 {{$root.medicationOptionDisplayValue('inventory_unit', administration.inventory_unit) |
-                                pluralize}}</span>
+                                pluralize:administration.quantity_administered}}</span>
                                 <span ng-if="!administration.is_given">&mdash;</span>
                             </td>
                             <td class="center">{{$root.medicationOptionDisplayValue('route', administration.route)}}</td>

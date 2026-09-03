@@ -2079,8 +2079,15 @@ define([
 		$scope.$emit('save.drawer.event', saveDrawer)
 	})
 
-	medicationModule.filter('pluralize', () => val => {
+	medicationModule.filter('pluralize', () => (val, quantity) => {
 		if (!val) return val
+		const hasQuantity = quantity !== undefined && quantity !== null && String(quantity).trim() !== ''
+		const numericQuantity = Number(quantity)
+		if (hasQuantity && Number.isFinite(numericQuantity) && numericQuantity <= 1) {
+			// Default options include both singular labels (Pill) and plural labels (Units).
+			// Only singularize recognized units; preserve custom labels and abbreviations.
+			return val.replace(/\b(pill|tablet|capsule|milliliter|milligram|unit)s$/i, '$1')
+		}
 		return val.slice(-1) === 's' ? val : val + 's'
 	})
 

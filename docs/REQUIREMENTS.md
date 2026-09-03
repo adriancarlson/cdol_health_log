@@ -146,6 +146,11 @@ Rules:
 
 The administration interface must be table-based, not calendar-based.
 
+The Administration table's Quantity Administered column uses a singular inventory
+unit when the effective quantity is 1 or less (for example, `1 Pill`, `0.5 Pill`,
+or `0.25 Pill`), and the existing plural form above 1. This is display-only; stored quantities, option
+codes, and historical snapshots remain unchanged.
+
 The student Administration page should remain simple: one Administer Medication button followed by the administration-history table, without an additional section heading or an inventory table. The medication selector in the drawer must include only medications with available inventory. Administration history may contain multiple medications and should be filterable by medication when needed.
 
 Each administration event should capture:
@@ -208,6 +213,33 @@ For administration:
 - Backdated administrations created from an Action Required row use that expected school date and capture the actual
   administration time and staff member.
 
+### Attendance-based automatic absence processing (planned)
+
+For unresolved expected daily medication administrations, the requested workflow automatically records Not Given:
+Absent when the student's attendance qualifies. Daily attendance uses the code's Absent classification. Meeting
+attendance uses the student's applicable converted day value and a school-configurable threshold, not a raw ratio
+of absent periods to all periods. Actual query results and the threshold's units still require validation.
+
+Next-morning processing was approved on September 3, 2026:
+
+- Process a dose date only on a later date, after the required overnight attendance refresh has completed successfully.
+- Do not use the school's Daily Medication Cutoff Time to schedule the automatic process.
+- Preserve the cutoff's existing role in Action Required alerts. This approval does not change the current alert queries.
+- Retain the original expected school date on the Not Given record and distinguish it from when automation records it.
+- Explain the timing beside the automatic-absence controls on the school Medication Administration Settings page.
+  Do not present automatic processing as available before the scheduled worker is implemented and validated.
+
+Required settings-page explanation for the implemented feature:
+
+> Automatic attendance-based absence processing runs the next morning, after PowerSchool's overnight attendance
+> refresh. It records qualifying missed daily medication administrations for the prior school day as Not Given:
+> Absent. The Daily Medication Cutoff Time controls when unresolved daily medications become Action Required;
+> it does not control automatic absence processing.
+
+The execution host, exact morning schedule, refresh-completion check, and behavior after a missed run remain open
+implementation decisions. Automatic submissions must preserve the append-only audit trail and avoid replacing an
+effective Given or Not Given entry or creating duplicate resolutions.
+
 ## 7. Alerts and reminders
 
 The project should support:
@@ -235,13 +267,22 @@ Medications Alert. The new alert opens
 `/admin/students/medication/administration.html?frn=~(studentfrn)` in the same tab,
 not a dialog. Use a blue (`#05729d`) outlined bottle with a solid blue cap and
 red (`#c22026`) plus, matching the existing `icon-meds.svg` palette.
-Display the student icon at 21 by 28 pixels, preserving its 3:4 proportions.
+Add a solid orange warning triangle with a white exclamation mark overlapping
+the lower-right corner. Make it slightly larger and farther left than the initial
+badge, with a transparent separation gap between it and the underlying bottle.
+The gap must show the page background, like the gap below the cap, not a painted
+white border. Keep the red plus recognizable.
+Use a 28-by-28 canvas while retaining the bottle's 21-by-28 scale and proportions.
 Keep the white header icon unchanged and retain the original 15-by-20
 outlined-cap variant as an unused backup.
 Calculate visibility on page load, using the Administration page's school/year
 context and the same eligibility and effective-resolution rules as the header
 count. Gate the student alert server-side to the admin portal and the same
 Medication Administration permission as the header count.
+Within the student alert's SQL row body, construct and return the complete FRN
+(`001` plus the student DCID) as the first and only column. The link consumes
+that column positionally; a row-body `~(studentfrn)` label does not read the
+session FRN. Never return the missed count into the link's FRN placeholder.
 
 ## 8. Auditability
 
