@@ -144,7 +144,31 @@ Rules:
 
 ## 6. Medication administration
 
-The administration interface must be table-based, not calendar-based.
+The administration interface must retain the table-based List view as its default and primary workflow. A supplemental
+read-only Chart view may present the same effective administration history as an annual calendar; it must not replace
+the List view's administration, correction, and audit controls.
+
+The Chart view uses the selected PowerSchool annual term, with one row per month and columns 1 through 31. It combines
+all of the student's medications using an uppercase abbreviation made from the first three letters of each medication
+name and a full medication legend. A Given entry shows the medication abbreviation and administering staff initials,
+with the initials styled as italic signature text. A Not Given entry shows the medication abbreviation and effective reason,
+and an unresolved eligible daily dose shows the medication key and `Missed`. Corrected entries use their final effective
+values, while Entered-in-Error entries remain available only in the List audit view. PRN and other non-daily medications
+show actual administrations but do not create expected or missed entries. The Chart's medication filter appears above
+the chart title, defaults to All Medications, and allows the user to rebuild the chart for one medication using the same
+choices as the List filter. Medication, staff-initial, and calendar legends appear below the annual calendar.
+
+The compact record header centers the school-year title, then left-aligns the student name, grade, and gender on one
+16-pixel screen line and 8-point print line with the same small gap above it in both views. Gender translates `M` to `Male` and `F` to `Female`. `Medication / Dosage` follows gender on that same
+line, with its comma-separated medication list immediately after the label. Each entry begins with its bold three-letter
+medication code, a colon, and the medication name and prescribed dosage. The month column must display
+every month name without clipping. Weekend `W` and no-school `NS` markers are larger and centered in their cells, and the
+`NS` calendar key is labeled `No School`.
+
+The Chart must visually distinguish weekends, weekday non-session days, dates outside the annual term, and dates when
+the student was not enrolled. Future in-session days and the current day before the daily cutoff remain blank. It must
+use PowerSchool's built-in print action to produce a one-page US Letter landscape record containing the student, school
+year, medication legend, staff-initial legend, calendar key, and annual chart without PowerSchool navigation or controls.
 
 The Administration table's Quantity Administered column uses a singular inventory
 unit when the effective quantity is 1 or less (for example, `1 Pill`, `0.5 Pill`,

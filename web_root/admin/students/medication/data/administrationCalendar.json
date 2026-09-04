@@ -1,0 +1,93 @@
+~[tlist_sql;
+    WITH medication_schools AS (
+        SELECT DISTINCT
+            medication.schoolid,
+            medication.yearid
+        FROM u_student_medication medication
+        WHERE medication.studentsdcid = ~(gpv.curStudentDCID;num)
+            AND medication.yearid = ~(gpv.yearID;num)
+            AND ~(gpv.curSchoolID;num) IN (0, medication.schoolid)
+    ),
+    annual_terms AS (
+        SELECT
+            medication_schools.schoolid,
+            medication_schools.yearid,
+            MIN(TRUNC(terms.firstday)) AS year_start_date,
+            MAX(TRUNC(terms.lastday)) AS year_end_date
+        FROM medication_schools
+        INNER JOIN terms
+            ON terms.schoolid = medication_schools.schoolid
+            AND terms.yearid = medication_schools.yearid
+            AND terms.isyearrec = 1
+        GROUP BY
+            medication_schools.schoolid,
+            medication_schools.yearid
+    ),
+    student_enrollment AS (
+        SELECT
+            students.dcid AS studentsdcid,
+            students.schoolid,
+            TRUNC(students.entrydate) AS entrydate,
+            TRUNC(students.exitdate) AS exitdate
+        FROM students
+        WHERE students.dcid = ~(gpv.curStudentDCID;num)
+
+        UNION ALL
+
+        SELECT
+            students.dcid AS studentsdcid,
+            reenrollments.schoolid,
+            TRUNC(reenrollments.entrydate) AS entrydate,
+            TRUNC(reenrollments.exitdate) AS exitdate
+        FROM students
+        INNER JOIN reenrollments
+            ON reenrollments.studentid = students.id
+        WHERE students.dcid = ~(gpv.curStudentDCID;num)
+    ),
+    calendar_rows AS (
+        SELECT DISTINCT
+            annual_terms.schoolid,
+            annual_terms.yearid,
+            annual_terms.year_start_date,
+            annual_terms.year_end_date,
+            TRUNC(calendar_day.date_value) AS calendar_date,
+            NVL(calendar_day.insession, 0) AS in_session,
+            calendar_day.note AS calendar_note,
+            calendar_day.type AS calendar_type,
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM student_enrollment
+                    WHERE student_enrollment.schoolid = annual_terms.schoolid
+                        AND calendar_day.date_value >= student_enrollment.entrydate
+                        AND calendar_day.date_value < student_enrollment.exitdate
+                ) THEN 1
+                ELSE 0
+            END AS is_enrolled
+        FROM annual_terms
+        INNER JOIN calendar_day
+            ON calendar_day.schoolid = annual_terms.schoolid
+            AND calendar_day.date_value BETWEEN annual_terms.year_start_date AND annual_terms.year_end_date
+    )
+    SELECT COALESCE(
+        JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'schoolid' VALUE calendar_rows.schoolid,
+                'yearid' VALUE calendar_rows.yearid,
+                'year_start_date' VALUE TO_CHAR(calendar_rows.year_start_date, 'YYYY-MM-DD'),
+                'year_end_date' VALUE TO_CHAR(calendar_rows.year_end_date, 'YYYY-MM-DD'),
+                'calendar_date' VALUE TO_CHAR(calendar_rows.calendar_date, 'YYYY-MM-DD'),
+                'in_session' VALUE calendar_rows.in_session,
+                'calendar_note' VALUE calendar_rows.calendar_note,
+                'calendar_type' VALUE calendar_rows.calendar_type,
+                'is_enrolled' VALUE calendar_rows.is_enrolled
+                NULL ON NULL
+                RETURNING CLOB
+            )
+            ORDER BY calendar_rows.schoolid, calendar_rows.calendar_date
+            RETURNING CLOB
+        ),
+        TO_CLOB(CHR(91) || CHR(93))
+    ) AS json_result
+    FROM calendar_rows
+;]~(data)[/tlist_sql]

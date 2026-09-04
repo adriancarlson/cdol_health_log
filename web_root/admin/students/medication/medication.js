@@ -94,6 +94,30 @@ define([
 		const hours12 = hours24 % 12 || 12
 		return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${hours24 >= 12 ? 'PM' : 'AM'}`
 	}
+	const parseDateKeyParts = value => {
+		const dateKey = normalizeDateKey(value)
+		const match = dateKey.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+		return match
+			? { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]), dateKey }
+			: null
+	}
+	const dateKeyFromParts = (year, month, day) =>
+		`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+	const daysInMonth = (year, month) => new Date(Date.UTC(year, month, 0)).getUTCDate()
+	const monthNames = [
+		'January', 'February', 'March', 'April', 'May', 'June',
+		'July', 'August', 'September', 'October', 'November', 'December'
+	]
+	const staffInitials = value => {
+		const nameParts = String(value || '').trim().split(/\s+/).filter(Boolean)
+		if (!nameParts.length) return '—'
+		if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase()
+		return `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`.toUpperCase()
+	}
+	const medicationAbbreviation = value => {
+		const letters = String(value || '').match(/[A-Za-z]/g) || []
+		return letters.slice(0, 3).join('').toUpperCase() || 'MED'
+	}
 	const isActiveHealthOption = record => {
 		if (record.isVisible === false || record.isVisible === 0 || record.isVisible === '0') return false
 		return true
@@ -267,8 +291,13 @@ define([
 		vm.medicationList = []
 		vm.availableMedicationList = []
 		vm.administrationList = []
+		vm.administrationChart = { months: [], medicationLegend: [], staffLegend: [], yearLabel: '' }
+		vm.administrationCalendarRows = []
 		vm.administrationMedicationOptions = []
 		vm.historyMedicationId = ''
+		vm.administrationView = String($attrs.ngAdministrationView || '').trim().toLowerCase() === 'chart'
+			? 'chart'
+			: 'list'
 		vm.filterAdministrationByMedication = administration => {
 			return !vm.historyMedicationId || String(administration.medication_id) === String(vm.historyMedicationId)
 		}
@@ -591,6 +620,199 @@ define([
 			return Array.from(optionsByMedication.values()).sort((left, right) => left.label.localeCompare(right.label))
 		}
 
+		const prepareAdministrationChart = (medications, administrations, calendarRows) => {
+			const normalizedCalendarRows = (calendarRows || []).map(row => Object.assign({}, row, {
+				calendar_date: normalizeDateKey(row.calendar_date),
+				year_start_date: normalizeDateKey(row.year_start_date),
+				year_end_date: normalizeDateKey(row.year_end_date)
+			})).filter(row => parseDateKeyParts(row.calendar_date))
+
+			const startDate = normalizedCalendarRows
+				.map(row => row.year_start_date)
+				.filter(Boolean)
+				.sort()[0]
+			const endDates = normalizedCalendarRows
+				.map(row => row.year_end_date)
+				.filter(Boolean)
+				.sort()
+			const endDate = endDates[endDates.length - 1]
+			const startParts = parseDateKeyParts(startDate)
+			const endParts = parseDateKeyParts(endDate)
+			if (!startParts || !endParts) {
+				return { months: [], medicationLegend: [], staffLegend: [], yearLabel: '' }
+			}
+
+			const medicationLegend = (medications || [])
+				.slice()
+				.sort((left, right) => {
+					const nameComparison = String(left.medication_name || '').localeCompare(String(right.medication_name || ''))
+					if (nameComparison) return nameComparison
+					const doseComparison = Number(left.dose_amount || 0) - Number(right.dose_amount || 0)
+					return doseComparison || Number(left.medication_id || 0) - Number(right.medication_id || 0)
+				})
+				.map(medication => Object.assign({}, medication, {
+					key: medicationAbbreviation(medication.medication_name),
+					label: `${medication.medication_name} — ${medication.dose_amount} ${medication.dose_unit}`
+				}))
+			const medicationById = new Map(medicationLegend.map(medication => [Number(medication.medication_id), medication]))
+
+			const effectiveRows = (administrations || []).filter(row => !row.is_entered_in_error)
+			const staffNames = Array.from(new Set(effectiveRows
+				.filter(row => row.is_given && String(row.user_name || '').trim())
+				.map(row => String(row.user_name).trim())))
+				.sort((left, right) => left.localeCompare(right))
+			const baseInitialCounts = staffNames.reduce((counts, name) => {
+				const initials = staffInitials(name)
+				counts.set(initials, (counts.get(initials) || 0) + 1)
+				return counts
+			}, new Map())
+			const baseInitialIndexes = new Map()
+			const staffLegend = staffNames.map(name => {
+				const base = staffInitials(name)
+				const nextIndex = (baseInitialIndexes.get(base) || 0) + 1
+				baseInitialIndexes.set(base, nextIndex)
+				return {
+					name,
+					key: baseInitialCounts.get(base) > 1 ? `${base}${nextIndex}` : base
+				}
+			})
+			const staffKeyByName = new Map(staffLegend.map(staff => [staff.name, staff.key]))
+
+			const eventsByDate = new Map()
+			effectiveRows.forEach(row => {
+				const dateKey = normalizeDateKey(row.event_date)
+				const medication = medicationById.get(Number(row.medication_id))
+				if (!medication || !parseDateKeyParts(dateKey) || dateKey < startDate || dateKey > endDate) return
+
+				let detail = ''
+				let statusClass = ''
+				let accessibleStatus = ''
+				if (row.is_given) {
+					const staffName = String(row.user_name || '').trim()
+					detail = staffKeyByName.get(staffName) || '—'
+					statusClass = 'administration-chart-given'
+					accessibleStatus = `given by ${staffName || 'unknown staff'}`
+				} else if (row.is_not_given) {
+					detail = row.not_given_reason_label || 'Not Given'
+					statusClass = 'administration-chart-not-given'
+					accessibleStatus = `not given: ${detail}`
+				} else if (row.is_action_required) {
+					detail = 'Missed'
+					statusClass = 'administration-chart-missed'
+					accessibleStatus = 'missed administration'
+				} else {
+					return
+				}
+
+				if (!eventsByDate.has(dateKey)) eventsByDate.set(dateKey, [])
+				eventsByDate.get(dateKey).push({
+					medication_key: medication.key,
+					medication_order: medicationLegend.indexOf(medication),
+					event_time: Number(row.event_time || 0),
+					detail,
+					is_given: Boolean(row.is_given),
+					label: `${medication.key} ${detail}`,
+					status_class: statusClass,
+					aria_label: `${medication.medication_name}, ${accessibleStatus}`
+				})
+			})
+			eventsByDate.forEach(events => events.sort((left, right) =>
+				left.medication_order - right.medication_order || left.event_time - right.event_time
+			))
+
+			const calendarByDate = new Map()
+			normalizedCalendarRows.forEach(row => {
+				const existing = calendarByDate.get(row.calendar_date)
+				const normalized = {
+					in_session: Number(row.in_session) === 1,
+					is_enrolled: Number(row.is_enrolled) === 1,
+					note: String(row.calendar_note || '').trim()
+				}
+				if (!existing) {
+					calendarByDate.set(row.calendar_date, normalized)
+					return
+				}
+				existing.in_session = existing.in_session || normalized.in_session
+				existing.is_enrolled = existing.is_enrolled || normalized.is_enrolled
+				if (!existing.note && normalized.note) existing.note = normalized.note
+			})
+
+			const months = []
+			let year = startParts.year
+			let month = startParts.month
+			while (year < endParts.year || (year === endParts.year && month <= endParts.month)) {
+				const maximumDay = daysInMonth(year, month)
+				const cells = []
+				for (let day = 1; day <= 31; day += 1) {
+					const dateKey = dateKeyFromParts(year, month, day)
+					const invalid = day > maximumDay
+					const outsideYear = !invalid && (dateKey < startDate || dateKey > endDate)
+					const calendar = calendarByDate.get(dateKey) || { in_session: false, is_enrolled: false, note: '' }
+					const weekday = invalid ? null : new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+					const weekend = !invalid && (weekday === 0 || weekday === 6)
+					let marker = ''
+					let dayType = 'In session'
+					if (invalid || outsideYear) {
+						dayType = 'Not part of the selected school year'
+					} else if (weekend) {
+						marker = 'W'
+						dayType = 'Weekend'
+					} else if (!invalid && !outsideYear && !calendar.in_session) {
+						marker = 'NS'
+						dayType = calendar.note || 'Not in session'
+					} else if (!invalid && !outsideYear && !calendar.is_enrolled) {
+						marker = 'NE'
+						dayType = 'Student not enrolled'
+					}
+					const events = invalid || outsideYear ? [] : (eventsByDate.get(dateKey) || [])
+					const eventLabels = events.map(event => event.aria_label)
+					cells.push({
+						day,
+						date_key: dateKey,
+						is_unavailable: invalid || outsideYear,
+						is_weekend: weekend && !outsideYear,
+						is_non_session: !invalid && !outsideYear && !weekend && !calendar.in_session,
+						is_not_enrolled: !invalid && !outsideYear && !weekend && calendar.in_session && !calendar.is_enrolled,
+						marker,
+						events,
+						aria_label: invalid || outsideYear
+							? `${monthNames[month - 1]} ${day}: not part of the selected school year`
+							: `${monthNames[month - 1]} ${day}, ${year}: ${[dayType].concat(eventLabels).join('; ')}`
+					})
+				}
+				months.push({ label: monthNames[month - 1], year, cells })
+				month += 1
+				if (month > 12) {
+					month = 1
+					year += 1
+				}
+			}
+
+			return {
+				months,
+				medicationLegend,
+				staffLegend,
+				yearLabel: startParts.year === endParts.year
+					? String(startParts.year)
+					: `${startParts.year}–${endParts.year}`
+			}
+		}
+		vm.rebuildAdministrationChart = () => {
+			const selectedMedicationId = Number(vm.historyMedicationId)
+			const hasSelectedMedication = Number.isFinite(selectedMedicationId) && selectedMedicationId > 0
+			const chartMedications = hasSelectedMedication
+				? vm.medicationList.filter(medication => Number(medication.medication_id) === selectedMedicationId)
+				: vm.medicationList
+			const chartAdministrations = hasSelectedMedication
+				? vm.administrationList.filter(administration => Number(administration.medication_id) === selectedMedicationId)
+				: vm.administrationList
+			vm.administrationChart = prepareAdministrationChart(
+				chartMedications,
+				chartAdministrations,
+				vm.administrationCalendarRows
+			)
+		}
+
 		$rootScope.loadData = () => {
 			loadingDialog()
 			const paramValues = {
@@ -632,13 +854,24 @@ define([
 					return psUtils.htmlEntitiesToCharCode(rows)
 				})
 				: $q.when([])
+			const administrationCalendarPromise = $rootScope.appData.context === 'administration' && vm.administrationView === 'chart'
+				? $http({
+					url: './data/administrationCalendar.json',
+					method: 'GET',
+					params: paramValues
+				}).then(res => {
+					const rows = parseJsonArray(res && res.data)
+					return psUtils.htmlEntitiesToCharCode(rows)
+				})
+				: $q.when([])
 
 			const dataPromise = $q.all([
 				medicationPromise,
 				transactionPromise,
 				medicationOptionsPromise,
 				settingsPromise,
-				expectedAdministrationsPromise
+				expectedAdministrationsPromise,
+				administrationCalendarPromise
 			]).then(results => {
 				const medicationList = prepareMedicationData(results[0], results[1])
 				vm.medicationList = medicationList
@@ -663,6 +896,7 @@ define([
 						? secondsToTime12(displaySetting.daily_cutoff_time)
 						: ''
 					vm.administrationList = prepareAdministrationHistory(medicationList, results[1], results[4])
+					vm.administrationCalendarRows = results[5]
 					vm.appData.activeNotGivenByOccurrence = vm.administrationList
 						.filter(row => row.is_not_given)
 						.reduce((rows, row) => {
@@ -670,6 +904,7 @@ define([
 							return rows
 						}, {})
 					vm.administrationMedicationOptions = prepareAdministrationMedicationOptions(vm.administrationList)
+					vm.rebuildAdministrationChart()
 				} else {
 					vm[`${$rootScope.appData.context}List`] = medicationList
 				}
@@ -688,6 +923,8 @@ define([
 			$rootScope.appData.availableMedicationList = []
 			if ($rootScope.appData.context === 'administration') {
 				vm.administrationList = []
+				vm.administrationChart = { months: [], medicationLegend: [], staffLegend: [], yearLabel: '' }
+				vm.administrationCalendarRows = []
 				vm.administrationMedicationOptions = []
 				vm.appData.activeNotGivenByOccurrence = {}
 			}

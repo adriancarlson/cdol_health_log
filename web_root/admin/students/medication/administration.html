@@ -123,6 +123,301 @@
                 line-height: 12px;
                 vertical-align: middle;
             }
+
+            .administration-tabs {
+                margin: 0 10px 12px;
+            }
+
+            .administration-chart-view {
+                margin: 0 10px;
+            }
+
+            .administration-chart-heading {
+                margin-bottom: 10px;
+                text-align: center;
+            }
+
+            .administration-chart-heading h2 {
+                margin: 0 0 3px;
+            }
+
+            .administration-chart-record-details {
+                text-align: left;
+                font-size: 12px;
+                line-height: 1.15;
+            }
+
+            .administration-chart-student-line {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px 24px;
+                margin-top: 4px;
+                font-size: 16px;
+                line-height: 1.2;
+            }
+
+            .administration-chart-medication-summary {
+                min-width: 0;
+            }
+
+            .administration-chart-medication-list {
+                display: inline;
+            }
+
+            .administration-chart-medication-item {
+                display: inline;
+            }
+
+            .administration-chart-toolbar {
+                display: flex;
+                justify-content: flex-start;
+                margin: 0 0 10px;
+            }
+
+            .administration-chart-legends {
+                margin-top: 8px;
+            }
+
+            .administration-chart-legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px 16px;
+                margin: 8px 0;
+                font-size: 12px;
+            }
+
+            .administration-chart-legend-title {
+                flex-basis: 100%;
+                font-weight: bold;
+            }
+
+            .administration-chart-key {
+                font-weight: bold;
+                white-space: nowrap;
+            }
+
+            .administration-chart-staff-initials {
+                font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", cursive;
+                font-style: italic;
+                font-weight: 600;
+            }
+
+            .administration-chart-table-wrap {
+                overflow-x: auto;
+            }
+
+            .administration-chart-table {
+                width: 100%;
+                min-width: 1120px;
+                table-layout: fixed;
+                border-collapse: collapse;
+            }
+
+            .administration-chart-table th,
+            .administration-chart-table td {
+                border: 1px solid #777;
+            }
+
+            .administration-chart-table th {
+                padding: 3px 1px;
+                text-align: center;
+            }
+
+            .administration-chart-month {
+                width: 76px;
+                padding: 3px !important;
+                text-align: left !important;
+                white-space: nowrap;
+            }
+
+            .administration-chart-cell {
+                position: relative;
+                height: 46px;
+                padding: 12px 1px 2px;
+                vertical-align: top;
+                text-align: center;
+                font-size: 9px;
+                line-height: 1.15;
+                overflow-wrap: anywhere;
+            }
+
+            .administration-chart-day-marker {
+                position: absolute;
+                top: 1px;
+                right: 2px;
+                color: #555;
+                font-size: 8px;
+                font-weight: bold;
+            }
+
+            .administration-chart-centered-marker {
+                top: 50%;
+                right: auto;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 12px;
+            }
+
+            .administration-chart-event {
+                display: block;
+                margin-bottom: 2px;
+                padding: 1px;
+                border-radius: 2px;
+                font-weight: bold;
+            }
+
+            .administration-chart-given {
+                color: #145a32;
+                background: #e8f5e9;
+            }
+
+            .administration-chart-not-given {
+                color: #5f4700;
+                background: #fff4ce;
+            }
+
+            .administration-chart-missed {
+                color: #8c1d18;
+                background: #fde8e7;
+            }
+
+            .administration-chart-weekend {
+                background: #edf0f2;
+            }
+
+            .administration-chart-non-session {
+                background: #d8dde1;
+            }
+
+            .administration-chart-not-enrolled {
+                background: #ece8df;
+            }
+
+            .administration-chart-unavailable {
+                background: #3f4448;
+            }
+
+            .administration-chart-empty {
+                margin: 12px 0;
+            }
+
+            @media print {
+                .administration-chart-hide-before-boundary {
+                    display: none !important;
+                }
+
+                .administration-chart-active .administration-tabs,
+                .administration-chart-active #administration-history-grid,
+                .administration-chart-active .administration-debug,
+                .administration-chart-active .administration-chart-toolbar,
+                .administration-chart-active .feedback-alert,
+                .administration-chart-active .feedback-confirm {
+                    display: none !important;
+                }
+
+                .administration-chart-active .administration-chart-view {
+                    display: block !important;
+                    width: 10.6in;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    color: #000;
+                    background: #fff;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+
+                .administration-chart-active .administration-chart-heading {
+                    margin-bottom: 3pt;
+                }
+
+                .administration-chart-active .administration-chart-heading h2 {
+                    margin: 0;
+                    font-size: 12pt;
+                }
+
+                .administration-chart-active .administration-chart-heading div {
+                    font-size: 8pt;
+                }
+
+                .administration-chart-active .administration-chart-record-details,
+                .administration-chart-active .administration-chart-record-details div {
+                    font-size: 6pt;
+                    line-height: 1;
+                }
+
+                .administration-chart-active .administration-chart-record-details .administration-chart-student-line {
+                    gap: 4px 24px;
+                    margin-top: 4px;
+                    font-size: 8pt;
+                    line-height: 1.2;
+                }
+
+                .administration-chart-active .administration-chart-legend {
+                    gap: 1pt 8pt;
+                    margin: 2pt 0;
+                    font-size: 6pt;
+                    line-height: 1.05;
+                }
+
+                .administration-chart-active .administration-chart-legends {
+                    margin-top: 2pt;
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                }
+
+                .administration-chart-active .administration-chart-staff-initials {
+                    font-size: 6pt;
+                }
+
+                .administration-chart-active .administration-chart-table-wrap {
+                    overflow: visible;
+                }
+
+                .administration-chart-active .administration-chart-table {
+                    width: 100%;
+                    min-width: 0;
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                }
+
+                .administration-chart-active .administration-chart-table th {
+                    padding: 1pt 0;
+                    font-size: 6pt;
+                    line-height: 1;
+                }
+
+                .administration-chart-active .administration-chart-month {
+                    width: 0.55in;
+                    padding: 1pt !important;
+                    font-size: 6pt !important;
+                }
+
+                .administration-chart-active .administration-chart-cell {
+                    height: 0.38in;
+                    padding: 7pt 0.5pt 0.5pt;
+                    font-size: 5pt;
+                    line-height: 1;
+                }
+
+                .administration-chart-active .administration-chart-day-marker {
+                    top: 0.5pt;
+                    right: 1pt;
+                    font-size: 4.5pt;
+                }
+
+                .administration-chart-active .administration-chart-centered-marker {
+                    top: 50%;
+                    right: auto;
+                    left: 50%;
+                    font-size: 8pt;
+                }
+
+                .administration-chart-active .administration-chart-event {
+                    margin-bottom: 0.5pt;
+                    padding: 0;
+                    border-radius: 0;
+                }
+            }
         </style>
     </head>
 
@@ -131,16 +426,28 @@
         ~[wc:admin_navigation_frame_css]
         ~[wc:title_student_begin_css]~(first_name)'s Medication Administration~[wc:title_student_end_css]
 
-        <div data-require-path="./medication.js" data-module-name="medicationModule"
+        <div id="administration-chart-print-boundary" data-require-path="./medication.js" data-module-name="medicationModule"
             ng-controller="medicationController as vm" data-bootstrap-local="true" ng-cur-student-dcid="~(rn)"
             ng-cur-student-name="~(studentname)" ng-cur-user-dcid="~[x:users_dcid]" ng-cur-school-id="~(curschoolid)"
             ng-cur-year-id="~(curyearid)" ng-cur-date="~[date]" ng-cur-time="~[time]"
             ng-server-name="~[x:WEB_GetServerInfo;name=HostName]" ng-cur-user-security-roles="~[x:usersroles]"
-            ng-context="administration" ng-cloak>
+            ng-context="administration" ng-administration-view="~(gpv.view;onlyalpha)"
+            ng-class="{ 'administration-chart-active': vm.administrationView === 'chart' }" ng-cloak>
+
+            <ul class="tabs shown_tabs administration-tabs">
+                <li ng-class="{ selected: vm.administrationView === 'list' }">
+                    <a href="/admin/students/medication/administration.html?frn=~(studentfrn)"
+                        ng-attr-aria-current="{{vm.administrationView === 'list' ? 'page' : undefined}}">List</a>
+                </li>
+                <li ng-class="{ selected: vm.administrationView === 'chart' }">
+                    <a href="/admin/students/medication/administration.html?frn=~(studentfrn)&amp;view=chart"
+                        ng-attr-aria-current="{{vm.administrationView === 'chart' ? 'page' : undefined}}">Chart</a>
+                </li>
+            </ul>
 
             <div id="administration-history-grid" data-pss-grid-widget data-data="vm.administrationList"
                 data-filtered-data="vm.filteredAdministrationList" data-client-side-pagination="false"
-                data-filter-constraint="no-filters">
+                data-filter-constraint="no-filters" ng-if="vm.administrationView === 'list'">
                 <div class="feedback-confirm" role="status" aria-live="polite"
                     ng-if="vm.appData.administrationFeedback">
                     {{vm.appData.administrationFeedback}}
@@ -282,11 +589,147 @@
                 </table>
             </div>
 
-            <div class="box-round" ng-if="$root.appData.districtUser && $root.appData.isTestServer">
+            <section id="administration-chart-view" class="administration-chart-view"
+                ng-if="vm.administrationView === 'chart'" aria-labelledby="administration-chart-title">
+                <div class="feedback-alert" role="alert" ng-if="vm.hasMissingDailyCutoff">
+                    Daily medication gaps cannot be calculated for this school until a cutoff time is configured.
+                    <a href="/admin/schoolsetup/medication/administration_settings.html">Configure Medication Administration Settings</a>.
+                </div>
+
+                <div class="administration-chart-empty feedback-info" ng-if="!vm.administrationChart.months.length">
+                    No medication calendar is available for this student in the selected school year.
+                </div>
+
+                <div ng-if="vm.administrationChart.months.length">
+                    <div class="administration-chart-toolbar" ng-if="vm.administrationMedicationOptions.length > 1">
+                        <div class="administration-filter">
+                            <label for="administration-chart-medication-filter">Filter Medication</label>
+                            <select id="administration-chart-medication-filter" ng-model="vm.historyMedicationId"
+                                ng-change="vm.rebuildAdministrationChart()"
+                                ng-options="option.medication_id as option.label for option in vm.administrationMedicationOptions">
+                                <option value="">All Medications</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="administration-chart-heading">
+                        <h2 id="administration-chart-title">{{vm.administrationChart.yearLabel}} Medication Administration Record</h2>
+                        <div class="administration-chart-record-details">
+                            <div class="administration-chart-student-line">
+                                <span><strong>Student:</strong> {{vm.appData.curStudentName}}</span>
+                                <span><strong>Grade:</strong> ~([students]grade_level)</span>
+                                <span><strong>Gender:</strong> ~(decode;~(gender);M;Male;F;Female;Not Specified)</span>
+                                <span class="administration-chart-medication-summary">
+                                    <strong>Medication / Dosage</strong>
+                                    <span class="administration-chart-medication-list">
+                                        <span class="administration-chart-medication-item"
+                                            ng-repeat="medication in vm.administrationChart.medicationLegend track by medication.medication_id">
+                                            <strong>{{medication.key}}:</strong> {{medication.medication_name}} — {{medication.dose_amount}}
+                                            {{$root.medicationOptionDisplayValue('dose_unit', medication.dose_unit)}}<span ng-if="!$last">,</span>
+                                        </span>
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="administration-chart-table-wrap">
+                        <table class="administration-chart-table">
+                            <caption class="screen_readers_only">
+                                Annual medication administration chart for {{vm.appData.curStudentName}}, {{vm.administrationChart.yearLabel}}
+                            </caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="administration-chart-month">Month</th>
+                                    <th scope="col" ng-repeat="cell in vm.administrationChart.months[0].cells track by cell.day">
+                                        {{cell.day}}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="month in vm.administrationChart.months track by (month.year + '-' + month.label)">
+                                    <th scope="row" class="administration-chart-month">{{month.label}}</th>
+                                    <td ng-repeat="cell in month.cells track by cell.date_key"
+                                        class="administration-chart-cell"
+                                        ng-class="{
+                                            'administration-chart-unavailable': cell.is_unavailable,
+                                            'administration-chart-weekend': cell.is_weekend,
+                                            'administration-chart-non-session': cell.is_non_session,
+                                            'administration-chart-not-enrolled': cell.is_not_enrolled
+                                        }"
+                                        ng-attr-title="{{cell.aria_label}}"
+                                        ng-attr-aria-label="{{cell.aria_label}}">
+                                        <span class="administration-chart-day-marker" ng-if="cell.marker"
+                                            ng-class="{ 'administration-chart-centered-marker': cell.marker === 'W' || cell.marker === 'NS' }">{{cell.marker}}</span>
+                                        <span class="administration-chart-event"
+                                            ng-repeat="event in cell.events track by $index"
+                                            ng-class="event.status_class"
+                                            ng-attr-title="{{event.aria_label}}">
+                                            <span>{{event.medication_key}}</span>
+                                            <span ng-class="{ 'administration-chart-staff-initials': event.is_given }">{{event.detail}}</span>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="administration-chart-legends">
+                        <div class="administration-chart-legend" ng-if="vm.administrationChart.medicationLegend.length">
+                            <div class="administration-chart-legend-title">Medications</div>
+                            <div ng-repeat="medication in vm.administrationChart.medicationLegend track by medication.medication_id">
+                                <span class="administration-chart-key">{{medication.key}}</span>
+                                {{medication.medication_name}} — {{medication.dose_amount}}
+                                {{$root.medicationOptionDisplayValue('dose_unit', medication.dose_unit)}}
+                            </div>
+                        </div>
+
+                        <div class="administration-chart-legend" ng-if="vm.administrationChart.staffLegend.length">
+                            <div class="administration-chart-legend-title">Staff initials</div>
+                            <div ng-repeat="staff in vm.administrationChart.staffLegend track by staff.name">
+                                <span class="administration-chart-key administration-chart-staff-initials">{{staff.key}}</span>
+                                {{staff.name}}
+                            </div>
+                        </div>
+
+                        <div class="administration-chart-legend">
+                            <div class="administration-chart-legend-title">Calendar key</div>
+                            <div><span class="administration-chart-key">W</span> Weekend</div>
+                            <div><span class="administration-chart-key">NS</span> No School</div>
+                            <div><span class="administration-chart-key">NE</span> Student not enrolled</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="box-round administration-debug" ng-if="$root.appData.districtUser && $root.appData.isTestServer">
                 <strong>appData:</strong>
                 <pre>{{$root.appData | json}}</pre>
             </div>
         </div>
+
+        <script>
+            (function prepareAdministrationChartPrint() {
+                const view = new URLSearchParams(window.location.search).get('view')
+                if ((view || '').toLowerCase() !== 'chart') return
+
+                const pageStyle = document.createElement('style')
+                pageStyle.id = 'administration-chart-page-style'
+                pageStyle.media = 'print'
+                pageStyle.textContent = '@page { size: letter landscape; margin: 0.2in; }'
+                document.head.appendChild(pageStyle)
+
+                let chartAncestor = document.getElementById('administration-chart-print-boundary')
+                while (chartAncestor && chartAncestor !== document.body) {
+                    let precedingElement = chartAncestor.previousElementSibling
+                    while (precedingElement) {
+                        precedingElement.classList.add('administration-chart-hide-before-boundary')
+                        precedingElement = precedingElement.previousElementSibling
+                    }
+                    chartAncestor = chartAncestor.parentElement
+                }
+            })()
+        </script>
 
         ~[wc:admin_footer_frame_css]
     </body>

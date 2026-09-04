@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Medication Administration Chart fixture</title>
+    <style>
+        body { margin: 12px; font-family: Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    <div class="fixture-powerschool-header">PowerSchool header fixture (must not print)</div>
+    <div class="fixture-student-header">Student banner fixture (must not print)</div>
+    <main id="administration-chart-print-boundary" class="administration-chart-active">
+        <section class="administration-chart-view">
+            <div class="administration-chart-toolbar">
+                <div class="administration-filter">
+                    <label for="fixture-filter">Filter Medication</label>
+                    <select id="fixture-filter"><option>All Medications</option><option>Aspirin</option></select>
+                </div>
+            </div>
+            <div class="administration-chart-heading">
+                <h2>2026–2027 Medication Administration Record</h2>
+                <div class="administration-chart-record-details">
+                    <div class="administration-chart-student-line">
+                        <span><strong>Student:</strong> Fictional, Student</span>
+                        <span><strong>Grade:</strong> 9</span>
+                        <span><strong>Gender:</strong> Female</span>
+                        <span class="administration-chart-medication-summary">
+                            <strong>Medication / Dosage</strong>
+                            <span class="administration-chart-medication-list">
+                                <span class="administration-chart-medication-item"><strong>ASP:</strong> Aspirin — 1 Pill<span>,</span></span>
+                                <span class="administration-chart-medication-item"><strong>IBU:</strong> Ibuprofen — 5 mg</span>
+                            </span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="administration-chart-table-wrap">
+                <table class="administration-chart-table">
+                    <thead><tr id="fixture-days"><th class="administration-chart-month">Month</th></tr></thead>
+                    <tbody id="fixture-months"></tbody>
+                </table>
+            </div>
+            <div class="administration-chart-legends">
+                <div class="administration-chart-legend">
+                    <div class="administration-chart-legend-title">Medications</div>
+                    <div><span class="administration-chart-key">ASP</span> Aspirin — 1 Pill</div>
+                    <div><span class="administration-chart-key">IBU</span> Ibuprofen — 5 mg</div>
+                </div>
+                <div class="administration-chart-legend">
+                    <div class="administration-chart-legend-title">Staff initials</div>
+                    <div><span class="administration-chart-key administration-chart-staff-initials">AC</span> Avery Clinician</div>
+                </div>
+                <div class="administration-chart-legend">
+                    <div class="administration-chart-legend-title">Calendar key</div>
+                    <div><span class="administration-chart-key">W</span> Weekend</div>
+                    <div><span class="administration-chart-key">NS</span> No School</div>
+                    <div><span class="administration-chart-key">NE</span> Student not enrolled</div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script>
+        fetch('/web_root/admin/students/medication/administration.html')
+            .then(response => response.text())
+             .then(source => {
+                 const css = source.match(/<style>([\s\S]*?)<\/style>/)[1]
+                     .replace(/~\[if#[^\]]+\]/g, '')
+                     .replace(/\[\/if#[^\]]+\]/g, '')
+                 const style = document.createElement('style')
+                 style.textContent = css
+                 document.head.appendChild(style)
+
+                 history.replaceState(null, '', '?view=chart')
+                 const printPreparation = source.match(/<script>\s*([\s\S]*?prepareAdministrationChartPrint[\s\S]*?)<\/script>/)[1]
+                 Function(printPreparation)()
+             })
+
+        const dayHeader = document.getElementById('fixture-days')
+        for (let day = 1; day <= 31; day += 1) {
+            dayHeader.insertAdjacentHTML('beforeend', `<th>${day}</th>`)
+        }
+
+        const monthNames = ['August', 'September', 'October', 'November', 'December', 'January', 'February', 'March', 'April', 'May']
+        const monthNumbers = [8, 9, 10, 11, 12, 1, 2, 3, 4, 5]
+        const tbody = document.getElementById('fixture-months')
+        monthNames.forEach((name, monthIndex) => {
+            const month = monthNumbers[monthIndex]
+            const year = month >= 8 ? 2026 : 2027
+            const maximumDay = new Date(Date.UTC(year, month, 0)).getUTCDate()
+            const row = document.createElement('tr')
+            row.innerHTML = `<th class="administration-chart-month">${name}</th>`
+            for (let day = 1; day <= 31; day += 1) {
+                const cell = document.createElement('td')
+                cell.className = 'administration-chart-cell'
+                if (day > maximumDay) {
+                    cell.classList.add('administration-chart-unavailable')
+                } else {
+                    const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+                    if (weekday === 0 || weekday === 6) {
+                        cell.classList.add('administration-chart-weekend')
+                        cell.innerHTML = '<span class="administration-chart-day-marker administration-chart-centered-marker">W</span>'
+                    }
+                    if (name === 'September' && day === 7) {
+                        cell.className = 'administration-chart-cell administration-chart-non-session'
+                        cell.innerHTML = '<span class="administration-chart-day-marker administration-chart-centered-marker">NS</span>'
+                    }
+                    if (name === 'August' && day === 19) {
+                        cell.insertAdjacentHTML('beforeend', '<span class="administration-chart-event administration-chart-given">ASP <span class="administration-chart-staff-initials">AC</span></span>')
+                    }
+                    if (name === 'August' && day === 20) {
+                        cell.insertAdjacentHTML('beforeend', '<span class="administration-chart-event administration-chart-not-given">IBU Absent</span>')
+                    }
+                    if (name === 'August' && day === 21) {
+                        cell.insertAdjacentHTML('beforeend', '<span class="administration-chart-event administration-chart-missed">ASP Missed</span>')
+                    }
+                }
+                row.appendChild(cell)
+            }
+            tbody.appendChild(row)
+        })
+    </script>
+</body>
+</html>

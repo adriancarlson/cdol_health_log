@@ -29,7 +29,7 @@ Treat those documents and the installed schema as the current source of truth. W
 - Do not overwrite historical inventory lots.
 - Inventory consumption must use FIFO from the oldest lot with quantity remaining.
 - A refill creates a new inventory lot, not a duplicate medication definition.
-- Medication administration must use a table-based workflow, not a calendar-based workflow.
+- Medication administration must retain the table-based List as its default and primary workflow. The annual Chart is a supplemental read-only view and must not replace the List's administration or audit controls.
 - Route values must come from a controlled dropdown, not unrestricted free text.
 - Do not use `cc` as a dosage unit.
 - Ask before making destructive schema changes.

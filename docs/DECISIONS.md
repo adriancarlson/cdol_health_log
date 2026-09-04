@@ -2,7 +2,8 @@
 
 ## Confirmed workflow decisions
 
-1. The administration experience will be table-based, not calendar-based.
+1. The administration experience uses the table-based List view as its default and primary workflow. A supplemental
+   read-only annual Chart view is allowed, but it does not replace List administration, correction, or audit controls.
 2. Medication name remains free-form.
 3. Route uses a controlled dropdown and is not unrestricted free text.
 4. Do not use `cc` as a dosage unit.
@@ -129,12 +130,19 @@ Cutoff Time. The cutoff continues to control existing Action Required alerts; it
 submission. The school Medication Administration Settings page must explain both timings clearly when the feature
 is implemented. No exact morning clock time or execution host has been selected, and this decision does not enable
 automatic writes.
+87. The annual Medication Administration Chart places its medication filter above the record title and all legends below
+the calendar. Medication keys use the uppercase first three letters of the medication name, and staff initials use italic
+signature-style text in both administration cells and the staff legend.
+88. The chart's compact record header uses one left-aligned line at 16 pixels on screen and 8 points in print, with the same small top gap in both views, for student name, grade, translated gender,
+Medication / Dosage, and its immediately adjacent comma-separated list. Entries begin with bold three-letter medication
+codes and colons. The month column must fit full month names, weekend `W` and no-school `NS` markers are centered and enlarged, and the `NS`
+legend wording is `No School`.
 
 ## Superseded or rejected approaches
 
 - Do not create a new medication row for every refill.
 - Do not store only one mutable inventory quantity that loses refill history.
-- Do not use a calendar as the primary daily administration interface.
+- Do not use the annual Chart as the primary daily administration interface; the List remains the default workflow.
 - Do not allow arbitrary route text.
 - Do not use `cc`.
 - Do not place timing or an active flag on each inventory lot merely to represent medication scheduling.
