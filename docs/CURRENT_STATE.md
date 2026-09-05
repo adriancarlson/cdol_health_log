@@ -31,7 +31,7 @@
 - Reversal is not exposed in the nurse-facing inventory workflow. A future correction workflow must be designed separately from medication physically returning to school.
 - The full inventory workflow has been validated successfully on the PowerSchool test server, including medication creation, required inventory, multiple inventory rows, read-only lots, additions, FIFO deductions, insufficient-inventory blocking, decimal quantities, warning thresholds, duplicate prevention, and medication-name normalization.
 - The initial student-specific Medication Administration page is implemented as one Administer Medication button followed directly by a simple administration-history table. Inventory is not displayed on the page. The drawer limits medication selection to medications with inventory available and records administered date/time, quantity, staff member, and notes. Routine administrations save directly without a redundant confirmation modal; required-field validation, available-inventory validation, save-in-progress protection, and inline medication details remain in place.
-- Version 26.9.1.6 adds PowerSchool List and Chart tabs to that same page. List remains the default and preserves the
+- Version 26.9.3 adds PowerSchool List and Chart tabs to that same page. List remains the default and preserves the
   existing table and controls. Chart is a read-only annual summary that combines all medications, derives its statuses
   from the existing effective administration reducer, and loads school-year session and enrollment classifications from
   `data/administrationCalendar.json` only when the Chart tab is opened. It prints through PowerSchool's built-in print
@@ -44,6 +44,10 @@
   `NS` markers are enlarged and centered; and `NS` is labeled `No School` in the calendar key. Chart-only print
   preparation mirrors the Emergency Quick Sheet boundary pattern so PowerSchool's header, student banner, page title,
   navigation, tabs, and controls are excluded from the printed record.
+  When two administering staff members share first-and-last initials, the chart adds their available middle initials,
+  includes their middle names in the staff legend, and gives the readable Lucida Handwriting signature font to staff with fewer entries.
+  The matching staff member with the most effective Given entries retains the primary signature font.
+  This uses the existing administration response and does not add a page-load request.
 - The Administer Medication button remains visible even when no medication is available. In that case, the drawer explains that medication must first be added through the Medication Inventory page. The administration drawer uses compact spacing consistent with the other medication drawers.
 - The administration drawer repeats the Inventory page's warning colors in compact status pills. Available Inventory shows the medication's current non-normal status. The Quantity Administered pill recalculates live from the projected inventory remaining after the entered quantity, so it can change from Normal to Low Inventory, Critical Inventory, or Last of Inventory before saving. Last of Inventory uses the Out styling but accurately describes administering the remaining amount. Invalid or excessive quantities do not show a projected pill, the no-available-medication message displays Out of Inventory, and Normal remains unmarked.
 - The Inventory and Administration grid toolbars provide matching low-emphasis, left-arrow navigation links while keeping Add Medication and the Administration page's Administer Medication button as the primary actions. Administration links to `← View Medication Inventory`; Inventory links to `← Administer Medication`; and all links preserve the current student's PowerSchool FRN. The no-inventory administration drawer guidance also links directly to that student's inventory.

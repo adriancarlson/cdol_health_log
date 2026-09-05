@@ -202,6 +202,12 @@
                 font-weight: 600;
             }
 
+            .administration-chart-staff-initials-secondary {
+                font-family: "Lucida Handwriting", "Segoe Print", "Comic Sans MS", cursive;
+                font-style: normal;
+                font-weight: 600;
+            }
+
             .administration-chart-table-wrap {
                 overflow-x: auto;
             }
@@ -666,7 +672,7 @@
                                             ng-class="event.status_class"
                                             ng-attr-title="{{event.aria_label}}">
                                             <span>{{event.medication_key}}</span>
-                                            <span ng-class="{ 'administration-chart-staff-initials': event.is_given }">{{event.detail}}</span>
+                                            <span ng-class="{ 'administration-chart-staff-initials': event.is_given, 'administration-chart-staff-initials-secondary': event.staff_signature_class === 'secondary' }">{{event.detail}}</span>
                                         </span>
                                     </td>
                                 </tr>
@@ -686,8 +692,9 @@
 
                         <div class="administration-chart-legend" ng-if="vm.administrationChart.staffLegend.length">
                             <div class="administration-chart-legend-title">Staff initials</div>
-                            <div ng-repeat="staff in vm.administrationChart.staffLegend track by staff.name">
-                                <span class="administration-chart-key administration-chart-staff-initials">{{staff.key}}</span>
+                            <div ng-repeat="staff in vm.administrationChart.staffLegend track by staff.identity">
+                                <span class="administration-chart-key administration-chart-staff-initials"
+                                    ng-class="{ 'administration-chart-staff-initials-secondary': staff.signature_class === 'secondary' }">{{staff.key}}</span>
                                 {{staff.name}}
                             </div>
                         </div>

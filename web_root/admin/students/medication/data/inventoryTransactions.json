@@ -11,6 +11,7 @@
                     'event_time' VALUE u_student_med_inv_txn.event_time,
                     'users_dcid' VALUE u_student_med_inv_txn.users_dcid,
                     'user_name' VALUE users.first_name || ' ' || users.last_name,
+                    'user_middle_name' VALUE users.middle_name,
                     'notes' VALUE u_student_med_inv_txn.notes,
                     'medication_name' VALUE u_student_med_inv_txn.medication_name,
                     'dose_amount' VALUE u_student_med_inv_txn.dose_amount,

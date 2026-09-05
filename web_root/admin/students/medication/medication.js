@@ -114,6 +114,23 @@ define([
 		if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase()
 		return `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`.toUpperCase()
 	}
+	const staffInitialsWithMiddle = (value, middleName) => {
+		const nameParts = String(value || '').trim().split(/\s+/).filter(Boolean)
+		const middleInitial = String(middleName || '').trim().charAt(0).toUpperCase()
+		if (nameParts.length < 2 || !middleInitial) return staffInitials(value)
+		return `${nameParts[0].charAt(0)}${middleInitial}${nameParts[nameParts.length - 1].charAt(0)}`.toUpperCase()
+	}
+	const staffDisplayName = (value, middleName) => {
+		const nameParts = String(value || '').trim().split(/\s+/).filter(Boolean)
+		const middle = String(middleName || '').trim()
+		if (nameParts.length < 2 || !middle) return nameParts.join(' ')
+		return [nameParts[0], middle].concat(nameParts.slice(1)).join(' ')
+	}
+	const staffIdentity = row => {
+		const dcid = String(row && row.users_dcid || '').trim()
+		if (dcid) return `dcid:${dcid}`
+		return `name:${String(row && row.user_name || '').trim()}|middle:${String(row && row.user_middle_name || '').trim()}`
+	}
 	const medicationAbbreviation = value => {
 		const letters = String(value || '').match(/[A-Za-z]/g) || []
 		return letters.slice(0, 3).join('').toUpperCase() || 'MED'
@@ -503,6 +520,7 @@ define([
 						administration.event_time = correction.event_time
 						administration.users_dcid = correction.users_dcid
 						administration.user_name = correction.user_name
+						administration.user_middle_name = correction.user_middle_name
 						administration.notes = correction.notes
 						administration.medication_name = correction.medication_name || administration.medication_name
 						administration.dose_amount = correction.dose_amount || administration.dose_amount
@@ -657,26 +675,68 @@ define([
 			const medicationById = new Map(medicationLegend.map(medication => [Number(medication.medication_id), medication]))
 
 			const effectiveRows = (administrations || []).filter(row => !row.is_entered_in_error)
-			const staffNames = Array.from(new Set(effectiveRows
+			const staffMembersByIdentity = effectiveRows
 				.filter(row => row.is_given && String(row.user_name || '').trim())
-				.map(row => String(row.user_name).trim())))
-				.sort((left, right) => left.localeCompare(right))
-			const baseInitialCounts = staffNames.reduce((counts, name) => {
-				const initials = staffInitials(name)
+				.reduce((members, row) => {
+					const identity = staffIdentity(row)
+					if (!members.has(identity)) {
+						members.set(identity, {
+							identity,
+							name: String(row.user_name).trim(),
+							middle_name: String(row.user_middle_name || '').trim(),
+							entry_count: 0
+						})
+					}
+					const staff = members.get(identity)
+					staff.entry_count += 1
+					if (!staff.middle_name && row.user_middle_name) {
+						staff.middle_name = String(row.user_middle_name).trim()
+					}
+					return members
+				}, new Map())
+			const staffMembers = Array.from(staffMembersByIdentity.values())
+				.sort((left, right) => left.name.localeCompare(right.name)
+					|| left.middle_name.localeCompare(right.middle_name)
+					|| left.identity.localeCompare(right.identity))
+			const baseInitialCounts = staffMembers.reduce((counts, staff) => {
+				const initials = staffInitials(staff.name)
 				counts.set(initials, (counts.get(initials) || 0) + 1)
 				return counts
 			}, new Map())
-			const baseInitialIndexes = new Map()
-			const staffLegend = staffNames.map(name => {
-				const base = staffInitials(name)
-				const nextIndex = (baseInitialIndexes.get(base) || 0) + 1
-				baseInitialIndexes.set(base, nextIndex)
+			const candidateInitialCounts = staffMembers.reduce((counts, staff) => {
+				const base = staffInitials(staff.name)
+				const candidate = baseInitialCounts.get(base) > 1
+					? staffInitialsWithMiddle(staff.name, staff.middle_name)
+					: base
+				counts.set(candidate, (counts.get(candidate) || 0) + 1)
+				return counts
+			}, new Map())
+			const primaryStaffByBase = staffMembers.reduce((primaryStaff, staff) => {
+				const base = staffInitials(staff.name)
+				const current = primaryStaff.get(base)
+				if (!current || staff.entry_count > current.entry_count) primaryStaff.set(base, staff)
+				return primaryStaff
+			}, new Map())
+			const candidateInitialIndexes = new Map()
+			const staffLegend = staffMembers.map(staff => {
+				const base = staffInitials(staff.name)
+				const hasCollision = baseInitialCounts.get(base) > 1
+				const candidate = hasCollision
+					? staffInitialsWithMiddle(staff.name, staff.middle_name)
+					: base
+				const candidateIndex = (candidateInitialIndexes.get(candidate) || 0) + 1
+				candidateInitialIndexes.set(candidate, candidateIndex)
 				return {
-					name,
-					key: baseInitialCounts.get(base) > 1 ? `${base}${nextIndex}` : base
+					identity: staff.identity,
+					name: hasCollision ? staffDisplayName(staff.name, staff.middle_name) : staff.name,
+					key: hasCollision && candidateInitialCounts.get(candidate) > 1
+						? `${candidate}${candidateIndex}`
+						: candidate,
+					signature_class: hasCollision && primaryStaffByBase.get(base).identity !== staff.identity ? 'secondary' : '',
+					entry_count: staff.entry_count
 				}
 			})
-			const staffKeyByName = new Map(staffLegend.map(staff => [staff.name, staff.key]))
+			const staffByIdentity = new Map(staffLegend.map(staff => [staff.identity, staff]))
 
 			const eventsByDate = new Map()
 			effectiveRows.forEach(row => {
@@ -687,11 +747,14 @@ define([
 				let detail = ''
 				let statusClass = ''
 				let accessibleStatus = ''
+				let staffSignatureClass = ''
 				if (row.is_given) {
 					const staffName = String(row.user_name || '').trim()
-					detail = staffKeyByName.get(staffName) || '—'
+					const staff = staffByIdentity.get(staffIdentity(row))
+					detail = staff ? staff.key : '—'
+					staffSignatureClass = staff ? staff.signature_class : ''
 					statusClass = 'administration-chart-given'
-					accessibleStatus = `given by ${staffName || 'unknown staff'}`
+					accessibleStatus = `given by ${staff ? staff.name : staffName || 'unknown staff'}`
 				} else if (row.is_not_given) {
 					detail = row.not_given_reason_label || 'Not Given'
 					statusClass = 'administration-chart-not-given'
@@ -711,6 +774,7 @@ define([
 					event_time: Number(row.event_time || 0),
 					detail,
 					is_given: Boolean(row.is_given),
+					staff_signature_class: staffSignatureClass,
 					label: `${medication.key} ${detail}`,
 					status_class: statusClass,
 					aria_label: `${medication.medication_name}, ${accessibleStatus}`

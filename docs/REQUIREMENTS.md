@@ -165,6 +165,12 @@ medication code, a colon, and the medication name and prescribed dosage. The mon
 every month name without clipping. Weekend `W` and no-school `NS` markers are larger and centered in their cells, and the
 `NS` calendar key is labeled `No School`.
 
+Staff members normally use their first-and-last initials. Only when two staff members on the chart share those initials,
+use each available middle initial in the chart key and show the middle name in the staff legend. Within each collision group,
+the staff member with the most effective Given entries uses the primary font, and staff with fewer entries use the readable
+Lucida Handwriting signature font. Ties resolve deterministically by staff name. If middle initials still do not make the keys unique, append a stable
+number. The collision handling must reuse the administration response and must not add another page-load request.
+
 The Chart must visually distinguish weekends, weekday non-session days, dates outside the annual term, and dates when
 the student was not enrolled. Future in-session days and the current day before the daily cutoff remain blank. It must
 use PowerSchool's built-in print action to produce a one-page US Letter landscape record containing the student, school

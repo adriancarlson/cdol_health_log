@@ -49,7 +49,8 @@
                 </div>
                 <div class="administration-chart-legend">
                     <div class="administration-chart-legend-title">Staff initials</div>
-                    <div><span class="administration-chart-key administration-chart-staff-initials">AC</span> Avery Clinician</div>
+                    <div><span class="administration-chart-key administration-chart-staff-initials">ACB</span> Avery Claire Brown</div>
+                    <div><span class="administration-chart-key administration-chart-staff-initials administration-chart-staff-initials-secondary">ADB</span> Alex Drew Baker</div>
                 </div>
                 <div class="administration-chart-legend">
                     <div class="administration-chart-legend-title">Calendar key</div>
@@ -106,13 +107,16 @@
                         cell.innerHTML = '<span class="administration-chart-day-marker administration-chart-centered-marker">NS</span>'
                     }
                     if (name === 'August' && day === 19) {
-                        cell.insertAdjacentHTML('beforeend', '<span class="administration-chart-event administration-chart-given">ASP <span class="administration-chart-staff-initials">AC</span></span>')
+                        cell.insertAdjacentHTML('beforeend', '<span class="administration-chart-event administration-chart-given">ASP <span class="administration-chart-staff-initials">ACB</span></span>')
                     }
                     if (name === 'August' && day === 20) {
                         cell.insertAdjacentHTML('beforeend', '<span class="administration-chart-event administration-chart-not-given">IBU Absent</span>')
                     }
                     if (name === 'August' && day === 21) {
                         cell.insertAdjacentHTML('beforeend', '<span class="administration-chart-event administration-chart-missed">ASP Missed</span>')
+                    }
+                    if (name === 'August' && day === 22) {
+                        cell.insertAdjacentHTML('beforeend', '<span class="administration-chart-event administration-chart-given">IBU <span class="administration-chart-staff-initials administration-chart-staff-initials-secondary">ADB</span></span>')
                     }
                 }
                 row.appendChild(cell)

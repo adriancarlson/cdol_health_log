@@ -31,7 +31,7 @@
     Verify clock spacing, compact width, keyboard editing, and Given/Not Given
     toggling. A browser-only preview passed; installed-package acceptance remains.
 
-17. Install Health Log 26.9.1.6 and validate the Medication Administration Chart tab against live PowerSchool annual
+17. Install Health Log 26.9.3 and validate the Medication Administration Chart tab against live PowerSchool annual
     term and `Calendar_Day` data. Confirm List remains the default, medication and staff keys are stable, corrected and
     Entered-in-Error behavior matches the effective-record rules, PRN medications do not create missed entries, and the
     built-in print action produces one readable US Letter landscape page without navigation or controls. Test authorized

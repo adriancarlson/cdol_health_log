@@ -62,8 +62,8 @@ test('builds one 31-day row per school-year month with boundary and day classifi
 
 test('uses first-three-letter medication abbreviations and effective chart-only event labels', () => {
     const chart = prepareAdministrationChart(medications, [
-        { medication_id: 10, event_date: '2024-08-15', event_time: 36000, is_given: true, user_name: 'Alex Brown' },
-        { medication_id: 20, event_date: '2024-08-15', event_time: 37000, is_given: true, is_corrected: true, user_name: 'Amy Baker' },
+        { medication_id: 10, event_date: '2024-08-15', event_time: 36000, is_given: true, users_dcid: 101, user_name: 'Alex Brown', user_middle_name: 'Charles' },
+        { medication_id: 20, event_date: '2024-08-15', event_time: 37000, is_given: true, is_corrected: true, users_dcid: 102, user_name: 'Amy Baker', user_middle_name: 'Diane' },
         { medication_id: 10, event_date: '2024-08-16', is_not_given: true, not_given_reason_label: 'Absent' },
         { medication_id: 20, event_date: '2024-08-19', is_action_required: true },
         { medication_id: 10, event_date: '2024-08-20', is_entered_in_error: true, is_given: true, user_name: 'Alex Brown' }
@@ -78,14 +78,34 @@ test('uses first-three-letter medication abbreviations and effective chart-only 
     assert.deepEqual(Array.from(chart.medicationLegend, medication => `${medication.key}:${medication.medication_name}`), [
         'ALP:Alpha', 'ZET:Zeta'
     ])
-    assert.deepEqual(Array.from(chart.staffLegend, staff => staff.key), ['AB1', 'AB2'])
+    assert.deepEqual(Array.from(chart.staffLegend, staff => [staff.key, staff.name, staff.signature_class]), [
+        ['ACB', 'Alex Charles Brown', ''],
+        ['ADB', 'Amy Diane Baker', 'secondary']
+    ])
 
     const august = chart.months[0]
-    assert.deepEqual(Array.from(august.cells[14].events, event => event.label), ['ALP AB1', 'ZET AB2'])
-    assert.deepEqual(Array.from(august.cells[14].events, event => [event.detail, event.is_given]), [['AB1', true], ['AB2', true]])
+    assert.deepEqual(Array.from(august.cells[14].events, event => event.label), ['ALP ACB', 'ZET ADB'])
+    assert.deepEqual(Array.from(august.cells[14].events, event => [event.detail, event.is_given, event.staff_signature_class]), [['ACB', true, ''], ['ADB', true, 'secondary']])
     assert.deepEqual(Array.from(august.cells[15].events, event => event.label), ['ALP Absent'])
     assert.deepEqual(Array.from(august.cells[18].events, event => event.label), ['ZET Missed'])
     assert.equal(august.cells[19].events.length, 0)
+})
+
+test('uses stable numeric fallbacks when matching middle initials still collide', () => {
+    const chart = prepareAdministrationChart(medications, [
+        { medication_id: 10, event_date: '2024-08-15', is_given: true, users_dcid: 201, user_name: 'Alex Brown', user_middle_name: 'Dale' },
+        { medication_id: 10, event_date: '2024-08-15', is_given: true, users_dcid: 202, user_name: 'Amy Baker', user_middle_name: 'Dawn' },
+        { medication_id: 10, event_date: '2024-08-16', is_given: true, users_dcid: 202, user_name: 'Amy Baker', user_middle_name: 'Dawn' },
+        { medication_id: 10, event_date: '2024-08-15', is_given: true, users_dcid: 203, user_name: 'Avery Baker', user_middle_name: 'Drew' },
+        { medication_id: 10, event_date: '2024-08-15', is_given: true, users_dcid: 204, user_name: 'Holly Steinbach', user_middle_name: 'Marie' }
+    ], [calendarRow('2024-08-15'), calendarRow('2025-05-23')])
+
+    assert.deepEqual(Array.from(chart.staffLegend, staff => [staff.key, staff.name, staff.signature_class]), [
+        ['ADB1', 'Alex Dale Brown', 'secondary'],
+        ['ADB2', 'Amy Dawn Baker', ''],
+        ['ADB3', 'Avery Drew Baker', 'secondary'],
+        ['HS', 'Holly Steinbach', '']
+    ])
 })
 
 test('page uses PowerSchool tabs, the chart query parameter, and built-in printing', () => {
@@ -102,6 +122,9 @@ test('page uses PowerSchool tabs, the chart query parameter, and built-in printi
     assert.match(html, /new URLSearchParams\(window\.location\.search\)\.get\('view'\)/)
     assert.match(html, /class="administration-chart-key administration-chart-staff-initials"/)
     assert.match(html, /font-family:\s*"Segoe Script", "Brush Script MT", "Lucida Handwriting", cursive/)
+    assert.match(html, /\.administration-chart-staff-initials-secondary\s*{[\s\S]*font-family:\s*"Lucida Handwriting", "Segoe Print", "Comic Sans MS", cursive[\s\S]*font-style:\s*normal/)
+    assert.match(html, /event\.staff_signature_class === 'secondary'/)
+    assert.match(html, /staff\.signature_class === 'secondary'/)
     assert.match(html, /<strong>Grade:<\/strong> ~\(\[students\]grade_level\)/)
     assert.match(html, /<strong>Gender:<\/strong> ~\(decode;~\(gender\);M;Male;F;Female;Not Specified\)/)
     assert.match(html, /class="administration-chart-medication-summary">[\s\S]*<strong>Medication \/ Dosage<\/strong>/)
@@ -130,4 +153,10 @@ test('calendar endpoint is read-only and preserves term, session, and enrollment
         assert.ok(endpoint.includes(expected), expected)
     }
     assert.doesNotMatch(endpoint, /\b(?:INSERT|UPDATE|DELETE|MERGE)\b/i)
+})
+
+test('administration feed supplies middle names without adding a chart request', () => {
+    const endpoint = fs.readFileSync(path.join(medicationDir, 'data/inventoryTransactions.json'), 'utf8')
+    assert.match(endpoint, /'user_middle_name' VALUE users\.middle_name/)
+    assert.equal((source.match(/getData\('staff'/g) || []).length, 1)
 })

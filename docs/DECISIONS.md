@@ -137,6 +137,11 @@ signature-style text in both administration cells and the staff legend.
 Medication / Dosage, and its immediately adjacent comma-separated list. Entries begin with bold three-letter medication
 codes and colons. The month column must fit full month names, weekend `W` and no-school `NS` markers are centered and enlarged, and the `NS`
 legend wording is `No School`.
+89. Staff initials remain first-and-last initials unless the chart contains a collision. For a collision, available middle
+initials are added and middle names appear in the legend. The matching staff member with the most effective Given entries uses
+the primary font; staff with fewer entries use Lucida Handwriting, with ties resolved by staff name.
+Stable numeric suffixes remain the fallback when middle initials do not resolve a collision. The existing administration
+response supplies the middle name so this does not add a page-load request.
 
 ## Superseded or rejected approaches
 
