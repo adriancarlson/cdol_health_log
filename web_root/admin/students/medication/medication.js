@@ -75,6 +75,23 @@ define([
 		normalizeInventoryTransactionType(transaction && transaction.transaction_type)
 	)
 	const roundedInventoryQuantity = value => Number(Number(value || 0).toFixed(10))
+	const getInventoryBatchDisplay = (batches, hideDepletedInventory) => {
+		const displayBatches = (batches || []).filter(batch =>
+			(Number(batch.effective_quantity_added) > 0 || Number(batch.inventory_entry_correction_quantity) <= 0) &&
+			(!hideDepletedInventory || Number(batch.quantity_remaining) > 0)
+		)
+		return {
+			displayBatches,
+			displayTotalEffective: roundedInventoryQuantity(displayBatches.reduce(
+				(total, batch) => total + (Number(batch.effective_quantity_added) || 0),
+				0
+			)),
+			displayTotalRemaining: roundedInventoryQuantity(displayBatches.reduce(
+				(total, batch) => total + (Number(batch.quantity_remaining) || 0),
+				0
+			))
+		}
+	}
 	const normalizeDateKey = value => {
 		if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) {
 			return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`
@@ -357,8 +374,14 @@ define([
 			Object.assign(medication, getInventoryStatus(quantityRemaining, baselineQuantity))
 		}
 
-		const prepareMedicationData = (medications, transactions) => {
+		const prepareMedicationData = (medications, transactions, administrationSettings) => {
 			const transactionRows = Array.isArray(transactions) ? transactions : []
+			const settingBySchool = new Map()
+			;(Array.isArray(administrationSettings) ? administrationSettings : [])
+				.filter(Boolean)
+				.slice()
+				.sort((left, right) => Number(left.id) - Number(right.id))
+				.forEach(setting => settingBySchool.set(Number(setting.schoolid), setting))
 
 			return (medications || []).map(medication => {
 				medication.inventory_batches = parseJsonArray(medication.inventory_batches)
@@ -403,9 +426,14 @@ define([
 					(total, batch) => total + (Number(batch.quantity_remaining) || 0),
 					0
 				))
-				medication.display_inventory_batches = sortedBatches.filter(batch =>
-					Number(batch.effective_quantity_added) > 0 || Number(batch.inventory_entry_correction_quantity) <= 0
+				const schoolSetting = settingBySchool.get(Number(medication.schoolid))
+				const inventoryBatchDisplay = getInventoryBatchDisplay(
+					sortedBatches,
+					Boolean(schoolSetting && Number(schoolSetting.hide_depleted_inventory) === 1)
 				)
+				medication.display_inventory_batches = inventoryBatchDisplay.displayBatches
+				medication.inventory_total_display_effective = inventoryBatchDisplay.displayTotalEffective
+				medication.inventory_total_display_remaining = inventoryBatchDisplay.displayTotalRemaining
 				applyInventoryStatus(medication)
 
 				const correctionRowsByOriginal = new Map()
@@ -905,7 +933,7 @@ define([
 			}).then(res => Array.isArray(res?.data) ? psUtils.htmlEntitiesToCharCode(res.data) : [])
 
 			const medicationOptionsPromise = loadMedicationOptions()
-			const settingsPromise = $rootScope.appData.context === 'administration'
+			const settingsPromise = ['administration', 'inventory'].includes($rootScope.appData.context)
 				? psApiService.psApiCall('u_cdol_med_admin_setting', 'GET', {})
 				: $q.when([])
 			const expectedAdministrationsPromise = $rootScope.appData.context === 'administration'
@@ -937,7 +965,7 @@ define([
 				expectedAdministrationsPromise,
 				administrationCalendarPromise
 			]).then(results => {
-				const medicationList = prepareMedicationData(results[0], results[1])
+				const medicationList = prepareMedicationData(results[0], results[1], results[3])
 				vm.medicationList = medicationList
 				vm.availableMedicationList = medicationList.filter(medication => Number(medication.inventory_total_remaining) > 0)
 				$rootScope.appData.availableMedicationList = vm.availableMedicationList
@@ -1544,6 +1572,8 @@ define([
 			delete medicationPayload.inventory_total_initial
 			delete medicationPayload.inventory_total_effective
 			delete medicationPayload.inventory_total_remaining
+			delete medicationPayload.inventory_total_display_effective
+			delete medicationPayload.inventory_total_display_remaining
 			delete medicationPayload.display_inventory_batches
 			delete medicationPayload.inventory_transactions
 			delete medicationPayload.inventory_percentage_remaining

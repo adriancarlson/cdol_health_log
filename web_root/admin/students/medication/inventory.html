@@ -227,8 +227,8 @@
                                                         <span class="inventory-status-text"
                                                             ng-if="medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
                                                         <span class="inventory-quantity-text"><strong>Total:</strong>
-                                                            {{medication.inventory_total_remaining}} /
-                                                            {{medication.inventory_total_effective}}
+                                                            {{medication.inventory_total_display_remaining}} /
+                                                            {{medication.inventory_total_display_effective}}
                                                             {{$root.medicationOptionDisplayValue('inventory_unit',
                                                             medication.inventory_unit) | pluralize}}</span>
                                                     </div>

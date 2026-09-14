@@ -63,6 +63,20 @@
                                 <span id="daily-medication-cutoff-help">Enter a time such as 03:00 PM.</span>
                             </td>
                         </tr>
+                        <tr class="~[evenoddrow]">
+                            <td class="bold">
+                                <label for="hide-depleted-inventory">Hide Depleted Inventory Batches</label>
+                            </td>
+                            <td>
+                                <input id="hide-depleted-inventory" type="checkbox"
+                                    ng-model="settings.hideDepletedInventory" ng-disabled="settings.saving"
+                                    aria-describedby="hide-depleted-inventory-help">
+                                <span id="hide-depleted-inventory-help">
+                                    Hide batches with no inventory remaining and exclude their original quantities from
+                                    the displayed total.
+                                </span>
+                            </td>
+                        </tr>
                     </table>
                     <br>
 

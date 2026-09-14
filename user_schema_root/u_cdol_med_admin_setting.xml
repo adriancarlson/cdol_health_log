@@ -5,5 +5,6 @@
     <extendedTable type="standalone" dbTableName="u_cdol_med_admin_setting" childName="u_cdol_med_admin_setting" comment="School-level medication administration settings">
         <field name="schoolid" type="Integer" />
         <field name="daily_cutoff_time" type="Integer" />
+        <field name="hide_depleted_inventory" type="Integer" />
     </extendedTable>
 </psExtension>

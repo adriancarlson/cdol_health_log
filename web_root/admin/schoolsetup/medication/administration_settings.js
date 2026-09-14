@@ -34,6 +34,7 @@ define([
 		vm.isDistrictOffice = !Number.isFinite(vm.schoolId) || vm.schoolId === 0
 		vm.settingId = null
 		vm.cutoffTime = ''
+		vm.hideDepletedInventory = false
 		vm.isValid = false
 		vm.saving = false
 		vm.loaded = false
@@ -61,6 +62,7 @@ define([
 					if (setting) {
 						vm.settingId = Number(setting.id)
 						vm.cutoffTime = secondsToTime(setting.daily_cutoff_time)
+						vm.hideDepletedInventory = Number(setting.hide_depleted_inventory) === 1
 					}
 				})
 				.catch(() => {
@@ -89,7 +91,8 @@ define([
 			loadingDialog()
 			const payload = {
 				schoolid: vm.schoolId,
-				daily_cutoff_time: timeToSeconds(vm.cutoffTime)
+				daily_cutoff_time: timeToSeconds(vm.cutoffTime),
+				hide_depleted_inventory: vm.hideDepletedInventory ? 1 : 0
 			}
 			const method = vm.settingId ? 'PUT' : 'POST'
 			psApiService.psApiCall('u_cdol_med_admin_setting', method, payload, vm.settingId)
@@ -100,7 +103,7 @@ define([
 						if (savedRecord) vm.settingId = Number(savedRecord.id)
 					}
 					vm.cutoffTime = normalizeTime(vm.cutoffTime)
-					vm.feedbackMessage = `Daily medication cutoff saved as ${vm.cutoffTime}.`
+					vm.feedbackMessage = 'Medication administration settings saved.'
 				})
 				.finally(() => {
 					vm.saving = false
