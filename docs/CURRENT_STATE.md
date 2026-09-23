@@ -2,6 +2,22 @@
 
 ## Confirmed completed work
 
+- Version 26.9.5 moves Medical Authorization and Health History into this plugin under
+  `/admin/students/health/`, retaining their Health Profile navigation IDs and sort orders.
+  Both pages use PowerSchool's AngularJS 1.4.7 loader, native main-form submission,
+  model comparison for audit stamps, and scoped Bootstrap-style form controls.
+  Prescription CRUD uses independent inline Angular editors and verified audit-only
+  requests with retry support. No schemas are moved. Local AngularJS 1.4.7 browser
+  tests pass; installed validation is pending. See `HEALTH_FORMS_MIGRATION.md`.
+- Version 26.9.6 maps the supplied Health History form 24779195 export, adding
+  seizures, inhaler use, allergies, EpiPen, school-specific document notices,
+  dental agreement, and sports follow-ups. Parent document-return methods are
+  shown as read-only radio buttons beneath the form links and never submitted. The user-approved inhaler-contract condition is
+  enrollment-school 311 and inhaler = Yes. Hidden fields retain their values but
+  are disabled for POST and excluded from change comparison. Allergies remain a single editable
+  native field saved and audited with the main form; there is no allergy table.
+  No schemas change. See `HEALTH_HISTORY_RULES.md`.
+
 - A PowerSchool extension XML exists.
 - The XML defines:
   - `u_student_medication`, a student child table for medication definitions.

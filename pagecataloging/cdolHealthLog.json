@@ -1,6 +1,26 @@
 {
 	"pages": [
 		{
+			"htmlID": "cdol-health-history",
+			"title": "Health History🔹",
+			"pageURL": "/admin/students/health/health_history.html?frn=~(studentfrn)",
+			"version": "26.9.6",
+			"contextType": "student",
+			"districtLevelContext": 0,
+			"sortOrder": 100,
+			"parentHTMLID": "navStudentHealthProfile"
+		},
+		{
+			"htmlID": "cdol-medical",
+			"title": "Medical Authorization🔹",
+			"pageURL": "/admin/students/health/medical_authorization.html?frn=~(studentfrn)",
+			"version": "26.9.5",
+			"contextType": "student",
+			"districtLevelContext": 0,
+			"sortOrder": 150,
+			"parentHTMLID": "navStudentHealthProfile"
+		},
+		{
 			"htmlID": "cdol-health-quick-sheet",
 			"title": "Emergency Quick Sheet🔹",
 			"version": "26.9.3",

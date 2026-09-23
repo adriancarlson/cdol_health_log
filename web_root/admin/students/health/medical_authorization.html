@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Medical Authorization</title>
+        ~[wc:commonscripts]
+        <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+        <link href="/images/css/print.css" rel="stylesheet" media="print">
+        <link href="/admin/students/health/healthForms.css" rel="stylesheet">
+    </head>
+
+    <body>
+        ~[wc:admin_header_frame_css]
+        ~[wc:admin_navigation_frame_css]
+        ~[wc:title_student_begin_css]Medical Authorization~[wc:title_student_end_css]
+
+        <style>
+            .topsubmit {
+                float: right;
+                margin-top: -90px;
+            }
+
+            .otc-medications {
+                margin: 0 auto;
+                max-width: 100%;
+                width: 900px;
+            }
+
+            .otc-medications td {
+                width: 33.33%;
+                padding: 8px;
+                vertical-align: top;
+            }
+
+            .otc-example {
+                margin: 2px 0 8px;
+            }
+
+            .otc-option {
+                display: inline-block;
+                min-width: 125px;
+            }
+
+            .consent-question td {
+                padding: 12px 18px;
+                background: #fff;
+            }
+
+            .consent-question p {
+                margin: 0 0 14px;
+            }
+
+            .consent-option {
+                display: block;
+                margin-top: 8px;
+            }
+
+            .medical-consent-table {
+                margin-bottom: 0 !important;
+            }
+
+            #prescriptionMedicationsTable {
+                width: 100%;
+            }
+
+            .box-round.medical-section-box {
+                margin: 0 10px 10px !important;
+                overflow: hidden;
+            }
+
+            .medical-form-submit-row {
+                margin: 0 10px 10px !important;
+            }
+
+            .prescription-medication-header-action {
+                float: right;
+            }
+
+            #prescriptionMedicationFeedback {
+                margin: 4px 10px 0;
+            }
+
+            #prescriptionMedicationFeedback:not(:empty)+.prescription-medications-box {
+                margin-top: 4px;
+            }
+
+            .medical-section-banner {
+                background-color: #a6bfcd;
+                margin: 0 !important;
+            }
+
+            .medical-section-banner-content {
+                padding: 5px 10px !important;
+            }
+
+            .medical-section-banner-content::after {
+                clear: both;
+                content: "";
+                display: table;
+            }
+
+            .agreements-banner-content {
+                align-items: center;
+                display: flex;
+                gap: 12px;
+                justify-content: space-between;
+            }
+
+            .agreements-banner-content::after {
+                display: none;
+            }
+
+            .otc-medications-content {
+                padding: 8px 10px 10px;
+            }
+
+            .parent-signature-row {
+                display: flex;
+                gap: 24px;
+                justify-content: flex-start;
+                margin: 16px 10px 10px;
+                max-width: 725px;
+            }
+
+            .parent-signature-field {
+                flex: 0 0 480px;
+            }
+
+            .parent-signature-date-field {
+                flex: 0 0 220px;
+            }
+
+            .parent-signature-row label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 6px;
+            }
+
+            .parent-signature-row input[readonly] {
+                box-sizing: border-box;
+                font-size: 14px;
+                height: 28px;
+                padding: 5px 10px !important;
+                width: 100%;
+            }
+
+            .parent-signature-row span {
+                box-sizing: border-box;
+                display: block;
+                font-size: 18px;
+                font-style: italic;
+                line-height: 28px;
+                padding-left: 10px;
+                width: 100%;
+            }
+
+            .medical-last-updated {
+                font-weight: normal;
+                margin-left: auto;
+                text-align: right;
+            }
+
+            #prescriptionMedicationsTable[aria-busy="true"] tbody {
+                pointer-events: none;
+                opacity: 0.65;
+            }
+
+            #prescriptionMedicationsTable input[type="text"],
+            #prescriptionMedicationsTable select {
+                box-sizing: border-box;
+                width: 100%;
+            }
+
+            #prescriptionMedicationsTable .prescription-medication-actions {
+                white-space: nowrap;
+                width: 1%;
+            }
+
+            #prescriptionMedicationsTable .prescription-medication-actions button {
+                margin-left: 4px;
+            }
+
+            #prescriptionMedicationsTable tr.prescription-medication-editing {
+                cursor: default;
+            }
+        </style>
+
+
+        <div class="cdol-health-forms" data-require-path="./healthForms.js" data-module-name="cdolHealthForms"
+            data-bootstrap-local="true" ng-controller="healthFormController as vm"
+            data-student-dcid="~(rn)" data-audit-user="~[x:username;firstlast]" data-audit-date="~[date]">
+        <form health-bound-form name="vm.form" ng-submit="vm.submit($event)" id="medicalForm" action="/~[self.page]?frn=~(studentfrn)&changesSaved=true" method="POST">
+            <p class="feedback-alert" ng-if="vm.message" ng-bind="vm.message" ng-cloak role="status"></p>
+            ~[if.~(gpv.changesSaved)=true]
+            <div class="feedback-confirm">~[text:psx.common.changes_recorded]</div>[/if]
+            <!-- The first newer Admin event may be the parent's approval.
+                 Consecutive responses by the same named Admin within 60 seconds count as one event.
+                 Count archived responses too; two or more events use the latest Admin response.
+                 A strictly newer medical-page audit date overrides that attribution; ties keep it. -->
+            <div class="medical-sections-container">
+                <section id="medicalAgreementsSection" class="box-round medical-section-box agreements-box"
+                    aria-labelledby="medicalAgreementsHeading">
+                    <div class="medical-section-banner">
+                        <div class="medical-section-banner-content agreements-banner-content">
+                            <strong id="medicalAgreementsHeading">Agreements</strong>
+                            <span id="medicalLastUpdated" class="medical-last-updated"><em>~[tlist_sql;
+                                    WITH student_data AS (
+                                    SELECT students.id AS student_id,
+                                    students.dcid AS student_dcid,
+                                    TRIM(u_student_additional_info.med_sig) AS parent_name,
+                                    u_student_additional_info.med_sig_date AS parent_date,
+                                    TRIM(u_student_additional_info.med_last_updated_user_type) AS audit_user_type,
+                                    TRIM(u_student_additional_info.med_last_updated_by) AS audit_name,
+                                    u_student_additional_info.med_last_updated_date AS audit_date
+                                    FROM students
+                                    LEFT JOIN u_student_additional_info
+                                    ON u_student_additional_info.studentsdcid = students.dcid
+                                    WHERE students.dcid = ~(rn)
+                                    ),
+                                    newer_admin_rows AS (
+                                    SELECT student_data.student_dcid,
+                                    u_fb_form_response.created_by AS admin_name,
+                                    u_fb_form_response.created_on AS admin_date,
+                                    LAG(UPPER(TRIM(u_fb_form_response.created_by))) OVER (
+                                    PARTITION BY student_data.student_dcid
+                                    ORDER BY u_fb_form_response.created_on, u_fb_form_response.id
+                                    ) AS previous_admin_name,
+                                    LAG(u_fb_form_response.created_on) OVER (
+                                    PARTITION BY student_data.student_dcid
+                                    ORDER BY u_fb_form_response.created_on, u_fb_form_response.id
+                                    ) AS previous_admin_date,
+                                    ROW_NUMBER() OVER (
+                                    PARTITION BY student_data.student_dcid
+                                    ORDER BY u_fb_form_response.created_on DESC, u_fb_form_response.id DESC
+                                    ) AS latest_row
+                                    FROM student_data
+                                    JOIN u_fb_form_response
+                                    ON u_fb_form_response.student_id = student_data.student_id
+                                    WHERE u_fb_form_response.u_fb_form_id = 24778944
+                                    AND u_fb_form_response.response_type = 'A'
+                                    AND u_fb_form_response.id > 0
+                                    AND u_fb_form_response.created_on > student_data.parent_date
+                                    AND (u_fb_form_response.approval IS NULL OR u_fb_form_response.approval = '1')
+                                    ),
+                                    newer_admin_events AS (
+                                    SELECT newer_admin_rows.*,
+                                    SUM(CASE
+                                    WHEN UPPER(TRIM(newer_admin_rows.admin_name)) = newer_admin_rows.previous_admin_name
+                                    AND CAST(newer_admin_rows.admin_date AS TIMESTAMP)
+                                    <= CAST(newer_admin_rows.previous_admin_date AS TIMESTAMP) + INTERVAL '60' SECOND
+                                        THEN 0 ELSE 1 END) OVER ( PARTITION BY newer_admin_rows.student_dcid ) AS
+                                        newer_admin_count FROM newer_admin_rows ), form_attribution AS ( SELECT
+                                        student_data.student_dcid, CASE WHEN NVL(newer_admin_events.newer_admin_count,
+                                        0)>= 2 THEN newer_admin_events.admin_date
+                                        ELSE student_data.parent_date
+                                        END AS submitted_date,
+                                        CASE
+                                        WHEN NVL(newer_admin_events.newer_admin_count, 0) >= 2 THEN
+                                        'Last Updated by Admin' || CHR(58) || ' '
+                                        || NVL(newer_admin_events.admin_name, 'Name unavailable')
+                                        || ' - '
+                                        || TO_CHAR(newer_admin_events.admin_date, 'MM/DD/YYYY')
+                                        ELSE
+                                        'Last Updated by Parent' || CHR(58) || ' '
+                                        || student_data.parent_name
+                                        || ' - '
+                                        || TO_CHAR(student_data.parent_date, 'MM/DD/YYYY')
+                                        END AS last_updated_message
+                                        FROM student_data
+                                        LEFT JOIN newer_admin_events
+                                        ON newer_admin_events.student_dcid = student_data.student_dcid
+                                        AND newer_admin_events.latest_row = 1
+                                        WHERE student_data.parent_name IS NOT NULL
+                                        AND student_data.parent_date IS NOT NULL
+                                        ),
+                                        attribution AS (
+                                        SELECT CASE
+                                        WHEN student_data.audit_date IS NOT NULL
+                                        AND (form_attribution.submitted_date IS NULL OR student_data.audit_date >
+                                        form_attribution.submitted_date) THEN
+                                        'Last Updated by ' || student_data.audit_user_type || CHR(58) || ' '
+                                        || student_data.audit_name
+                                        || ' - '
+                                        || TO_CHAR(student_data.audit_date, 'MM/DD/YYYY')
+                                        ELSE form_attribution.last_updated_message
+                                        END AS last_updated_message
+                                        FROM student_data
+                                        LEFT JOIN form_attribution
+                                        ON form_attribution.student_dcid = student_data.student_dcid
+                                        WHERE form_attribution.submitted_date IS NOT NULL OR student_data.audit_date IS
+                                        NOT NULL
+                                        )
+                                        SELECT REPLACE(REPLACE(REPLACE(last_updated_message,
+                                        CHR(38), CHR(38) || 'amp' || CHR(59)),
+                                        CHR(60), CHR(38) || 'lt' || CHR(59)),
+                                        CHR(62), CHR(38) || 'gt' || CHR(59)) AS last_updated_message
+                                        FROM attribution
+                                        ;nonemessage=]~(last_updated_message)[/tlist_sql]
+                                </em></span>
+                        </div>
+                    </div>
+                    <table border="0" cellspacing="0" cellpadding="4" class="linkDescList medical-consent-table">
+                        <colgroup>
+                            <col style="width:40%">
+                            <col>
+                        </colgroup>
+                        <tr class="consent-question">
+                            <td colspan="2">
+                                <p>In the event of a severe asthma or allergic reaction ~(first_name)'s personal Action
+                                    Plan
+                                    will be followed. If ~(first_name) does not have an Action Plan, the Emergency
+                                    Response
+                                    to Life Threatening Asthma or the Systemic Allergic Reactions protocol will be
+                                    followed.
+                                </p>
+                                <label class="consent-option"><input type="checkbox"
+                                        name="[students.U_STUDENT_ADDITIONAL_INFO]MED_SHARE_CONSENT" value="1"> Parents
+                                    consent to Emergency Treatment</label>
+                            </td>
+                        </tr>
+                        <tr class="consent-question">
+                            <td colspan="2">
+                                <p>School personnel may provide ~(first_name) with basic first aid care.
+                                </p>
+                                <label class="consent-option"><input type="checkbox"
+                                        name="[students.U_STUDENT_ADDITIONAL_INFO]MED_FIRST_AID_CONSENT" value="1">
+                                    Parents
+                                    consent to Basic First Aid Care</label>
+                            </td>
+                        </tr>
+                        <tr class="consent-question">
+                            <td colspan="2">
+                                <p>In the event of a serious injury or illness requiring emergency medical treatment,
+                                    the
+                                    first responders may determine which hospital to transport ~(first_name) for
+                                    treatment.
+                                    If the first responders do not determine which hospital, the school will attempt to
+                                    contact parents, if possible, while coordinating with emergency responders to
+                                    determine
+                                    the most appropriate hospital for transport. If the school is unable to reach a
+                                    parent,
+                                    ~(first_name) will be transported either to the nearest hospital or a hospital
+                                    chosen by
+                                    the school.</p>
+                                <input type="hidden" id="hospitalConsentValue"
+                                    name="[students.U_STUDENT_ADDITIONAL_INFO]HOSPITAL_CONSENT" value="">
+                                <label class="consent-option"><input type="checkbox" id="hospitalConsentCheckbox" ng-model="vm.values['[students.u_student_additional_info]hospital_consent']" ng-true-value="'1'" ng-false-value="'0'">
+                                    Parents agree to Hospital Consent</label>
+                            </td>
+                        </tr>
+                    </table>
+                </section>
+
+                <section id="otcMedicationSection" class="box-round medical-section-box otc-medications-box"
+                    aria-labelledby="otcMedicationHeading">
+                    <div class="medical-section-banner">
+                        <div class="medical-section-banner-content">
+                            <strong id="otcMedicationHeading">Over-the-counter Medications</strong>
+                        </div>
+                    </div>
+                    <div class="otc-medications-content">
+                        <table class="otc-medications">
+                            <tr>
+                                <td>
+                                    <strong>Acetaminophen</strong>
+                                    <div class="otc-example">ex. Tylenol</div>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]ACETAMINOPHEN" value="1">
+                                        Yes</label>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]ACETAMINOPHEN" value="0">
+                                        No</label>
+                                </td>
+                                <td>
+                                    <strong>Ibuprofen</strong>
+                                    <div class="otc-example">ex. Motrin or Advil</div>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]IBUPROFEN" value="1">
+                                        Yes</label>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]IBUPROFEN" value="0">
+                                        No</label>
+                                </td>
+                                <td>
+                                    <strong>Antihistamine</strong>
+                                    <div class="otc-example">ex. Benadryl, Zyrtec, or Claritin</div>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]ANTIHISTAMINE" value="1">
+                                        Yes</label>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]ANTIHISTAMINE" value="0">
+                                        No</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Antacid</strong>
+                                    <div class="otc-example">ex. TUMS</div>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]ANTACID" value="1">
+                                        Yes</label>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]ANTACID" value="0">
+                                        No</label>
+                                </td>
+                                <td>
+                                    <strong>Antibiotic Ointment</strong>
+                                    <div class="otc-example">ex. Neosporin</div>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]ANTIBIOTIC" value="1">
+                                        Yes</label>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]ANTIBIOTIC" value="0">
+                                        No</label>
+                                </td>
+                                <td>
+                                    <strong>Hydrocortisone Cream</strong>
+                                    <div class="otc-example">&nbsp;</div>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]HYDROCORTISONE" value="1">
+                                        Yes</label>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]HYDROCORTISONE" value="0">
+                                        No</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Cough drops or Throat Lozenges</strong>
+                                    <div class="otc-example">&nbsp;</div>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]COUGH_DROP" value="1">
+                                        Yes</label>
+                                    <label class="otc-option"><input type="radio"
+                                            name="[students.U_STUDENT_ADDITIONAL_INFO]COUGH_DROP" value="0">
+                                        No</label>
+                                </td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </table>
+                    </div>
+                </section>
+
+                <div class="button-row medical-form-submit-row"><input type="hidden" name="ac"
+                        value="prim"><button type="submit" class="health-submit-button" disabled ng-disabled="!vm.hasChanges() || vm.form.$invalid || vm.medicationBlocked">Submit</button></div>
+                <input type="hidden" id="medLastUpdatedUserType"
+                    name="[students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_USER_TYPE" value="">
+                <input type="hidden" id="medLastUpdatedBy"
+                    name="[students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_BY" value="">
+                <input type="hidden" id="medLastUpdatedDate"
+                    name="[students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_DATE" value="">
+            </div>
+        </form>
+        <div ng-controller="prescriptionController as rx">
+
+
+                <div id="prescriptionMedicationFeedback" role="status" aria-live="polite" ng-if="rx.feedback" ng-class="rx.error ? 'feedback-alert' : 'feedback-confirm'" ng-cloak>
+                    <span ng-bind="rx.feedback"></span>
+                    <button type="button" ng-if="rx.auditPending" ng-click="rx.retryAudit()" ng-disabled="rx.busy">Retry Audit Stamp</button>
+                </div>
+                <section id="prescriptionMedicationSection"
+                    class="box-round medical-section-box prescription-medications-box"
+                    aria-labelledby="prescriptionMedicationHeading">
+                    <div class="medical-section-banner prescription-medication-banner">
+                        <div class="medical-section-banner-content prescription-medication-banner-content">
+                            <strong id="prescriptionMedicationHeading">Prescription Medications</strong>
+                            <button type="button" id="addPrescriptionMedicationButton"
+                                class="prescription-medication-header-action" disabled ng-click="rx.edit()" ng-disabled="rx.busy || rx.editor || rx.auditPending || !rx.loaded || !rx.units.length">Add Medication</button>
+                        </div>
+                    </div>
+                    <table border="0" cellspacing="0" cellpadding="4" class="linkDescList">
+                        <tr>
+                            <td colspan="5">
+                                <p id="prescriptionMedicationLoading" ng-if="rx.busy" ng-cloak>Loading prescription medications...</p>
+
+                                <table class="grid" id="prescriptionMedicationsTable" ng-attr-aria-busy="{{rx.busy}}">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Medication Name</th>
+                                            <th scope="col">Dosage</th>
+                                            <th scope="col">Dosage Units</th>
+                                            <th scope="col">Frequency Taken</th>
+                                            <th scope="col">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody ng-cloak>
+                                        <tr ng-if="!rx.rows.length && !rx.editor && !rx.busy"><td colspan="5"><span ng-if="rx.loaded">No Prescription Medications for ~(first_name) ~(last_name).</span><span ng-if="!rx.loaded">Prescription medications could not be loaded.</span></td></tr>
+                                        <tr ng-if="rx.editor && !rx.editingId" ng-form="rx.editorForm" class="prescription-medication-editing" ng-keydown="rx.keydown($event)">
+                                            <td><input type="text" name="medicationName" ng-model="rx.editor.name" ng-disabled="rx.busy" aria-label="Medication Name" required></td>
+                                                <td><input type="text" name="dosage" ng-model="rx.editor.dosage" ng-disabled="rx.busy" aria-label="Dosage" required></td>
+                                                <td><select name="doseUnit" ng-model="rx.editor.dosage_units" ng-disabled="rx.busy" ng-options="unit.code as unit.label for unit in rx.units" aria-label="Dosage Units" required>
+                                                    <option value="">Select a Dosage Unit</option>
+                                                </select><small ng-if="rx.originalUnit && !rx.editor.dosage_units">Previous value: {{rx.originalUnit}}. Select an active unit.</small></td>
+                                                <td><input type="text" name="frequency" ng-model="rx.editor.frequency_taken" ng-disabled="rx.busy" aria-label="Frequency Taken" required></td>
+                                                <td class="prescription-medication-actions actions center">
+                                                    <button type="button" ng-click="rx.cancel()" ng-disabled="rx.busy">Cancel</button>
+                                                    <button type="button" ng-click="rx.save()" ng-disabled="rx.busy || !rx.valid() || !rx.changed() || !rx.loaded">Submit</button>
+                                                </td>
+                                        </tr>
+                                        <tr ng-repeat-start="record in rx.rows track by record.medication_id" ng-show="rx.editingId !== record.medication_id.toString()">
+                                            <td ng-bind="record.name"></td><td ng-bind="record.dosage"></td>
+                                            <td ng-bind="rx.unitLabel(record.dosage_units)"></td><td ng-bind="record.frequency_taken"></td>
+                                            <td class="prescription-medication-actions actions center">
+                                                <button type="button" title="Edit Prescription Medication" aria-label="Edit Prescription Medication" ng-click="rx.edit(record)" ng-disabled="rx.busy || rx.editor || rx.auditPending || !rx.loaded || !rx.units.length"><em class="ui-icon-white ui-icon-pencil ui-icon"></em></button>
+                                                <button type="button" title="Delete Prescription Medication" aria-label="Delete Prescription Medication" ng-click="rx.remove(record)" ng-disabled="rx.busy || rx.editor || rx.auditPending || !rx.loaded"><em class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>
+                                            </td>
+                                        </tr>
+                                        <tr ng-repeat-end ng-if="rx.editingId === record.medication_id.toString()" ng-form="rx.editorForm" class="prescription-medication-editing" ng-keydown="rx.keydown($event)">
+                                            <td><input type="text" name="medicationName" ng-model="rx.editor.name" ng-disabled="rx.busy" aria-label="Medication Name" required></td>
+                                                <td><input type="text" name="dosage" ng-model="rx.editor.dosage" ng-disabled="rx.busy" aria-label="Dosage" required></td>
+                                                <td><select name="doseUnit" ng-model="rx.editor.dosage_units" ng-disabled="rx.busy" ng-options="unit.code as unit.label for unit in rx.units" aria-label="Dosage Units" required>
+                                                    <option value="">Select a Dosage Unit</option>
+                                                </select><small ng-if="rx.originalUnit && !rx.editor.dosage_units">Previous value: {{rx.originalUnit}}. Select an active unit.</small></td>
+                                                <td><input type="text" name="frequency" ng-model="rx.editor.frequency_taken" ng-disabled="rx.busy" aria-label="Frequency Taken" required></td>
+                                                <td class="prescription-medication-actions actions center">
+                                                    <button type="button" ng-click="rx.cancel()" ng-disabled="rx.busy">Cancel</button>
+                                                    <button type="button" ng-click="rx.save()" ng-disabled="rx.busy || !rx.valid() || !rx.changed() || !rx.loaded">Submit</button>
+                                                </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </section>
+                ~[if.~([students.U_STUDENT_ADDITIONAL_INFO]MED_SIG)#]
+                <div class="parent-signature-row" aria-label="Parent or Guardian submission information">
+                    <div class="parent-signature-field">
+                        <label for="parentGuardianSignature">Parent/Guardian Signature:</label>
+                        <span>~([students.U_STUDENT_ADDITIONAL_INFO]MED_SIG)</span>
+                    </div>
+                    <div class="parent-signature-date-field">
+                        <label for="parentGuardianSignatureDate">Date:</label>
+                        <span>~([students.U_STUDENT_ADDITIONAL_INFO]MED_SIG_DATE)</span>
+                    </div>
+                </div>
+                [/if]
+
+
+        </div>
+        <!-- end of content area -->
+        </div>
+
+        ~[if.~(gpv.healthAuditSaved)=true]
+        <span id="healthAuditReceipt" hidden data-type="~([students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_USER_TYPE)"
+            data-user="~([students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_BY)"
+            data-date="~([students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_DATE)"></span>
+        [/if]
+        ~[wc:admin_footer_frame_css]
+    </body>
+
+</html>

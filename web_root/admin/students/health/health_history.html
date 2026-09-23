@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Health History</title>
+        ~[wc:commonscripts]
+        <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+        <link href="/images/css/print.css" rel="stylesheet" media="print">
+        <link href="/admin/students/health/healthForms.css" rel="stylesheet">
+    </head>
+
+    <body>
+        ~[wc:admin_header_frame_css]
+        <a href="/admin/home.html" target="_top">Start Page</a> &gt; <a
+            href="/admin/students/home.html?selectstudent=nosearch" target="_top">Student Selection</a> &gt; Health
+        History
+        ~[wc:admin_navigation_frame_css]
+        ~[wc:title_student_begin_css]Health History~[wc:title_student_end_css]
+
+        <style>
+            .box-round.health-section-box {
+                margin: 0 10px 10px !important;
+                overflow: hidden;
+            }
+
+            .health-section-banner {
+                background-color: #a6bfcd;
+                margin: 0 !important;
+            }
+
+            .health-section-banner-content {
+                padding: 5px 10px !important;
+            }
+
+            .health-section-content {
+                padding: 12px 16px 16px;
+            }
+
+            .health-contact-grid {
+                display: grid;
+                gap: 24px;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .health-contact-field + .health-contact-field {
+                margin-top: 10px;
+            }
+
+            .health-contact-field label,
+            .health-field label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            .health-contact-field input[type="text"] {
+                box-sizing: border-box;
+                width: 100%;
+            }
+
+            .health-question-grid,
+            .health-field-grid {
+                display: grid;
+                gap: 20px 36px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .health-question-title {
+                font-weight: bold;
+                margin-bottom: 8px;
+            }
+
+            .health-radio-option {
+                display: inline-block;
+                min-width: 120px;
+            }
+
+            .health-field input[type="text"],
+            .health-field select,
+            .health-field textarea {
+                box-sizing: border-box;
+                max-width: 100%;
+            }
+
+            .health-field-wide {
+                grid-column: 1 / -1;
+            }
+
+            .health-field-wide input[type="text"],
+            .health-field-wide textarea {
+                width: 100%;
+            }
+
+            .health-submit-row {
+                margin: 0 10px 10px !important;
+            }
+
+            @media (max-width: 900px) {
+                .health-contact-grid,
+                .health-question-grid,
+                .health-field-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .health-field-wide {
+                    grid-column: auto;
+                }
+            }
+        </style>
+
+        <div class="cdol-health-forms" data-require-path="./healthForms.js" data-module-name="cdolHealthForms"
+            data-bootstrap-local="true" ng-controller="healthFormController as vm"
+            data-student-dcid="~(rn)" data-form-school="~([students.U_STUDENT_ENROLLMENT_LOGIC]PSEE_SCHOOL_ID)" data-current-school="~(schoolid)" data-audit-user="~[x:username;firstlast]" data-audit-date="~[date]">
+        <form health-bound-form name="vm.form" ng-submit="vm.submit($event)" id="healthHistoryForm" action="/~[self.page]?frn=~(studentfrn)&changesSaved=true" method="POST">
+            <p class="feedback-alert" ng-if="vm.message" ng-bind="vm.message" ng-cloak role="status"></p>
+            ~[if.~(gpv.changesSaved)=true]
+            <div class="feedback-confirm">~[text:psx.common.changes_recorded]</div>[/if]
+
+            <section class="box-round health-section-box" aria-labelledby="healthContactsHeading">
+                <div class="health-section-banner">
+                    <div class="health-section-banner-content">
+                        <strong id="healthContactsHeading">Health Contacts</strong>
+                    </div>
+                </div>
+                <div class="health-section-content health-contact-grid">
+                    <div class="health-contact-column">
+                        <div class="health-contact-field">
+                            <label for="healthDoctorName">Physician's Name</label>
+                            <input type="text" id="healthDoctorName" name="[01]Doctor_Name" value="" required>
+                        </div>
+                        <div class="health-contact-field">
+                            <label for="healthDoctorPhone">Physician's Phone</label>
+                            <input type="text" id="healthDoctorPhone" name="[01]Doctor_Phone" value="" required>
+                        </div>
+                    </div>
+                    <div class="health-contact-column">
+                        <div class="health-contact-field">
+                            <label for="healthDentistName">Dentist's Name</label>
+                            <input type="text" id="healthDentistName" name="[students.StudentCoreFields]dentist_name" value="">
+                        </div>
+                        <div class="health-contact-field">
+                            <label for="healthDentistPhone">Dentist's Phone</label>
+                            <input type="text" id="healthDentistPhone" name="[students.StudentCoreFields]dentist_phone" value="">
+                        </div>
+                    </div>
+                    <div class="health-contact-column">
+                        <div class="health-contact-field">
+                            <label for="healthDaycareProvider">Daycare Provider</label>
+                            <input type="text" id="healthDaycareProvider"
+                                name="[students.U_STUDENT_ADDITIONAL_INFO]STUDENT_DAYCARE" value="">
+                        </div>
+                        <div class="health-contact-field">
+                            <label for="healthDaycarePhone">Daycare Provider Phone</label>
+                            <input type="text" id="healthDaycarePhone"
+                                name="[students.U_STUDENT_ADDITIONAL_INFO]STUDENT_DAYCARE_PHONE" value="">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box" health-when="vm.show('dentalAgreement')" ng-cloak aria-labelledby="dentalAgreementHeading">
+                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="dentalAgreementHeading">Dental Agreement</strong></div></div>
+                <div class="health-section-content">
+                    <label><input type="checkbox" name="[students.U_STUDENT_ADDITIONAL_INFO]DENTAL_AGREE" value="1">
+                        Parents confirm that ~(first_name) is under the care of a dentist and is seen at least annually.</label>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box" aria-labelledby="emergencyAuthorizationHeading">
+                <div class="health-section-banner">
+                    <div class="health-section-banner-content">
+                        <strong id="emergencyAuthorizationHeading">Emergency Authorization</strong>
+                    </div>
+                </div>
+                <div class="health-section-content">
+                    <div class="health-question">
+                        <div class="health-question-title" id="physicianConsentQuestion">May the school contact
+                            ~(first_name)'s doctor in an emergency?</div>
+                        <div role="radiogroup" aria-labelledby="physicianConsentQuestion">
+                            <label class="health-radio-option"><input type="radio"
+                                    name="[students.U_STUDENT_ADDITIONAL_INFO]PHYSICIAN_CONSENT" value="1"> Yes</label>
+                            <label class="health-radio-option"><input type="radio"
+                                    name="[students.U_STUDENT_ADDITIONAL_INFO]PHYSICIAN_CONSENT" value="0"> No</label>
+                        </div>
+                    </div>
+                    <div class="health-field-grid" style="margin-top:20px;">
+                        <div class="health-field">
+                            <label for="healthHospitalConsent">Hospital Treatment Preference</label>
+                            <select id="healthHospitalConsent"
+                                name="[students.U_STUDENT_ADDITIONAL_INFO]HOSPITAL_CONSENT">
+                                <option value=""></option>
+                                <option value="1">Yes, I consent to treatment at the nearest hospital</option>
+                                <option value="No - other preferred hospital">No, I prefer the hospital listed below
+                                </option>
+                                <option value="0">No, I do not consent to treatment at a hospital</option>
+                            </select>
+                        </div>
+                        <div class="health-field">
+                            <label for="fieldPrefHospital">Preferred Hospital</label>
+                            <input type="text" id="fieldPrefHospital"
+                                name="[students.U_STUDENT_ADDITIONAL_INFO]STUDENT_HOSPITAL" value="" size="40">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box" aria-labelledby="medicalHistoryHeading">
+                <div class="health-section-banner">
+                    <div class="health-section-banner-content">
+                        <strong id="medicalHistoryHeading">Medical History</strong>
+                    </div>
+                </div>
+                <div class="health-section-content">
+                    <div class="health-question-grid">
+                        <div class="health-question">
+                            <div class="health-question-title" id="wearsGlassesQuestion">Does ~(first_name) wear glasses or contacts?</div>
+                            <div role="radiogroup" aria-labelledby="wearsGlassesQuestion">
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]WEARS_GLASSES" value="1"> Yes</label>
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]WEARS_GLASSES" value="0"> No</label>
+                            </div>
+                        </div>
+                        <div class="health-question">
+                            <div class="health-question-title" id="diabetesQuestion">Does ~(first_name) have diabetes?</div>
+                            <div role="radiogroup" aria-labelledby="diabetesQuestion">
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]DIABETES" value="1"> Yes</label>
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]DIABETES" value="0"> No</label>
+                            </div>
+                        </div>
+                        <div class="health-question">
+                            <div class="health-question-title" id="seizuresQuestion">Does ~(first_name) have a history of seizures?</div>
+                            <div role="radiogroup" aria-labelledby="seizuresQuestion">
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]SEIZURE_AGREE" value="1"> Yes</label>
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]SEIZURE_AGREE" value="0"> No</label>
+                            </div>
+                        </div>
+                        <div></div>
+                        <div class="health-question">
+                            <div class="health-question-title" id="asthmaQuestion">Does ~(first_name) have asthma/anaphylaxis?</div>
+                            <div role="radiogroup" aria-labelledby="asthmaQuestion">
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ASTHMA" value="1"> Yes</label>
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ASTHMA" value="0"> No</label>
+                            </div>
+                        </div>
+                        <div class="health-question">
+                            <div class="health-question-title" id="inhalerQuestion">Does ~(first_name) use an inhaler?</div>
+                            <div role="radiogroup" aria-labelledby="inhalerQuestion">
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]INHALER" value="1"> Yes</label>
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]INHALER" value="0"> No</label>
+                            </div>
+                        </div>
+                        <div class="health-question">
+                            <div class="health-question-title" id="allergyQuestion">Does ~(first_name) have allergies or dietary restrictions?</div>
+                            <div role="radiogroup" aria-labelledby="allergyQuestion">
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ALLERGY_AGREE" value="1"> Yes</label>
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ALLERGY_AGREE" value="0"> No</label>
+                            </div>
+                        </div>
+                        <div class="health-question">
+                            <div class="health-question-title" id="epipenQuestion">Has ~(first_name) been prescribed an EpiPen?</div>
+                            <div role="radiogroup" aria-labelledby="epipenQuestion">
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]EPIPEN" value="1"> Yes</label>
+                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]EPIPEN" value="0"> No</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feedback-info health-plan-notice" health-when="vm.show('actionPlan')" ng-cloak>
+                        <strong>Action Plan</strong>
+                        <p>Please provide an updated action plan from the student's doctor, dated after May 1, by the end of the first week of school.</p>
+                    </div>
+
+                    <div class="health-field-grid" style="margin-top:24px;">
+                        <div class="health-field health-field-wide" health-when="vm.show('allergies')" ng-cloak>
+                            <label for="healthAllergies">Allergies</label>
+                            <input type="text" id="healthAllergies" name="[students.StudentCoreFields]allergies" value="">
+                        </div>
+                        <div class="health-field health-field-wide">
+                            <label for="healthMedicalAlert">Medical Alert Text <i>(other medical considerations)</i></label>
+                            <textarea id="healthMedicalAlert" name="[01]Alert_Medical" rows="4"></textarea>
+                        </div>
+                        <div class="health-field">
+                            <label for="healthMedicalAlertExpires">Medical Alert Expiration Date</label>
+                            <input type="text" id="healthMedicalAlertExpires" name="[01]Alert_MedicalExpires"
+                                value="" size="10"> <span>(0/0/0 to never expire)</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box" health-when="vm.show('dentalPlan')" ng-cloak aria-labelledby="dentalPlanHeading">
+                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="dentalPlanHeading">Dental Examination</strong></div></div>
+                <div class="health-section-content">
+                    <p>An updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/Ed1IH3Wq1npNqMN32DNG1rABGza4DISTStTbImiJy7q_2A?e=jt1qDO" target="_blank" rel="noopener">Report of Dental Examination</a> is required annually, by the end of the first week of school.</p>
+                    <div class="health-field">
+                        <div class="health-question-title">Parent's Stated Return Method</div>
+                        <div id="dentalPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]DENTAL_PLAN_COLLECTION_METHOD)"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box" health-when="vm.show('diabetesPlan')" ng-cloak aria-labelledby="diabetesPlanHeading">
+                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="diabetesPlanHeading">Diabetes Documentation</strong></div></div>
+                <div class="health-section-content">
+                    <p>An updated <a ng-show="vm.currentSchool === '310'" href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/Eb-RNkX_68VItk_KiTr23xsBjio5l2LId39SPSZc7MTQ-A?e=tezeDs" target="_blank" rel="noopener">Contract for Students Keeping a Diabetic Pump and Blood Glucose Testing Meter at School</a><a ng-show="vm.currentSchool !== '310'" href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EamboljcOtVBoAldQKBuwYwB8ay8K7PExkWQj-Ge9DXMYg?e=yKDFeZ" target="_blank" rel="noopener">Diabetes Action Plan</a> is required annually, by the end of the first week of school.</p>
+                    <div class="health-field">
+                        <div class="health-question-title">Parent's Stated Return Method</div>
+                        <div id="diabetesPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]DIABETES_COLLECTION_METHOD)"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box" health-when="vm.show('seizurePlan')" ng-cloak aria-labelledby="seizurePlanHeading">
+                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="seizurePlanHeading">Seizure Action Plan</strong></div></div>
+                <div class="health-section-content">
+                    <p>An updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EdMWOZGj5kVMn24LFIAwZZYBhP4-f0Xx4sSZK3WTagK7aQ?e=HoMSHg" target="_blank" rel="noopener">Seizure Action Plan</a> is required annually, by the end of the first week of school.</p>
+                    <div class="health-field">
+                        <div class="health-question-title">Parent's Stated Return Method</div>
+                        <div id="seizurePlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]SEIZURE_PLAN_COLLECTION_METHOD)"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box" health-when="vm.show('inhalerContract')" ng-cloak aria-labelledby="inhalerContractHeading">
+                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="inhalerContractHeading">Inhaler Contract</strong></div></div>
+                <div class="health-section-content">
+                    <p>An updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/ESCZEwPPO_FPqIoIWkUaAYoBuI8-fttPIsDF0TFJoyupbA?e=dhQeYn" target="_blank" rel="noopener">Contract for Students Keeping Inhalers With Them While at School</a> is required annually, by the end of the first week of school.</p>
+                    <div class="health-field">
+                        <div class="health-question-title">Parent's Stated Return Method</div>
+                        <div id="inhalerContractMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]INHALER_COLLECTION_METHOD)"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box" health-when="vm.show('asthmaAllergyPlan')" ng-cloak aria-labelledby="asthmaAllergyPlanHeading">
+                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="asthmaAllergyPlanHeading">Asthma/Allergy Action Plan</strong></div></div>
+                <div class="health-section-content">
+                    <p>An updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EXAZ9lcDSEFOlIElK0DKRpMBSXYqRjEu0kzDA75QmfRaUg?e=2wgXCk" target="_blank" rel="noopener">Asthma/Allergy Action Plan</a> (<a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EXw6mFEjCvhAsKD8u_j_YpIBetaWvCQamBvJYxl4QoLHMg?e=kqa5lK" target="_blank" rel="noopener">en Español</a>) or a current plan from the student's doctor is required annually, by the end of the first week of school.</p>
+                    <div class="health-field">
+                        <div class="health-question-title">Parent's Stated Return Method</div>
+                        <div id="asthmaAllergyPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]ALLERGY_PLAN_COLLECTION_METHOD)"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box" health-when="vm.show('mealPlan')" ng-cloak aria-labelledby="mealPlanHeading">
+                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="mealPlanHeading">Meal Accommodation</strong></div></div>
+                <div class="health-section-content">
+                    <p health-when="vm.show('mealPlanInstructions')">An updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EZUf0I9b9J1BsVBUbjMsiBkB-6c_WmAjHZ-i0re3cfLg6g?e=FcFKyd" target="_blank" rel="noopener">Request for Meal Accommodation</a> is required annually, by the end of the first week of school.</p>
+                    <div class="health-field">
+                        <div class="health-question-title">Parent's Stated Return Method</div>
+                        <div id="mealPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]FOOD_PLAN_COLLECTION_METHOD)"></div>
+                    </div>
+                </div>
+            </section>
+            <section class="box-round health-section-box" health-when="vm.show('medicalCareNotice')" ng-cloak aria-labelledby="medicalCareNoticeHeading">
+                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="medicalCareNoticeHeading">Medical Care Authorization Notice</strong></div></div>
+                <div class="health-section-content">
+                    <p>This is to certify that I, parent or guardian of ~(first_name) ~(last_name), hereby grant permission for
+                    ~([students.U_STUDENT_ENROLLMENT_LOGIC]PSEE_SCHOOL_NAME) to obtain medical care from any licensed physician,
+                    hospital or medical clinic for the student named herein at such time as either parent or guardian cannot
+                    be contacted in person or by phone. We do hereby waive, release, absolve, indemnify, and agree to hold the
+                    activity sponsors, organizers, supervisors, and participants, for any claim arising out of injury to the
+                    student or accidents that may occur during the school day or activity.</p>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box" aria-labelledby="sportsParticipationHeading">
+                <div class="health-section-banner">
+                    <div class="health-section-banner-content">
+                        <strong id="sportsParticipationHeading">Sports Participation</strong>
+                    </div>
+                </div>
+                <div class="health-section-content health-field-grid">
+                    <div class="health-field">
+                        <label for="healthCanPlaySports">Ability to Play Sports</label>
+                        <select id="healthCanPlaySports"
+                            name="[students.U_STUDENT_ADDITIONAL_INFO]CAN_PLAY_SPORTS">
+                            <option value=""></option>
+                            <option value="0">No</option>
+                            <option value="1">Yes - No Accommodations</option>
+                            <option value="Yes - With Accommodations">Yes - With Accommodations</option>
+                        </select>
+                    </div>
+                    <div></div>
+                    <div class="health-field" health-when="vm.show('sportsAccommodations')" ng-cloak>
+                        <label for="healthSportsAccommodations">Sport Accommodations</label>
+                        <textarea id="healthSportsAccommodations"
+                            name="[Students.U_STUDENT_ADDITIONAL_INFO]SPORTS_ACCOMODATIONS" rows="4"
+                            cols="40"></textarea>
+                    </div>
+                    <div class="health-field" health-when="vm.show('restrictedActivities')" ng-cloak>
+                        <label for="healthUnapprovedActivities">Activities the Student Should Not Engage In</label>
+                        <textarea id="healthUnapprovedActivities"
+                            name="[Students.U_STUDENT_ADDITIONAL_INFO]UNAPPROVED_ACTIVITES" rows="4"
+                            cols="40"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box" aria-labelledby="medicationAuthorizationHeading">
+                <div class="health-section-banner">
+                    <div class="health-section-banner-content">
+                        <strong id="medicationAuthorizationHeading">Medication Authorization</strong>
+                    </div>
+                </div>
+                <div class="health-section-content health-question-grid">
+                    <div class="health-question">
+                        <div class="health-question-title" id="studentMedicationQuestion">Does ~(first_name) require
+                            medication to be administered at school?</div>
+                        <div role="radiogroup" aria-labelledby="studentMedicationQuestion">
+                            <label class="health-radio-option"><input type="radio"
+                                    name="[students.U_STUDENT_ADDITIONAL_INFO]STUDENT_MEDICATION" value="1"> Yes</label>
+                            <label class="health-radio-option"><input type="radio"
+                                    name="[students.U_STUDENT_ADDITIONAL_INFO]STUDENT_MEDICATION" value="0"> No</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            ~[if#Peter.SchoolID = 110]
+            <section class="box-round health-section-box" aria-labelledby="extendedCareHeading">
+                <div class="health-section-banner">
+                    <div class="health-section-banner-content">
+                        <strong id="extendedCareHeading">Extended Care</strong>
+                    </div>
+                </div>
+                <div class="health-section-content health-question-grid">
+                    <div class="health-question">
+                        <div class="health-question-title" id="extendedCareQuestion">Does ~(first_name) attend
+                            Extended Care at ~(schoolname)?</div>
+                        <div role="radiogroup" aria-labelledby="extendedCareQuestion">
+                            <label class="health-radio-option"><input type="radio"
+                                    name="[students.U_STUDENT_ADDITIONAL_INFO]EXTENDED_CARE" value="1"> Yes</label>
+                            <label class="health-radio-option"><input type="radio"
+                                    name="[students.U_STUDENT_ADDITIONAL_INFO]EXTENDED_CARE" value="0"> No</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            [else#Peter]
+            [/if#Peter]
+
+            <div class="box-round health-section-box">
+                <table border="0" cellspacing="0" cellpadding="4" class="linkDescList">
+                    <colgroup>
+                        <col style="width:40%">
+                        <col>
+                    </colgroup>
+                    ~[x:insertfile;../state/emergency~[displaypref:districtstate].html]
+                </table>
+            </div>
+
+            <input type="hidden" id="medLastUpdatedUserType"
+                name="[students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_USER_TYPE" value="">
+            <input type="hidden" id="medLastUpdatedBy"
+                name="[students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_BY" value="">
+            <input type="hidden" id="medLastUpdatedDate"
+                name="[students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_DATE" value="">
+            <div class="button-row health-submit-row"><input type="hidden" name="ac" value="prim"><button type="submit" class="health-submit-button" disabled ng-disabled="!vm.hasChanges() || vm.form.$invalid">Submit</button></div>
+        </form>
+
+        </div>
+        ~[wc:admin_footer_frame_css]
+    </body>
+
+</html>

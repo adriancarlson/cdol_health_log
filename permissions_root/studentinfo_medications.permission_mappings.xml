@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<permission_mappings>
+    <permission name="/admin/students/health/medical_authorization.html">
+        <implies allow="post">/ws/schema/query/net.cdolinc.studentinfo.prescription.medications</implies>
+        <implies allow="get">/ws/schema/table/u_cdol_health_option</implies>
+        <implies allow="post">/ws/schema/table/u_fb_medications</implies>
+        <implies allow="put">/ws/schema/table/u_fb_medications/#</implies>
+        <implies allow="delete">/ws/schema/table/u_fb_medications/#</implies>
+    </permission>
+</permission_mappings>

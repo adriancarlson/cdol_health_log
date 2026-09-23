@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<queries>
+    <query name="net.cdolinc.studentinfo.prescription.medications" coreTable="students" flattened="true">
+        <summary>Student Prescription Medications</summary>
+        <description>Lists the prescription medication records for one student.</description>
+        <args>
+            <arg name="studentsDCID" column="students.dcid" required="true" description="Current student DCID" />
+        </args>
+        <columns>
+            <column column="students.dcid">student_dcid</column>
+            <column column="u_fb_medications.id">medication_id</column>
+            <column column="u_fb_medications.studentsdcid">studentsdcid</column>
+            <column column="u_fb_medications.name">name</column>
+            <column column="u_fb_medications.dosage">dosage</column>
+            <column column="u_fb_medications.dosage_units">dosage_units</column>
+            <column column="u_fb_medications.frequency_taken">frequency_taken</column>
+        </columns>
+        <sql>
+            <![CDATA[
+                SELECT
+                    students.dcid,
+                    u_fb_medications.id,
+                    u_fb_medications.studentsdcid,
+                    u_fb_medications.name,
+                    u_fb_medications.dosage,
+                    u_fb_medications.dosage_units,
+                    u_fb_medications.frequency_taken
+                FROM students
+                INNER JOIN u_fb_medications
+                    ON u_fb_medications.studentsdcid = students.dcid
+                WHERE students.dcid = :studentsDCID
+                ORDER BY UPPER(u_fb_medications.name), u_fb_medications.id
+            ]]>
+        </sql>
+    </query>
+</queries>

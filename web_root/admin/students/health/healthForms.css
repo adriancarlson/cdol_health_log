@@ -1,0 +1,48 @@
+/* Bootstrap-style form controls, scoped so the prescription grid stays native. */
+.cdol-health-forms [ng-cloak] { display: none !important; }
+.cdol-health-forms .ng-hide { display: none !important; }
+.cdol-health-forms .health-plan-notice { margin: 18px 0 0; }
+.cdol-health-forms .health-plan-notice p { margin: 6px 0 0; }
+.cdol-health-forms .health-parent-return { display: flex; flex-wrap: wrap; gap: 6px 24px; }
+.cdol-health-forms .health-field .health-parent-return label { display: inline-block; font-weight: normal; margin: 0; }
+.cdol-health-forms .box-round.medical-section-box,
+.cdol-health-forms .box-round.health-section-box { padding-top: 0 !important; }
+.cdol-health-forms form input[type="text"],
+.cdol-health-forms form select,
+.cdol-health-forms form textarea {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-height: 34px;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #555;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+.cdol-health-forms form input[type="text"]:focus,
+.cdol-health-forms form select:focus,
+.cdol-health-forms form textarea:focus {
+    border-color: #66afe9;
+    outline: 0;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
+}
+.cdol-health-forms form input[type="radio"],
+.cdol-health-forms form input[type="checkbox"] { margin: 0 6px 0 0; vertical-align: middle; }
+.cdol-health-forms form .ng-invalid.ng-touched { border-color: #a94442; }
+.cdol-health-forms .health-contact-field + .health-contact-field { margin-top: 15px; }
+.cdol-health-forms .health-contact-field label,
+.cdol-health-forms .health-field label { margin: 0 0 5px; }
+.cdol-health-forms .health-submit-button { padding: 6px 12px; border-radius: 4px; }
+.cdol-health-forms button:disabled { opacity: .65; cursor: not-allowed; }
+.cdol-health-forms .parent-signature-row label { margin-left: 0; padding-left: 0; }
+.cdol-health-forms .parent-signature-row span { padding-left: 0; }
+@media (max-width: 760px) {
+    .cdol-health-forms .parent-signature-row { flex-wrap: wrap; }
+    .cdol-health-forms .parent-signature-field,
+    .cdol-health-forms .parent-signature-date-field { flex: 1 1 220px; }
+}
