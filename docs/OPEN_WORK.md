@@ -2,6 +2,14 @@
 
 ## Highest-priority implementation work
 
+- Install both Health Log 26.9.7.3 packages and validate Medical Authorization JSON
+  loading and schema API saves with checked, unchecked, blank, and absent-extension
+  records. Verify failed requests do not enable saving or falsely report success;
+  test denied, view-only, and cross-school access. Investigate why approved/responded
+  Basic First Aid values can differ from the mapped student field: the current form
+  mapping is correct, so inspect historical response/approval processing before
+  changing mappings or repairing any student data. See `HEALTH_FORMS_MIGRATION.md`.
+
 1. Package, install, and test the initial student Medication Administration page and the new `ADMINISTRATION` transaction fields.
 2. Confirm administration saves create exactly one deduction, update FIFO balances, refresh the available-medication list, and appear once in administration history.
 3. Confirm the supported PowerSchool server-side mechanism for preventing simultaneous deductions from exceeding available inventory.

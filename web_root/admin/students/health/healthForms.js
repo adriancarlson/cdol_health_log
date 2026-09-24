@@ -3,6 +3,20 @@ define(['angular', 'components/shared/index'], function (angular) {
     'use strict';
     var app = angular.module('cdolHealthForms', ['powerSchoolModule']);
 
+    // PowerSchool decorates ngSubmit; bind directly so both API and native forms
+    // run their controller handler regardless of that decorator's implementation.
+    app.directive('healthSubmit', ['$parse', function ($parse) {
+        return function (scope, element, attrs) {
+            var submit = $parse(attrs.healthSubmit);
+            function onSubmit(event) {
+                var invoke = function () { submit(scope, { $event: event }); };
+                if (scope.$root.$$phase) { invoke(); } else { scope.$apply(invoke); }
+            }
+            element.on('submit', onSubmit);
+            scope.$on('$destroy', function () { element.off('submit', onSubmit); });
+        };
+    }]);
+
     app.factory('healthChangeTracking', function () {
         function normalize(value) {
             if (angular.isArray(value)) { return value.map(normalize); }
@@ -17,12 +31,25 @@ define(['angular', 'components/shared/index'], function (angular) {
     // Seed ngModel from PowerSchool's rendered values before Angular renders the controls.
     // This also covers controls supplied by the state emergency include.
     app.directive('healthBoundForm', function () {
+        function fieldKey(field) {
+            if (field.name.charAt(0) === '[') { return field.name.toLowerCase(); }
+            // PowerSchool replaces source names with record-specific EF-/UF- names.
+            // Its validation key preserves the table/field identity. Generated
+            // checkbox companion inputs have no key and must not seed ngModel.
+            var validation;
+            try { validation = JSON.parse(field.getAttribute('data-validation') || '{}'); }
+            catch (error) { return ''; }
+            var key = String(validation.key || '').toLowerCase();
+            var separator = key.lastIndexOf('.');
+            return separator > 0 ? '[' + key.slice(0, separator) + ']' + key.slice(separator + 1) : '';
+        }
         return {
             priority: 100,
             compile: function (element) {
-                angular.forEach(element[0].querySelectorAll('input[name^="["], select[name^="["], textarea[name^="["]'), function (field) {
+                angular.forEach(element[0].querySelectorAll('input[name], select[name], textarea[name]'), function (field) {
                     if (/^medLastUpdated/.test(field.id)) { return; }
-                    var key = field.name.toLowerCase();
+                    var key = fieldKey(field);
+                    if (!key) { return; }
                     var control = angular.element(field);
                     control.attr('ng-model', 'vm.values[' + JSON.stringify(key) + ']');
                     control.attr('health-initial-value', key);
@@ -191,6 +218,151 @@ define(['angular', 'components/shared/index'], function (angular) {
         };
     }]);
 
+    app.factory('medicalAuthorizationApi', ['$http', '$q', function ($http, $q) {
+        var fields = ['med_share_consent', 'med_first_aid_consent', 'hospital_consent',
+            'acetaminophen', 'ibuprofen', 'antihistamine', 'antacid', 'antibiotic', 'hydrocortisone', 'cough_drop'];
+        function flag(value) {
+            if (value === null || value === undefined || value === '') { return ''; }
+            if (value === true || value === 1 || value === '1' || value === 'true') { return '1'; }
+            if (value === false || value === 0 || value === '0' || value === 'false') { return '0'; }
+            throw new Error('An authorization has an unsupported saved value.');
+        }
+        function load(context) {
+            return $http.get('/admin/students/health/data/medicalAuthorization.json', {
+                params: { frn: context.frn, studentDcid: context.dcid }, cache: false
+            }).then(function (response) {
+                var rows = typeof psUtils !== 'undefined' && psUtils.htmlEntitiesToCharCode ?
+                    psUtils.htmlEntitiesToCharCode(response.data) : response.data;
+                if (typeof rows === 'string') { rows = JSON.parse(rows); }
+                if (!angular.isArray(rows) || rows.length !== 1 || String(rows[0].student_dcid) !== context.dcid ||
+                        !/^[01]$/.test(String(rows[0].record_exists)) || !/^\d{4}-\d{2}-\d{2}$/.test(rows[0].today || '')) {
+                    throw new Error('The student authorization response could not be verified.');
+                }
+                var record = rows[0], values = {};
+                fields.forEach(function (field) {
+                    if (!Object.prototype.hasOwnProperty.call(record, field)) { throw new Error('Missing authorization field.'); }
+                    values[field] = flag(record[field]);
+                });
+                return { record: record, values: values };
+            });
+        }
+        return {
+            fields: fields,
+            load: load,
+            save: function (context, record, changes) {
+                var payload = {};
+                fields.forEach(function (field) {
+                    if (Object.prototype.hasOwnProperty.call(changes, field)) {
+                        var value = flag(changes[field]);
+                        if (value === '') { throw new Error('Choose Yes or No before saving.'); }
+                        // Schema Boolean fields use true/false; Hospital Consent is String(100).
+                        payload[field] = field === 'hospital_consent' ? value : (value === '1' ? 'true' : 'false');
+                    }
+                });
+                payload.med_last_updated_user_type = 'Admin';
+                payload.med_last_updated_by = context.user;
+                payload.med_last_updated_date = record.today;
+                var exists = String(record.record_exists) === '1';
+                if (!exists) { payload.studentsdcid = context.dcid; }
+                return $http({
+                    method: exists ? 'PUT' : 'POST',
+                    url: '/ws/schema/table/u_student_additional_info' + (exists ? '/' + encodeURIComponent(context.dcid) : ''),
+                    data: { tables: { u_student_additional_info: payload } }
+                }).then(function (response) {
+                    var result = response.data && response.data.result;
+                    if (!angular.isArray(result) || !result.length || !result.every(function (row) {
+                        return !row.error_message && (row.status === 'SUCCESS' || Boolean(row.success_message));
+                    })) { return $q.reject(new Error('PowerSchool did not confirm the authorization save.')); }
+                    return load(context).then(function (saved) {
+                        if (String(saved.record.record_exists) !== '1' || saved.record.audit_name !== payload.med_last_updated_by ||
+                                saved.record.audit_user_type !== 'Admin' || saved.record.audit_date !== payload.med_last_updated_date ||
+                                Object.keys(changes).some(function (field) { return saved.values[field] !== changes[field]; })) {
+                            throw new Error('The saved authorizations could not be verified.');
+                        }
+                        return saved;
+                    });
+                });
+            }
+        };
+    }]);
+
+    app.controller('medicalAuthorizationController', ['$element', '$scope', '$q', '$timeout', '$window', 'medicalAuthorizationApi', function ($element, $scope, $q, $timeout, $window, api) {
+        var vm = this, root = $element[0];
+        var context = { dcid: root.getAttribute('data-student-dcid'), frn: root.getAttribute('data-student-frn'),
+            user: root.getAttribute('data-audit-user') };
+        vm.appData = {};
+        vm.original = {};
+        vm.record = {};
+        vm.loaded = false;
+        vm.busy = false;
+        vm.initializing = true;
+        vm.prescriptionBusy = true;
+        vm.message = '';
+        var dialogOpen = false;
+        $scope.$watch(function () { return vm.busy || vm.prescriptionBusy; }, function (busy) {
+            if (busy && !dialogOpen) { loadingDialog(); dialogOpen = true; }
+            if (!busy) {
+                vm.initializing = false;
+                if (dialogOpen) { closeLoading(); dialogOpen = false; }
+            }
+        });
+        $scope.$on('$destroy', function () { if (dialogOpen) { closeLoading(); } });
+        vm.hasParentSignature = function () {
+            var name = vm.record.parent_name;
+            return typeof name === 'string' && name.trim() !== '' && name.trim().toLowerCase() !== 'null';
+        };
+        function changedValues() {
+            var changes = {};
+            api.fields.forEach(function (field) {
+                if (vm.appData[field] !== vm.original[field]) { changes[field] = vm.appData[field]; }
+            });
+            return changes;
+        }
+        function accept(saved) {
+            vm.record = saved.record;
+            vm.appData = saved.values;
+            vm.original = angular.copy(saved.values);
+            vm.loaded = true;
+            if (vm.form) { vm.form.$setPristine(); vm.form.$setUntouched(); }
+        }
+        vm.hasChanges = function () { return vm.loaded && Object.keys(changedValues()).length > 0; };
+        vm.load = function () {
+            if (vm.busy) { return; }
+            vm.busy = true; vm.loaded = false; vm.initializing = true; vm.message = '';
+            return api.load(context).then(accept, function () {
+                vm.error = true;
+                vm.message = 'Medical authorizations could not be loaded. Retry loading before making changes.';
+            }).finally(function () { vm.busy = false; });
+        };
+        vm.submit = function (event) {
+            if (event) { event.preventDefault(); }
+            if (!vm.loaded || vm.busy || vm.medicationBlocked || !vm.hasChanges() || (vm.form && vm.form.$invalid)) { return; }
+            vm.busy = true; vm.message = '';
+            return api.save(context, vm.record, changedValues()).then(function (saved) {
+                accept(saved);
+                vm.error = false; vm.message = 'Medical authorizations saved.';
+                // Wait for the loading dialog to close before scrolling to the confirmation.
+                $timeout(function () { $window.scrollTo(0, 0); }, 0, false);
+            }, function () {
+                vm.loaded = false; vm.error = true;
+                vm.message = 'The save could not be verified. Reload the saved values before making another change.';
+            }).finally(function () { vm.busy = false; });
+        };
+        // Prescription changes stamp only audit fields and preserve unsaved consent edits.
+        vm.saveAudit = function () {
+            if (vm.busy) { return $q.reject(new Error('Authorizations are busy.')); }
+            vm.busy = true;
+            // Re-read first: a previous audit request may have saved despite a lost response.
+            return api.load(context).then(function (saved) {
+                return api.save(context, saved.record, {});
+            }).then(function (saved) {
+                vm.record = saved.record;
+                return saved.record.last_updated_message;
+            }).finally(function () { vm.busy = false; });
+        };
+        vm.load();
+    }]);
+
     app.factory('prescriptionApi', ['$http', '$q', function ($http, $q) {
         function unwrap(data, table) {
             if (data && data.tables && data.tables[table] !== undefined) {
@@ -230,8 +402,15 @@ define(['angular', 'components/shared/index'], function (angular) {
             },
             list: function (studentDcid) {
                 return $http.post('/ws/schema/query/net.cdolinc.studentinfo.prescription.medications?pagesize=0', { studentsDCID: studentDcid }).then(function (response) {
-                    if (!response.data || !angular.isArray(response.data.record)) { return $q.reject(new Error('Invalid medication response.')); }
-                    return response.data.record;
+                    var data = response.data;
+                    if (data && angular.isArray(data.record)) { return data.record; }
+                    // A zero-row PowerQuery returns only its core-table metadata.
+                    // Accept that known envelope, but never treat a login/error response as empty.
+                    if (data && data.name === 'students' && typeof data['@extensions'] === 'string' &&
+                            Object.keys(data).every(function (key) { return key === 'name' || key === '@extensions'; })) {
+                        return [];
+                    }
+                    return $q.reject(new Error('Invalid medication response.'));
                 });
             },
             write: function (method, id, record) {
@@ -262,7 +441,10 @@ define(['angular', 'components/shared/index'], function (angular) {
         rx.auditPending = false;
         function feedback(message, error) { rx.feedback = message; rx.error = Boolean(error); }
         function belongs(row) { return row && String(row.studentsdcid) === String(studentDcid); }
-        function block() { vm.medicationBlocked = rx.busy || Boolean(rx.editor) || rx.auditPending; }
+        function block() {
+            vm.medicationBlocked = rx.busy || Boolean(rx.editor) || rx.auditPending;
+            vm.prescriptionBusy = rx.busy;
+        }
         function findUnit(value) {
             var key = String(value || '').trim().toLowerCase();
             return rx.units.filter(function (unit) { return unit.code.toLowerCase() === key || String(unit.label).toLowerCase() === key; })[0];
@@ -284,7 +466,7 @@ define(['angular', 'components/shared/index'], function (angular) {
             return Boolean(row.name && row.dosage && row.dosage_units && row.frequency_taken);
         };
         rx.edit = function (row) {
-            if (rx.busy || rx.editor || rx.auditPending || !rx.loaded || !rx.units.length || (row && !belongs(row))) { return; }
+            if (vm.busy || vm.loaded === false || rx.busy || rx.editor || rx.auditPending || !rx.loaded || !rx.units.length || (row && !belongs(row))) { return; }
             rx.editingId = row ? String(row.medication_id) : null;
             rx.editor = normalized(row || {});
             rx.original = angular.copy(rx.editor);
@@ -309,10 +491,10 @@ define(['angular', 'components/shared/index'], function (angular) {
             });
         }
         function saveAudit(message) {
-            return audit.save(root).then(function (text) {
+            return (vm.saveAudit ? vm.saveAudit() : audit.save(root)).then(function (text) {
                 rx.auditPending = false;
                 var banner = root.querySelector('#medicalLastUpdated');
-                if (banner) { banner.textContent = text; banner.style.fontStyle = 'italic'; }
+                if (banner && !vm.saveAudit) { banner.textContent = text; banner.style.fontStyle = 'italic'; }
                 feedback(message);
             }, function () {
                 rx.auditPending = true;
@@ -337,20 +519,20 @@ define(['angular', 'components/shared/index'], function (angular) {
             }).finally(function () { rx.busy = false; block(); });
         }
         rx.save = function () {
-            if (rx.busy || !rx.valid() || !rx.changed() || !rx.loaded || rx.auditPending) { return; }
+            if (vm.busy || vm.loaded === false || rx.busy || !rx.valid() || !rx.changed() || !rx.loaded || rx.auditPending) { return; }
             var data = normalized(rx.editor);
             if (rx.editingId && !rx.rows.some(function (row) { return String(row.medication_id) === rx.editingId && belongs(row); })) { return; }
             if (!rx.editingId) { data.studentsdcid = studentDcid; }
             return write(rx.editingId ? 'PUT' : 'POST', rx.editingId, data, rx.editingId ? 'Prescription medication updated.' : 'Prescription medication added.');
         };
         rx.remove = function (row) {
-            if (rx.busy || rx.editor || rx.auditPending || !rx.loaded || !belongs(row)) { return; }
+            if (vm.busy || vm.loaded === false || rx.busy || rx.editor || rx.auditPending || !rx.loaded || !belongs(row)) { return; }
             psConfirm({
                 title: 'Delete Prescription Medication',
                 message: 'Delete this prescription medication? This action cannot be undone.',
                 oktext: 'Delete', canceltext: 'Cancel',
                 ok: function () { $scope.$evalAsync(function () {
-                    if (!rx.busy && !rx.editor && !rx.auditPending && rx.loaded) {
+                    if (!vm.busy && vm.loaded !== false && !rx.busy && !rx.editor && !rx.auditPending && rx.loaded) {
                         write('DELETE', row.medication_id, null, 'Prescription medication deleted.');
                     }
                 }); }

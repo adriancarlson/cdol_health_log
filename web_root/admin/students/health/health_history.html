@@ -111,7 +111,7 @@
         <div class="cdol-health-forms" data-require-path="./healthForms.js" data-module-name="cdolHealthForms"
             data-bootstrap-local="true" ng-controller="healthFormController as vm"
             data-student-dcid="~(rn)" data-form-school="~([students.U_STUDENT_ENROLLMENT_LOGIC]PSEE_SCHOOL_ID)" data-current-school="~(schoolid)" data-audit-user="~[x:username;firstlast]" data-audit-date="~[date]">
-        <form health-bound-form name="vm.form" ng-submit="vm.submit($event)" id="healthHistoryForm" action="/~[self.page]?frn=~(studentfrn)&changesSaved=true" method="POST">
+        <form health-bound-form name="vm.form" health-submit="vm.submit($event)" id="healthHistoryForm" action="/~[self.page]?frn=~(studentfrn)&changesSaved=true" method="POST">
             <p class="feedback-alert" ng-if="vm.message" ng-bind="vm.message" ng-cloak role="status"></p>
             ~[if.~(gpv.changesSaved)=true]
             <div class="feedback-confirm">~[text:psx.common.changes_recorded]</div>[/if]

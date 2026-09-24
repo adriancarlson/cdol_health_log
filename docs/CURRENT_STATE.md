@@ -1,5 +1,63 @@
 # Current State
 
+## Medical Authorization submit confirmation (26.9.7.3)
+
+Successful Medical Authorization submits scroll to the top after the save is
+verified and the loading dialog closes, making the confirmation visible.
+Both 26.9.7.3 packages are built; installed validation remains pending.
+
+## Medical Authorization loading and submit binding (26.9.7.2)
+
+The Medical Authorization root is cloaked and hidden until its initial authorization,
+prescription, and dose-unit requests settle. PowerSchool's native `loadingDialog()` /
+`closeLoading()` pair replaces inline loading messages and also covers saves and
+prescription audit retries. The signature section requires a nonblank, non-null name.
+
+Read-only inspection of the installed PowerSchool `ngSubmitDirective` found that its
+non-`pssValidationForm` branch returns the original compile function instead of its
+compiled link function. The Medical Authorization form consequently had no Angular
+submit listener; the native `submitOnce` handler opened a dialog without an API save.
+Both health pages now bind their controller submit handler through `health-submit`.
+The API form uses PowerSchool's `noSubmitLoading` opt-out, so its own request lifecycle
+controls the dialog. Health History retains its native POST and action URL.
+
+AngularJS 1.4.7 tests reproduce the installed decorator and native loading handler,
+verify consent/OTC saves, loading-dialog closure after success/failure, initial hiding,
+and absent signatures. Both 26.9.7.2 packages are built; installed save validation is pending.
+
+## Medical Authorization empty prescriptions and signature section (26.9.7.1)
+
+The parent/guardian signature and date have their own `box-round` section and
+matching blue header. Both remain read-only, and the section appears when a
+parent signature exists.
+
+Read-only inspection of the test server confirmed that the prescription PowerQuery
+returns only `name` and `@extensions` metadata when no rows exist. This known
+successful envelope now becomes an empty list, showing the no-prescriptions message
+and enabling Add Medication when authorization data and dose units are loaded.
+Malformed responses, login pages, and error envelopes still fail loading.
+AngularJS 1.4.7 tests cover an initially empty list, creating its first medication,
+audit stamping, and invalid-response rejection. Both 26.9.7.1 packages are built;
+installed validation of this revision remains pending.
+
+## Medical Authorization JSON/API loading (26.9.7.0)
+
+Medical Authorization reads the student's existing consent and OTC fields through
+`health/data/medicalAuthorization.json`, binds them to `vm.appData`, and saves only
+changed fields plus audit metadata through the student-extension schema API.
+Blank saved values remain blank; there is no Enrollment Express consent fallback.
+Successful saves require a matching read-back. Prescription audit saves use the
+same API and preserve pending main-form edits. The existing attribution rules and
+read-only parent signature are retained. Health History keeps native submission,
+with its shared binding corrected for PowerSchool-generated field names.
+
+AngularJS 1.4.7 browser tests cover JSON loading, saved/blank/false consent, reverted
+edits, Boolean versus String serialization, read-back mismatch, load failure,
+student isolation, extension creation, and prescription CRUD/audit retries.
+Installed Oracle execution, saves, and authorization checks still require testing
+after both 26.9.7.0 packages are installed. See `HEALTH_FORMS_MIGRATION.md` for the
+separate Basic First Aid response-to-student-field discrepancy found during diagnosis.
+
 ## Confirmed completed work
 
 - Version 26.9.5 moves Medical Authorization and Health History into this plugin under

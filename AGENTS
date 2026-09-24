@@ -20,6 +20,7 @@ Treat those documents and the installed schema as the current source of truth. W
 ## Working rules
 
 - Inspect the existing PowerSchool plugin structure and conventions before editing.
+- Use four-part plugin versions, starting with `26.9.7.0`; increment the final component for subsequent revisions within that release. Both generated plugin packages use the same version.
 - Preserve compatibility with PowerSchool SIS, Oracle SQL, AngularJS/RequireJS/jQuery patterns already used by the project.
 - Prefer clear ES6+ JavaScript where the existing PowerSchool runtime supports it.
 - Do not invent PowerSchool endpoints, table behavior, plugin paths, or security rules.

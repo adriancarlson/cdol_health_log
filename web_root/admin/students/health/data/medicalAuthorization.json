@@ -1,0 +1,127 @@
+~[if#medicalAccess.security.pagemod=/admin/students/health/medical_authorization.html]
+~[tlist_sql;
+WITH student_data AS (
+SELECT students.id AS student_id,
+students.dcid AS student_dcid,
+CASE WHEN u_student_additional_info.studentsdcid IS NULL THEN 0 ELSE 1 END AS record_exists,
+u_student_additional_info.med_share_consent,
+u_student_additional_info.med_first_aid_consent,
+u_student_additional_info.hospital_consent,
+u_student_additional_info.acetaminophen,
+u_student_additional_info.ibuprofen,
+u_student_additional_info.antihistamine,
+u_student_additional_info.antacid,
+u_student_additional_info.antibiotic,
+u_student_additional_info.hydrocortisone,
+u_student_additional_info.cough_drop,
+TRIM(u_student_additional_info.med_sig) AS parent_name,
+u_student_additional_info.med_sig_date AS parent_date,
+TRIM(u_student_additional_info.med_last_updated_user_type) AS audit_user_type,
+TRIM(u_student_additional_info.med_last_updated_by) AS audit_name,
+u_student_additional_info.med_last_updated_date AS audit_date
+FROM students
+LEFT JOIN u_student_additional_info
+ON u_student_additional_info.studentsdcid = students.dcid
+WHERE students.dcid = ~(rn)
+AND students.dcid = ~(gpv.studentDcid;num)
+AND ~(curschoolid) IN (0, students.schoolid)
+),
+newer_admin_rows AS (
+SELECT student_data.student_dcid,
+u_fb_form_response.created_by AS admin_name,
+u_fb_form_response.created_on AS admin_date,
+LAG(UPPER(TRIM(u_fb_form_response.created_by))) OVER (
+PARTITION BY student_data.student_dcid
+ORDER BY u_fb_form_response.created_on, u_fb_form_response.id
+) AS previous_admin_name,
+LAG(u_fb_form_response.created_on) OVER (
+PARTITION BY student_data.student_dcid
+ORDER BY u_fb_form_response.created_on, u_fb_form_response.id
+) AS previous_admin_date,
+ROW_NUMBER() OVER (
+PARTITION BY student_data.student_dcid
+ORDER BY u_fb_form_response.created_on DESC, u_fb_form_response.id DESC
+) AS latest_row
+FROM student_data
+JOIN u_fb_form_response
+ON u_fb_form_response.student_id = student_data.student_id
+WHERE u_fb_form_response.u_fb_form_id = 24778944
+AND u_fb_form_response.response_type = 'A'
+AND u_fb_form_response.id > 0
+AND u_fb_form_response.created_on > student_data.parent_date
+AND (u_fb_form_response.approval IS NULL OR u_fb_form_response.approval = '1')
+),
+newer_admin_events AS (
+SELECT newer_admin_rows.*,
+SUM(CASE
+WHEN UPPER(TRIM(newer_admin_rows.admin_name)) = newer_admin_rows.previous_admin_name
+AND CAST(newer_admin_rows.admin_date AS TIMESTAMP)
+<= CAST(newer_admin_rows.previous_admin_date AS TIMESTAMP) + INTERVAL '60' SECOND
+THEN 0 ELSE 1 END) OVER ( PARTITION BY newer_admin_rows.student_dcid ) AS
+newer_admin_count FROM newer_admin_rows ), form_attribution AS ( SELECT
+student_data.student_dcid, CASE WHEN NVL(newer_admin_events.newer_admin_count,
+0)>= 2 THEN newer_admin_events.admin_date
+ELSE student_data.parent_date
+END AS submitted_date,
+CASE
+WHEN NVL(newer_admin_events.newer_admin_count, 0) >= 2 THEN
+'Last Updated by Admin' || CHR(58) || ' '
+|| NVL(newer_admin_events.admin_name, 'Name unavailable')
+|| ' - '
+|| TO_CHAR(newer_admin_events.admin_date, 'MM/DD/YYYY')
+ELSE
+'Last Updated by Parent' || CHR(58) || ' '
+|| student_data.parent_name
+|| ' - '
+|| TO_CHAR(student_data.parent_date, 'MM/DD/YYYY')
+END AS last_updated_message
+FROM student_data
+LEFT JOIN newer_admin_events
+ON newer_admin_events.student_dcid = student_data.student_dcid
+AND newer_admin_events.latest_row = 1
+WHERE student_data.parent_name IS NOT NULL
+AND student_data.parent_date IS NOT NULL
+),
+attribution AS (
+SELECT student_data.student_dcid, CASE
+WHEN student_data.audit_date IS NOT NULL
+AND (form_attribution.submitted_date IS NULL OR student_data.audit_date >
+form_attribution.submitted_date) THEN
+'Last Updated by ' || student_data.audit_user_type || CHR(58) || ' '
+|| student_data.audit_name
+|| ' - '
+|| TO_CHAR(student_data.audit_date, 'MM/DD/YYYY')
+ELSE form_attribution.last_updated_message
+END AS last_updated_message
+FROM student_data
+LEFT JOIN form_attribution
+ON form_attribution.student_dcid = student_data.student_dcid
+WHERE form_attribution.submitted_date IS NOT NULL OR student_data.audit_date IS
+NOT NULL
+)
+SELECT COALESCE(JSON_ARRAYAGG(JSON_OBJECT(
+    'student_dcid' VALUE TO_CHAR(student_data.student_dcid),
+    'record_exists' VALUE student_data.record_exists,
+    'med_share_consent' VALUE TO_CHAR(student_data.med_share_consent),
+    'med_first_aid_consent' VALUE TO_CHAR(student_data.med_first_aid_consent),
+    'hospital_consent' VALUE student_data.hospital_consent,
+    'acetaminophen' VALUE TO_CHAR(student_data.acetaminophen),
+    'ibuprofen' VALUE TO_CHAR(student_data.ibuprofen),
+    'antihistamine' VALUE TO_CHAR(student_data.antihistamine),
+    'antacid' VALUE TO_CHAR(student_data.antacid),
+    'antibiotic' VALUE TO_CHAR(student_data.antibiotic),
+    'hydrocortisone' VALUE TO_CHAR(student_data.hydrocortisone),
+    'cough_drop' VALUE TO_CHAR(student_data.cough_drop),
+    'parent_name' VALUE student_data.parent_name,
+    'parent_date' VALUE TO_CHAR(student_data.parent_date, 'MM/DD/YYYY'),
+    'audit_name' VALUE student_data.audit_name,
+    'audit_user_type' VALUE student_data.audit_user_type,
+    'audit_date' VALUE TO_CHAR(student_data.audit_date, 'YYYY-MM-DD'),
+    'today' VALUE TO_CHAR(SYSDATE, 'YYYY-MM-DD'),
+    'last_updated_message' VALUE attribution.last_updated_message
+    NULL ON NULL RETURNING CLOB
+) RETURNING CLOB), TO_CLOB('[]')) AS json_result
+FROM student_data
+LEFT JOIN attribution ON attribution.student_dcid = student_data.student_dcid
+;]~(data)[/tlist_sql]
+[else#medicalAccess][][/if#medicalAccess]

@@ -1,5 +1,7 @@
 /* Bootstrap-style form controls, scoped so the prescription grid stays native. */
+.cdol-health-forms[ng-cloak],
 .cdol-health-forms [ng-cloak] { display: none !important; }
+.cdol-health-forms.ng-hide,
 .cdol-health-forms .ng-hide { display: none !important; }
 .cdol-health-forms .health-plan-notice { margin: 18px 0 0; }
 .cdol-health-forms .health-plan-notice p { margin: 6px 0 0; }
