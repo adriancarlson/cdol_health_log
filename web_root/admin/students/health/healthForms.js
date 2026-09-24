@@ -220,7 +220,7 @@ define(['angular', 'components/shared/index'], function (angular) {
 
     app.factory('medicalAuthorizationApi', ['$http', '$q', function ($http, $q) {
         var fields = ['med_share_consent', 'med_first_aid_consent', 'hospital_consent',
-            'acetaminophen', 'ibuprofen', 'antihistamine', 'antacid', 'antibiotic', 'hydrocortisone', 'cough_drop'];
+            'acetaminophen', 'ibuprofen', 'antihistamine', 'antacid', 'antibiotic', 'hydrocortisone', 'cough_drop', 'student_medication'];
         function flag(value) {
             if (value === null || value === undefined || value === '') { return ''; }
             if (value === true || value === 1 || value === '1' || value === 'true') { return '1'; }
@@ -298,7 +298,23 @@ define(['angular', 'components/shared/index'], function (angular) {
         vm.initializing = true;
         vm.prescriptionBusy = true;
         vm.message = '';
-        var dialogOpen = false;
+        var dialogOpen = false, scrollFrame, scrollTimer;
+        function scrollToConfirmation() {
+            var content = root.ownerDocument.getElementById('content-main');
+            var panelTop = content ? content.scrollTop : 0;
+            var windowTop = $window.pageYOffset, windowLeft = $window.pageXOffset;
+            var started;
+            $window.cancelAnimationFrame(scrollFrame);
+            function step(timestamp) {
+                if (started === undefined) { started = timestamp; }
+                var progress = Math.min((timestamp - started) / 600, 1);
+                var remaining = (1 + Math.cos(Math.PI * progress)) / 2;
+                if (content) { content.scrollTop = Math.round(panelTop * remaining); }
+                $window.scrollTo(windowLeft, Math.round(windowTop * remaining));
+                if (progress < 1) { scrollFrame = $window.requestAnimationFrame(step); }
+            }
+            scrollFrame = $window.requestAnimationFrame(step);
+        }
         $scope.$watch(function () { return vm.busy || vm.prescriptionBusy; }, function (busy) {
             if (busy && !dialogOpen) { loadingDialog(); dialogOpen = true; }
             if (!busy) {
@@ -306,7 +322,11 @@ define(['angular', 'components/shared/index'], function (angular) {
                 if (dialogOpen) { closeLoading(); dialogOpen = false; }
             }
         });
-        $scope.$on('$destroy', function () { if (dialogOpen) { closeLoading(); } });
+        $scope.$on('$destroy', function () {
+            if (dialogOpen) { closeLoading(); }
+            $timeout.cancel(scrollTimer);
+            $window.cancelAnimationFrame(scrollFrame);
+        });
         vm.hasParentSignature = function () {
             var name = vm.record.parent_name;
             return typeof name === 'string' && name.trim() !== '' && name.trim().toLowerCase() !== 'null';
@@ -342,7 +362,7 @@ define(['angular', 'components/shared/index'], function (angular) {
                 accept(saved);
                 vm.error = false; vm.message = 'Medical authorizations saved.';
                 // Wait for the loading dialog to close before scrolling to the confirmation.
-                $timeout(function () { $window.scrollTo(0, 0); }, 0, false);
+                scrollTimer = $timeout(scrollToConfirmation, 0, false);
             }, function () {
                 vm.loaded = false; vm.error = true;
                 vm.message = 'The save could not be verified. Reload the saved values before making another change.';
@@ -430,7 +450,7 @@ define(['angular', 'components/shared/index'], function (angular) {
 
     app.controller('prescriptionController', ['$scope', '$element', '$q', 'prescriptionApi', 'healthAudit', function ($scope, $element, $q, api, audit) {
         var rx = this;
-        var root = $element[0].parentNode;
+        var root = $element[0].closest('.cdol-health-forms');
         var vm = $scope.vm;
         var studentDcid = root.getAttribute('data-student-dcid');
         rx.rows = [];

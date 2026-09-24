@@ -166,123 +166,77 @@
                 </div>
             </section>
 
-            <section class="box-round health-section-box" aria-labelledby="emergencyAuthorizationHeading">
-                <div class="health-section-banner">
-                    <div class="health-section-banner-content">
-                        <strong id="emergencyAuthorizationHeading">Emergency Authorization</strong>
-                    </div>
-                </div>
-                <div class="health-section-content">
-                    <div class="health-question">
-                        <div class="health-question-title" id="physicianConsentQuestion">May the school contact
-                            ~(first_name)'s doctor in an emergency?</div>
-                        <div role="radiogroup" aria-labelledby="physicianConsentQuestion">
-                            <label class="health-radio-option"><input type="radio"
-                                    name="[students.U_STUDENT_ADDITIONAL_INFO]PHYSICIAN_CONSENT" value="1"> Yes</label>
-                            <label class="health-radio-option"><input type="radio"
-                                    name="[students.U_STUDENT_ADDITIONAL_INFO]PHYSICIAN_CONSENT" value="0"> No</label>
-                        </div>
-                    </div>
-                    <div class="health-field-grid" style="margin-top:20px;">
-                        <div class="health-field">
-                            <label for="healthHospitalConsent">Hospital Treatment Preference</label>
-                            <select id="healthHospitalConsent"
-                                name="[students.U_STUDENT_ADDITIONAL_INFO]HOSPITAL_CONSENT">
-                                <option value=""></option>
-                                <option value="1">Yes, I consent to treatment at the nearest hospital</option>
-                                <option value="No - other preferred hospital">No, I prefer the hospital listed below
-                                </option>
-                                <option value="0">No, I do not consent to treatment at a hospital</option>
-                            </select>
-                        </div>
-                        <div class="health-field">
-                            <label for="fieldPrefHospital">Preferred Hospital</label>
-                            <input type="text" id="fieldPrefHospital"
-                                name="[students.U_STUDENT_ADDITIONAL_INFO]STUDENT_HOSPITAL" value="" size="40">
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <section class="box-round health-section-box" aria-labelledby="medicalHistoryHeading">
                 <div class="health-section-banner">
                     <div class="health-section-banner-content">
                         <strong id="medicalHistoryHeading">Medical History</strong>
                     </div>
                 </div>
-                <div class="health-section-content">
-                    <div class="health-question-grid">
-                        <div class="health-question">
-                            <div class="health-question-title" id="wearsGlassesQuestion">Does ~(first_name) wear glasses or contacts?</div>
-                            <div role="radiogroup" aria-labelledby="wearsGlassesQuestion">
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]WEARS_GLASSES" value="1"> Yes</label>
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]WEARS_GLASSES" value="0"> No</label>
-                            </div>
-                        </div>
-                        <div class="health-question">
-                            <div class="health-question-title" id="diabetesQuestion">Does ~(first_name) have diabetes?</div>
-                            <div role="radiogroup" aria-labelledby="diabetesQuestion">
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]DIABETES" value="1"> Yes</label>
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]DIABETES" value="0"> No</label>
-                            </div>
-                        </div>
-                        <div class="health-question">
-                            <div class="health-question-title" id="seizuresQuestion">Does ~(first_name) have a history of seizures?</div>
-                            <div role="radiogroup" aria-labelledby="seizuresQuestion">
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]SEIZURE_AGREE" value="1"> Yes</label>
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]SEIZURE_AGREE" value="0"> No</label>
-                            </div>
-                        </div>
-                        <div></div>
-                        <div class="health-question">
-                            <div class="health-question-title" id="asthmaQuestion">Does ~(first_name) have asthma/anaphylaxis?</div>
-                            <div role="radiogroup" aria-labelledby="asthmaQuestion">
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ASTHMA" value="1"> Yes</label>
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ASTHMA" value="0"> No</label>
-                            </div>
-                        </div>
-                        <div class="health-question">
-                            <div class="health-question-title" id="inhalerQuestion">Does ~(first_name) use an inhaler?</div>
-                            <div role="radiogroup" aria-labelledby="inhalerQuestion">
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]INHALER" value="1"> Yes</label>
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]INHALER" value="0"> No</label>
-                            </div>
-                        </div>
-                        <div class="health-question">
-                            <div class="health-question-title" id="allergyQuestion">Does ~(first_name) have allergies or dietary restrictions?</div>
-                            <div role="radiogroup" aria-labelledby="allergyQuestion">
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ALLERGY_AGREE" value="1"> Yes</label>
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ALLERGY_AGREE" value="0"> No</label>
-                            </div>
-                        </div>
-                        <div class="health-question">
-                            <div class="health-question-title" id="epipenQuestion">Has ~(first_name) been prescribed an EpiPen?</div>
-                            <div role="radiogroup" aria-labelledby="epipenQuestion">
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]EPIPEN" value="1"> Yes</label>
-                                <label class="health-radio-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]EPIPEN" value="0"> No</label>
-                            </div>
-                        </div>
-                    </div>
+                <div class="health-section-content medical-history-content">
+                    <table class="otc-medications medical-history-questions" role="presentation">
+                        <tr>
+                            <td>
+                                <strong id="wearsGlassesQuestion">Does ~(first_name) wear glasses or contacts?</strong>
+                                <div role="radiogroup" aria-labelledby="wearsGlassesQuestion">
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]WEARS_GLASSES" value="1"> Yes</label>
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]WEARS_GLASSES" value="0"> No</label>
+                                </div>
+                            </td>
+                            <td>
+                                <strong id="diabetesQuestion">Does ~(first_name) have diabetes?</strong>
+                                <div role="radiogroup" aria-labelledby="diabetesQuestion">
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]DIABETES" value="1"> Yes</label>
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]DIABETES" value="0"> No</label>
+                                </div>
+                            </td>
+                            <td>
+                                <strong id="seizuresQuestion">Does ~(first_name) have a history of seizures?</strong>
+                                <div role="radiogroup" aria-labelledby="seizuresQuestion">
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]SEIZURE_AGREE" value="1"> Yes</label>
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]SEIZURE_AGREE" value="0"> No</label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong id="asthmaQuestion">Does ~(first_name) have asthma/anaphylaxis?</strong>
+                                <div role="radiogroup" aria-labelledby="asthmaQuestion">
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ASTHMA" value="1"> Yes</label>
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ASTHMA" value="0"> No</label>
+                                </div>
+                            </td>
+                            <td>
+                                <strong id="inhalerQuestion">Does ~(first_name) use an inhaler?</strong>
+                                <div role="radiogroup" aria-labelledby="inhalerQuestion">
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]INHALER" value="1"> Yes</label>
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]INHALER" value="0"> No</label>
+                                </div>
+                            </td>
+                            <td>
+                                <strong id="allergyQuestion">Does ~(first_name) have allergies or dietary restrictions?</strong>
+                                <div role="radiogroup" aria-labelledby="allergyQuestion">
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ALLERGY_AGREE" value="1"> Yes</label>
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ALLERGY_AGREE" value="0"> No</label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong id="epipenQuestion">Has ~(first_name) been prescribed an EpiPen?</strong>
+                                <div role="radiogroup" aria-labelledby="epipenQuestion">
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]EPIPEN" value="1"> Yes</label>
+                                <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]EPIPEN" value="0"> No</label>
+                                </div>
+                            </td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </table>
                     <div class="feedback-info health-plan-notice" health-when="vm.show('actionPlan')" ng-cloak>
                         <strong>Action Plan</strong>
                         <p>Please provide an updated action plan from the student's doctor, dated after May 1, by the end of the first week of school.</p>
                     </div>
 
-                    <div class="health-field-grid" style="margin-top:24px;">
-                        <div class="health-field health-field-wide" health-when="vm.show('allergies')" ng-cloak>
-                            <label for="healthAllergies">Allergies</label>
-                            <input type="text" id="healthAllergies" name="[students.StudentCoreFields]allergies" value="">
-                        </div>
-                        <div class="health-field health-field-wide">
-                            <label for="healthMedicalAlert">Medical Alert Text <i>(other medical considerations)</i></label>
-                            <textarea id="healthMedicalAlert" name="[01]Alert_Medical" rows="4"></textarea>
-                        </div>
-                        <div class="health-field">
-                            <label for="healthMedicalAlertExpires">Medical Alert Expiration Date</label>
-                            <input type="text" id="healthMedicalAlertExpires" name="[01]Alert_MedicalExpires"
-                                value="" size="10"> <span>(0/0/0 to never expire)</span>
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -363,6 +317,80 @@
                 </div>
             </section>
 
+            <section class="box-round health-section-box health-alerts" aria-labelledby="healthAlertsHeading">
+                <div class="health-section-banner">
+                    <div class="health-section-banner-content">
+                        <strong id="healthAlertsHeading">Health Alerts</strong>
+                    </div>
+                </div>
+                <h2 class="toggle expanded alerts-headder">Allergy Alert <img src="/images/img/alert_allergy.png"
+                        alt="Allergyalert">
+                </h2>
+                <div class="ps-25">
+                    <table class="linkDescList">
+                        <tr>
+                            <td class="bold w-25">Allergy Alert</td>
+                            <td colspan="2"><input title="Allergies" type="text" class="health-alert-control" id="healthAllergies" name="[students.StudentCoreFields]allergies" value=""
+                                    size="25"></td>
+                        </tr>
+                    </table>
+                </div>
+                <h2 class="toggle expanded alerts-headder">Medical Alert<img src="/images/img/alert_medical.png"
+                        alt="medicalalert">
+                </h2>
+                <div class="ps-25">
+                    <table class="linkDescList">
+                        <tr>
+                            <td class="bold w-25">Medical Alert Text</td>
+                            <td><textarea title="Med Alert Text" id="healthMedicalAlert" name="[students]alert_Medical" rows="6" cols="80"
+                                    class="standardalerts health-alert-control"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="bold">Alert Expiration Date</td>
+                            <td colspan="3"><input title="Med Alert Date" type="text" class="health-alert-control" id="healthMedicalAlertExpires" name="[01]Alert_MedicalExpires"
+                                    value="" size="10">
+                                ~[text:psx.html.admin_students.misc._to_never_expire,param:~[i18shortdate:0/0/0]]</td>
+                        </tr>
+                    </table>
+                </div>
+                <h2 class="toggle expanded alerts-headder">Medical Action Plan Alert<img style="margin-left: 7px;"
+                        src="/images/img/alert_map.png" alt="Medical Action Plan alert"></h2>
+                <div class="ps-25">
+                    <table class="linkDescList">
+                        <tr>
+                            <td class="bold w-25">Does ~(first_name) ~(last_name) have a Medical Action Plan?</td>
+                            <td><input title="MAP" type="checkbox" id="healthActionPlanAlert" name="[students.U_STUDENT_ADDITIONAL_INFO]IHP_ALERT"
+                                    value="1">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="bold w-25">Medical Action Plan Note:</td>
+                            <td><textarea title="Medical Action Plan Note"
+                                    id="healthActionPlanNote" name="[students.U_STUDENT_ADDITIONAL_INFO]IHP_DESCRIPTION" rows="6" cols="80"
+                                    class="standardalerts health-alert-control"></textarea></td>
+                        </tr>
+                    </table>
+                </div>
+                <h2 class="toggle expanded alerts-headder">Concussion Alert<img src="/images/img/alert_concussion.png"
+                        alt="concussionalert"></h2>
+                <div class="ps-25">
+                    <table class="linkDescList">
+                        <tr>
+                            <td class="bold w-25">Does ~(first_name) ~(last_name) have a Concussion?</td>
+                            <td><input title="Concussion" type="checkbox"
+                                    id="healthConcussionAlert" name="[students.U_STUDENT_ADDITIONAL_INFO]CONCUSSION_ALERT" value="1">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="bold w-25">Concussion Note:</td>
+                            <td><textarea title="Concussion Note"
+                                    id="healthConcussionNote" name="[students.U_STUDENT_ADDITIONAL_INFO]CONCUSSION_DESC" rows="6" cols="80"
+                                    class="standardalerts health-alert-control"></textarea></td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+
             <section class="box-round health-section-box" aria-labelledby="sportsParticipationHeading">
                 <div class="health-section-banner">
                     <div class="health-section-banner-content">
@@ -370,17 +398,17 @@
                     </div>
                 </div>
                 <div class="health-section-content health-field-grid">
-                    <div class="health-field">
-                        <label for="healthCanPlaySports">Ability to Play Sports</label>
-                        <select id="healthCanPlaySports"
-                            name="[students.U_STUDENT_ADDITIONAL_INFO]CAN_PLAY_SPORTS">
-                            <option value=""></option>
-                            <option value="0">No</option>
-                            <option value="1">Yes - No Accommodations</option>
-                            <option value="Yes - With Accommodations">Yes - With Accommodations</option>
-                        </select>
+                    <div class="health-question health-field-wide">
+                        <div class="health-question-title" id="healthCanPlaySportsQuestion">Is ~(first_name) allowed to play sports?</div>
+                        <div role="radiogroup" aria-labelledby="healthCanPlaySportsQuestion">
+                            <label class="health-radio-option"><input type="radio" id="healthCanPlaySportsYes"
+                                    name="[students.U_STUDENT_ADDITIONAL_INFO]CAN_PLAY_SPORTS" value="1"> Yes</label>
+                            <label class="health-radio-option"><input type="radio"
+                                    name="[students.U_STUDENT_ADDITIONAL_INFO]CAN_PLAY_SPORTS" value="0"> No</label>
+                            <label class="health-radio-option"><input type="radio"
+                                    name="[students.U_STUDENT_ADDITIONAL_INFO]CAN_PLAY_SPORTS" value="Yes - With Accommodations"> Yes - With Accommodations</label>
+                        </div>
                     </div>
-                    <div></div>
                     <div class="health-field" health-when="vm.show('sportsAccommodations')" ng-cloak>
                         <label for="healthSportsAccommodations">Sport Accommodations</label>
                         <textarea id="healthSportsAccommodations"
@@ -388,30 +416,11 @@
                             cols="40"></textarea>
                     </div>
                     <div class="health-field" health-when="vm.show('restrictedActivities')" ng-cloak>
-                        <label for="healthUnapprovedActivities">Activities the Student Should Not Engage In</label>
+                        <label for="healthUnapprovedActivities">Activities ~(first_name) should NOT engage in</label>
                         <textarea id="healthUnapprovedActivities"
                             name="[Students.U_STUDENT_ADDITIONAL_INFO]UNAPPROVED_ACTIVITES" rows="4"
-                            cols="40"></textarea>
-                    </div>
-                </div>
-            </section>
-
-            <section class="box-round health-section-box" aria-labelledby="medicationAuthorizationHeading">
-                <div class="health-section-banner">
-                    <div class="health-section-banner-content">
-                        <strong id="medicationAuthorizationHeading">Medication Authorization</strong>
-                    </div>
-                </div>
-                <div class="health-section-content health-question-grid">
-                    <div class="health-question">
-                        <div class="health-question-title" id="studentMedicationQuestion">Does ~(first_name) require
-                            medication to be administered at school?</div>
-                        <div role="radiogroup" aria-labelledby="studentMedicationQuestion">
-                            <label class="health-radio-option"><input type="radio"
-                                    name="[students.U_STUDENT_ADDITIONAL_INFO]STUDENT_MEDICATION" value="1"> Yes</label>
-                            <label class="health-radio-option"><input type="radio"
-                                    name="[students.U_STUDENT_ADDITIONAL_INFO]STUDENT_MEDICATION" value="0"> No</label>
-                        </div>
+                            cols="40" aria-describedby="healthUnapprovedActivitiesExample"></textarea>
+                        <div id="healthUnapprovedActivitiesExample">e.g., Physical Education</div>
                     </div>
                 </div>
             </section>

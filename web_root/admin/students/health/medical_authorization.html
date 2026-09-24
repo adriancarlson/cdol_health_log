@@ -20,27 +20,6 @@
                 margin-top: -90px;
             }
 
-            .otc-medications {
-                margin: 0 auto;
-                max-width: 100%;
-                width: 900px;
-            }
-
-            .otc-medications td {
-                width: 33.33%;
-                padding: 8px;
-                vertical-align: top;
-            }
-
-            .otc-example {
-                margin: 2px 0 8px;
-            }
-
-            .otc-option {
-                display: inline-block;
-                min-width: 125px;
-            }
-
             .consent-question td {
                 padding: 12px 18px;
                 background: #fff;
@@ -70,18 +49,30 @@
 
             .medical-form-fields {
                 border: 0;
+                background: transparent !important;
                 margin: 0;
                 padding: 0;
                 min-width: 0;
+            }
+
+            #medicalForm .medical-sections-container {
+                background: transparent;
+                margin: 0;
+                padding: 0;
             }
 
             .medical-form-submit-row {
                 margin: 0 10px 10px !important;
             }
 
-            .prescription-medication-header-action {
-                float: right;
+            .prescription-medication-content { padding: 8px 10px 10px; }
+            .prescription-required-question {
+                padding: 6px 10px;
+                border: 0;
             }
+            .prescription-required-question strong { display: block; margin-bottom: 4px; }
+            .prescription-required-question label { display: inline-block; min-width: 68px; }
+            .prescription-medication-actions-row { margin: 8px 0; text-align: right; }
 
             #prescriptionMedicationFeedback {
                 margin: 4px 10px 0;
@@ -271,6 +262,12 @@
                         </div>
                     </div>
                     <div class="otc-medications-content">
+                        <p>Parent/Guardian(s) have consented to allow the following OTC medications to be
+                            administered to ~(first_name) by ~(schoolname).
+                            <u>Dosage should be administered per age/weight instructions on medication container.</u></p>
+                        <p>These medications will be administered on an as needed basis. All medications will
+                            be kept in the nurse's/school secretaries office. The medications may be given at
+                            their discretion.</p>
                         <table class="otc-medications">
                             <tr>
                                 <td>
@@ -327,7 +324,6 @@
                                 </td>
                                 <td>
                                     <strong>Hydrocortisone Cream</strong>
-                                    <div class="otc-example">&nbsp;</div>
                                     <label class="otc-option"><input type="radio"
                                             name="hydrocortisone" ng-model="vm.appData.hydrocortisone" value="1">
                                         Yes</label>
@@ -339,7 +335,6 @@
                             <tr>
                                 <td>
                                     <strong>Cough drops or Throat Lozenges</strong>
-                                    <div class="otc-example">&nbsp;</div>
                                     <label class="otc-option"><input type="radio"
                                             name="cough_drop" ng-model="vm.appData.cough_drop" value="1">
                                         Yes</label>
@@ -354,10 +349,8 @@
                     </div>
                 </section>
 
-                <div class="button-row medical-form-submit-row"><button type="submit" class="health-submit-button" disabled ng-disabled="!vm.loaded || vm.busy || !vm.hasChanges() || vm.form.$invalid || vm.medicationBlocked">Submit</button></div>
             </div>
         </fieldset>
-        </form>
         <div ng-controller="prescriptionController as rx">
 
 
@@ -371,10 +364,26 @@
                     <div class="medical-section-banner prescription-medication-banner">
                         <div class="medical-section-banner-content prescription-medication-banner-content">
                             <strong id="prescriptionMedicationHeading">Prescription Medications</strong>
-                            <button type="button" id="addPrescriptionMedicationButton"
-                                class="prescription-medication-header-action" disabled ng-click="rx.edit()" ng-disabled="vm.busy || !vm.loaded || rx.busy || rx.editor || rx.auditPending || !rx.loaded || !rx.units.length">Add Medication</button>
                         </div>
                     </div>
+                    <div class="prescription-medication-content">
+                        <div class="prescription-required-question" role="group" aria-labelledby="prescriptionRequiredQuestion">
+                            <strong id="prescriptionRequiredQuestion">Does ~(first_name) require prescription medication to be administered at school?</strong>
+                            <label><input type="radio" name="student_medication" ng-model="vm.appData.student_medication" value="1"
+                                ng-disabled="!vm.loaded || vm.busy || vm.medicationBlocked">Yes</label>
+                            <label><input type="radio" name="student_medication" ng-model="vm.appData.student_medication" value="0"
+                                ng-disabled="!vm.loaded || vm.busy || vm.medicationBlocked">No</label>
+                        </div>
+                        <div ng-show="vm.appData.student_medication === '1'" ng-cloak>
+                            <p>Parent/Guardian(s) have consented to allow the following Prescription Medication to be
+                                administered to ~(first_name) by ~(schoolname). All prescription medications to be
+                                administered during school hours must be listed here.<br>
+                                Press the <strong>Add Medication</strong>
+                                button to add additional medications.</p>
+                            <div class="prescription-medication-actions-row">
+                                <button type="button" id="addPrescriptionMedicationButton" disabled ng-click="rx.edit()"
+                                    ng-disabled="vm.busy || !vm.loaded || rx.busy || rx.editor || rx.auditPending || !rx.loaded || !rx.units.length">Add Medication</button>
+                            </div>
                     <table border="0" cellspacing="0" cellpadding="4" class="linkDescList">
                         <tr>
                             <td colspan="5">
@@ -428,6 +437,8 @@
                             </td>
                         </tr>
                     </table>
+                        </div>
+                    </div>
                 </section>
 
                 <section id="parentGuardianSignatureSection" class="box-round medical-section-box"
@@ -452,6 +463,8 @@
 
 
         </div>
+        <div class="button-row medical-form-submit-row"><button type="submit" disabled ng-disabled="!vm.loaded || vm.busy || !vm.hasChanges() || vm.form.$invalid || vm.medicationBlocked">Submit</button></div>
+        </form>
         <!-- end of content area -->
         </div>
         ~[wc:admin_footer_frame_css]

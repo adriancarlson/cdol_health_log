@@ -92,7 +92,25 @@ field substitution/saving, the relative state emergency include, and permissions
 Version 26.9.7.3 scrolls to the top after a verified Medical Authorization submit
 and loading-dialog closure so the save confirmation is visible.
 
-Install both 26.9.7.3 packages: the Data Access plugin adds student-extension POST/PUT
+Version 26.9.7.4 uses native PowerSchool styling for the main Submit button.
+
+Version 26.9.7.5 adds the requested parent/guardian consent wording below the OTC
+heading, before the radio buttons, with the dosage sentence underlined.
+
+Version 26.9.7.6 visually groups each OTC question and its Yes/No choices with a
+subtle background and border. Questions stack on narrow screens.
+
+Version 26.9.7.7 corrects post-submit scrolling to reset PowerSchool's inner
+`content-main` panel in addition to the window after a verified save.
+
+Version 26.9.7.8 joins OTC cards edge to edge and reduces padding and blank space.
+
+Version 26.9.7.10 uses the saved Boolean `STUDENT_MEDICATION` answer to show the
+prescription instructions, Add Medication button, and table only for Yes. No and
+blank hide them without deleting medication records. The main Submit is below
+all sections; prescription row saves remain independent.
+
+Install both 26.9.7.13 packages: the Data Access plugin adds student-extension POST/PUT
 routes. These routes apply to the whole extension table, not a per-field allowlist;
 test authorized, denied, view-only, and cross-school accounts. The JSON endpoint
 requires modify access; view-only Medical Authorization support remains unverified.
@@ -121,3 +139,39 @@ No schema definitions change.
 The AngularJS browser tests cover conditional visibility, exclusion of hidden
 fields from POST, preservation of hidden values, reverting edits, required input,
 prescription CRUD and audit retries, read-only return choices, and native allergy-field submission.
+
+Version 26.9.7.14 removes the Medication Authorization section and its
+`STUDENT_MEDICATION` Yes/No question from Health History.
+
+Version 26.9.7.15 replaces the sports dropdown with Yes (`1`), No (`0`), and
+Yes - With Accommodations radio buttons. The sports question and restricted-activities
+label include the student's first name. No shows restricted activities; Yes - With
+Accommodations shows both restricted activities and sports accommodations.
+
+Version 26.9.7.16 removes Medical Alert Text (other medical considerations) and
+Medical Alert Expiration Date from Health History. Existing saved alert values
+are not changed by this page.
+
+Version 26.9.7.17 adds Health Alerts before Sports Participation, with the Allergy,
+Medical, Medical Action Plan, and Concussion sections copied from Custom Alerts.
+It preserves their native table layout, collapsible headings, and installed icon
+paths. The existing allergy input moves into this section and always remains
+available. Medical alert text and expiration return within this new section.
+All seven controls use the existing Angular binding, change tracking, native POST,
+and medical audit stamping. The two alert checkboxes use checked `1` / unchecked
+`0`; there is no separate form or API save. Installed validation must verify native
+checkbox clearing, field rendering, icons, and heading toggles.
+
+Version 26.9.7.18 removes the Emergency Authorization section and its physician
+consent, hospital treatment preference, and preferred hospital questions from
+Health History. Existing saved values are not changed by this page.
+
+Version 26.9.7.19 gives all seven Medical History Yes/No questions the OTC section's
+compact shaded cells, shared borders, rounded corners, and three-column layout
+that stacks below 761px. Both pages use the same question styles in
+`healthForms.css`; field names, values, visibility rules, and submission are unchanged.
+
+Version 26.9.7.20 styles Physician, Dentist, and Daycare Provider as three separate
+cards, each containing the provider and phone fields. They use the OTC background,
+border, padding, corner radius, and focus color, retaining the existing responsive
+contact grid and field behavior.

@@ -1,5 +1,119 @@
 # Current State
 
+## Health Contacts cards (26.9.7.20)
+
+Physician, Dentist, and Daycare Provider each have a separate card containing the
+provider and phone fields. The cards match OTC colors, borders, padding, rounded
+corners, and focus styling. They retain the existing three-column layout and stack
+on narrow screens. Field bindings and required physician fields are unchanged.
+Installed PowerSchool visual validation remains pending.
+
+## Medical History question styling (26.9.7.19)
+
+The seven Medical History Yes/No questions share the OTC medication section's
+compact shaded cells, borders, rounded corners, and responsive three-column layout.
+Both pages use the same CSS. Existing bindings and submission remain unchanged.
+Installed PowerSchool visual validation remains pending.
+
+## Health History emergency authorization removal (26.9.7.18)
+
+The Emergency Authorization section and its physician consent, hospital treatment
+preference, and preferred hospital questions are removed from Health History.
+Existing saved values remain unchanged. Installed PowerSchool validation is pending.
+
+## Health History alerts (26.9.7.17)
+
+Health Alerts now appears immediately above Sports Participation. Allergy Alert,
+Medical Alert, Medical Action Plan Alert, and Concussion Alert retain the native
+Alerts page tables, headings, and icon paths. The single allergy input moves into
+this section. All seven alert fields use Health History's existing Angular model,
+change tracking, native submission, and medical audit stamp. The action-plan and
+concussion flags use checked `1` / unchecked `0`.
+
+Both packages are built. AngularJS browser tests passed with source and simulated
+PowerSchool field names, including alert initialization, reverts, and submission.
+XML, package-content, and diff checks passed. Installed field rendering, checkbox
+clearing, heading toggles, icons, and persistence still require PowerSchool validation.
+
+## Faster scroll and borderless prescription question (26.9.7.13)
+
+The smooth post-submit scroll now takes 600ms. The STUDENT_MEDICATION Yes/No
+question has no border or shaded background. Both 26.9.7.13 packages are built;
+installed visual validation remains pending.
+
+## Medical section wrapper cleanup (26.9.7.12)
+
+Read-only inspection identified a native white fieldset background and a gray
+inner wrapper with added margin and padding. The medical fieldset and section
+wrapper now have transparent backgrounds, with the inner wrapper spacing removed.
+Individual section boxes retain their backgrounds and spacing. Both 26.9.7.12
+packages are built; installed visual validation remains pending.
+
+## Gradual scroll and prescription text layout (26.9.7.11)
+
+Verified submits ease the content panel and window to the top over one second
+after the loading dialog closes. The animation is canceled when the controller
+is destroyed. Browser tests verify intermediate scroll positions. The prescription
+Yes/No question no longer has a shaded background, and the Add Medication
+instruction starts on a new line. Both 26.9.7.11 packages are built; installed
+visual validation remains pending.
+
+## Prescription requirement and bottom Submit (26.9.7.10)
+
+The prescription Yes/No question uses U_STUDENT_ADDITIONAL_INFO.STUDENT_MEDICATION.
+The parent form mapping and installed Health History validation metadata confirm
+Yes=1/No=0 and a Boolean field. JSON loading and verified schema API saves include
+this field. Blank/No hides the instructions, Add Medication, and table; Yes shows
+them. No preserves medication records. The question is disabled during medication
+edits/audit retries. Add Medication is above the table and the main Submit follows
+the signature section. Prescription row saves remain independent.
+
+Browser tests cover visibility, Boolean saves, record preservation, audit isolation,
+button placement, CRUD, and post-submit scrolling. Both 26.9.7.10 packages are built;
+installed JSON execution and save validation remain pending.
+
+## Rounded OTC outer corners (26.9.7.9)
+
+The compact, joined OTC cards now have 10px rounded outer corners on desktop
+and narrow screens. Internal borders stay joined. Both 26.9.7.9 packages are
+built; installed visual validation remains pending.
+
+## Compact OTC question cards (26.9.7.8)
+
+OTC cards now touch with shared borders, smaller padding, and tighter Yes/No
+spacing. Blank example rows are removed. The subtle background and narrow-screen
+stacking remain. Both 26.9.7.8 packages are built; installed visual validation
+remains pending.
+
+## Medical Authorization content-panel scrolling (26.9.7.7)
+
+Read-only inspection confirmed that the installed student shell scrolls its
+`content-main` panel while the document remains stationary. Verified submits now
+reset that panel as well as the window after the loading dialog closes. A browser
+regression reproduces the inner scrolling panel, fails with the previous code,
+and passes with the fix. Both 26.9.7.7 packages are built; installed save validation
+remains pending.
+
+## Medical Authorization OTC question styling (26.9.7.6)
+
+Each OTC medication and its Yes/No choices share a lightly shaded card with a thin
+border and spacing between questions. Cards stack on narrow screens; unused cells
+stay invisible. Styling is scoped to the OTC table and adds no Bootstrap dependency.
+Both 26.9.7.6 packages are built; installed visual validation remains pending.
+
+## Medical Authorization OTC consent wording (26.9.7.5)
+
+The requested parent/guardian consent wording appears beneath the OTC heading and
+above its radio buttons, with PowerSchool first-name and school-name substitutions.
+The dosage sentence is underlined. Duplicated pasted HTML was removed. Both
+26.9.7.5 packages are built; installed visual validation remains pending.
+
+## Medical Authorization native Submit styling (26.9.7.4)
+
+The main Submit button inherits PowerSchool's button and disabled styles without
+the custom padding, corner radius, or disabled opacity overrides. Both 26.9.7.4
+packages are built; installed visual validation remains pending.
+
 ## Medical Authorization submit confirmation (26.9.7.3)
 
 Successful Medical Authorization submits scroll to the top after the save is

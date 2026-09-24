@@ -2,7 +2,7 @@
 
 ## Highest-priority implementation work
 
-- Install both Health Log 26.9.7.3 packages and validate Medical Authorization JSON
+- Install both Health Log 26.9.7.13 packages and validate Medical Authorization JSON
   loading and schema API saves with checked, unchecked, blank, and absent-extension
   records. Verify failed requests do not enable saving or falsely report success;
   test denied, view-only, and cross-school access. Investigate why approved/responded

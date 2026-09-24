@@ -9,9 +9,9 @@
 .cdol-health-forms .health-field .health-parent-return label { display: inline-block; font-weight: normal; margin: 0; }
 .cdol-health-forms .box-round.medical-section-box,
 .cdol-health-forms .box-round.health-section-box { padding-top: 0 !important; }
-.cdol-health-forms form input[type="text"],
-.cdol-health-forms form select,
-.cdol-health-forms form textarea {
+.cdol-health-forms form:not(#medicalForm) input[type="text"]:not(.health-alert-control),
+.cdol-health-forms form:not(#medicalForm) select:not(.health-alert-control),
+.cdol-health-forms form:not(#medicalForm) textarea:not(.health-alert-control) {
     box-sizing: border-box;
     display: block;
     width: 100%;
@@ -26,9 +26,9 @@
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
     transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 }
-.cdol-health-forms form input[type="text"]:focus,
-.cdol-health-forms form select:focus,
-.cdol-health-forms form textarea:focus {
+.cdol-health-forms form:not(#medicalForm) input[type="text"]:not(.health-alert-control):focus,
+.cdol-health-forms form:not(#medicalForm) select:not(.health-alert-control):focus,
+.cdol-health-forms form:not(#medicalForm) textarea:not(.health-alert-control):focus {
     border-color: #66afe9;
     outline: 0;
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
@@ -40,7 +40,8 @@
 .cdol-health-forms .health-contact-field label,
 .cdol-health-forms .health-field label { margin: 0 0 5px; }
 .cdol-health-forms .health-submit-button { padding: 6px 12px; border-radius: 4px; }
-.cdol-health-forms button:disabled { opacity: .65; cursor: not-allowed; }
+.cdol-health-forms button:not([type="submit"]):disabled,
+.cdol-health-forms .health-submit-button:disabled { opacity: .65; cursor: not-allowed; }
 .cdol-health-forms .parent-signature-row label { margin-left: 0; padding-left: 0; }
 .cdol-health-forms .parent-signature-row span { padding-left: 0; }
 @media (max-width: 760px) {
@@ -48,3 +49,93 @@
     .cdol-health-forms .parent-signature-field,
     .cdol-health-forms .parent-signature-date-field { flex: 1 1 220px; }
 }
+
+/* Preserve the Alerts page layout and native controls within Health History. */
+.cdol-health-forms .health-alerts .alerts-headder { display: flex; align-items: center; }
+.cdol-health-forms .health-alerts .ps-25 { padding-left: 25px; }
+.cdol-health-forms .health-alerts .w-25 { width: 25%; }
+.cdol-health-forms .health-alerts .bold { font-weight: bold; }
+
+/* Shared question styling for OTC medications and Medical History. */
+.cdol-health-forms .otc-medications {
+    margin: 0 auto;
+    max-width: 100%;
+    width: 900px;
+    border: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.cdol-health-forms .otc-medications td {
+    width: 33.33%;
+    padding: 6px 10px;
+    vertical-align: top;
+    border: 0;
+    background: transparent;
+}
+
+.cdol-health-forms .otc-medications td:not(:empty) {
+    background: #f7f9fa;
+    border: 1px solid #dce3e7;
+    border-width: 0 1px 1px 0;
+    border-radius: 0;
+}
+
+.cdol-health-forms .otc-medications td:first-child { border-left-width: 1px; }
+.cdol-health-forms .otc-medications tr:first-child td { border-top-width: 1px; }
+
+@media (min-width: 761px) {
+    .cdol-health-forms .otc-medications tr:first-child td:first-child { border-top-left-radius: 10px; }
+    .cdol-health-forms .otc-medications tr:first-child td:last-child { border-top-right-radius: 10px; }
+    .cdol-health-forms .otc-medications tr:nth-last-child(2) td:last-child { border-bottom-right-radius: 10px; }
+    .cdol-health-forms .otc-medications tr:last-child td:first-child { border-radius: 0 0 10px 10px; }
+}
+
+.cdol-health-forms .otc-medications td > strong {
+    display: block;
+    margin-bottom: 3px;
+}
+
+.cdol-health-forms .otc-medications td:focus-within {
+    border-color: #8caaba;
+}
+
+.cdol-health-forms .otc-example {
+    margin: 0 0 3px;
+}
+
+.cdol-health-forms .otc-medications .otc-option {
+    display: inline-block;
+    min-width: 68px;
+    margin: 0;
+}
+
+@media (max-width: 760px) {
+    .cdol-health-forms .otc-medications,
+    .cdol-health-forms .otc-medications tbody,
+    .cdol-health-forms .otc-medications tr,
+    .cdol-health-forms .otc-medications td {
+        display: block;
+        width: auto;
+    }
+
+    .cdol-health-forms .otc-medications tr td:not(:empty) { border-width: 0 1px 1px; }
+    .cdol-health-forms .otc-medications tr:first-child td:first-child {
+        border-top-width: 1px;
+        border-radius: 10px 10px 0 0;
+    }
+    .cdol-health-forms .otc-medications tr:last-child td:first-child { border-radius: 0 0 10px 10px; }
+    .cdol-health-forms .otc-medications td:empty { display: none; }
+}
+
+.cdol-health-forms .medical-history-content { padding: 8px 10px 10px; }
+
+/* Keep each provider and phone together in a separate OTC-style card. */
+.cdol-health-forms .health-contact-column {
+    min-width: 0;
+    padding: 6px 10px;
+    background: #f7f9fa;
+    border: 1px solid #dce3e7;
+    border-radius: 10px;
+}
+.cdol-health-forms .health-contact-column:focus-within { border-color: #8caaba; }

@@ -22,7 +22,7 @@ the source used by the export's School Workflow Logic element (24779308).
 | Inhaler contract | School 311 and inhaler = 1; explicitly approved correction |
 | Asthma/allergy plan | Inhaler = 1 or EpiPen = 1; asthma alone does not trigger it |
 | Medical-care notice | School 210 or 211, and inhaler = 1 or EpiPen = 1 |
-| Allergy field | Allergies/dietary restrictions = 1 |
+| Allergy Alert field | Always available in Health Alerts |
 | Meal-document return method | School 110, 130, or 131, and allergies = 1 |
 | Meal-accommodation instructions | School 130 or 131, and allergies = 1 |
 | Sports accommodations | Sports = `Yes - With Accommodations` |
@@ -44,7 +44,11 @@ school used for section visibility.
 - Sports fields: `CAN_PLAY_SPORTS`, `SPORTS_ACCOMODATIONS`, and
   `UNAPPROVED_ACTIVITES` in the same extension. Existing capitalization variants
   of the accommodations answer remain recognized; the exported option value is
-  used for new selections.
+  used for new selections. The sports question uses Yes (`1`), No (`0`), and
+  Yes - With Accommodations radio buttons. No shows the restricted-activities
+  text box; Yes - With Accommodations shows both dependent text boxes. The question
+  and restricted-activities label include the student's first name, with Physical
+  Education shown as an example below the restricted-activities box.
 - Document methods: `DENTAL_PLAN_COLLECTION_METHOD`, `DIABETES_COLLECTION_METHOD`,
   `SEIZURE_PLAN_COLLECTION_METHOD`, `INHALER_COLLECTION_METHOD`,
   `ALLERGY_PLAN_COLLECTION_METHOD`, and `FOOD_PLAN_COLLECTION_METHOD`.
@@ -53,9 +57,23 @@ school used for section visibility.
   validation, upload control, or upload link. They never enter the submitted model.
 - Allergies: editable `StudentCoreFields.allergies`, submitted with the main form
   and covered by its actual-change audit stamp. No allergy table, child-record
-  API calls, or automatic summary rebuilding. Hiding the field preserves its value.
-- Existing emergency authorization, alert expiration, medication authorization,
-  extended-care, and state fields remain available from the previous admin page.
+  API calls, or automatic summary rebuilding. Its single input is now in Health
+  Alerts and remains available regardless of the allergies/dietary restrictions answer.
+- Existing extended-care and state fields remain available from the previous admin page.
+- Emergency Authorization and its physician consent, hospital treatment preference,
+  and preferred hospital questions are removed. Health History no longer submits
+  `PHYSICIAN_CONSENT`, `HOSPITAL_CONSENT`, or `STUDENT_HOSPITAL`.
+- Health Alerts appears immediately before Sports Participation. It copies Allergy
+  Alert, Medical Alert, Medical Action Plan Alert, and Concussion Alert from Custom
+  Alerts' `alerts.html`, retaining the native tables, headings, and icon paths.
+  Medical Alert Text and Expiration Date are now in this section. The fields use
+  `Students.alert_Medical`, `Students.Alert_MedicalExpires`, and extension fields
+  `IHP_ALERT`, `IHP_DESCRIPTION`, `CONCUSSION_ALERT`, and `CONCUSSION_DESC`.
+  The two checkboxes bind checked/unchecked to `1`/`0`. All fields participate in
+  Angular initialization, change tracking, and the main native submit/audit path.
+  Icons remain supplied by PowerSchool and the installed Custom Alerts plugin.
+- Medication Authorization and its `STUDENT_MEDICATION` question are removed
+  from Health History; this page no longer submits that field.
 
 Hidden dependent fields remain initialized in Angular. They are disabled for
 native submission and excluded from change comparison until visible. Values are
