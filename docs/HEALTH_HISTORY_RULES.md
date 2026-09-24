@@ -13,7 +13,8 @@ the source used by the export's School Workflow Logic element (24779308).
 
 | Section | Condition |
 | --- | --- |
-| Physician, dentist, daycare | Always shown; omit the parent update/correction prompt as requested |
+| Physician, dentist | Always shown; omit the parent update/correction prompt as requested |
+| Daycare provider and phone | School 110 only |
 | Dental agreement | School 120 |
 | Dental examination | School 104 |
 | Diabetes documentation | Diabetes = 1 and school does not match `101` (export's negative-match rule) |
@@ -27,6 +28,28 @@ the source used by the export's School Workflow Logic element (24779308).
 | Meal-accommodation instructions | School 130 or 131, and allergies = 1 |
 | Sports accommodations | Sports = `Yes - With Accommodations` |
 | Restricted activities | Sports = `0` or `Yes - With Accommodations` |
+
+The inline Action Plan notice shows the student- and school-specific DMMP wording
+when Diabetes is Yes, including school 101. The provider's form phrase is underlined
+and the first-week-of-school deadline is highlighted. Seizure-only cases retain the
+general action-plan wording in the same notice.
+
+When Diabetes is Yes, the inline Action Plan notice also shows Parent's Stated
+Return Method from `U_STUDENT_ADDITIONAL_INFO.DIABETES_COLLECTION_METHOD`. Upload
+and Return to school office display as disabled radios with no submission names;
+blank values show Not recorded. This display appears only once, within the notice,
+including at school 101. It is hidden for seizure-only cases.
+
+For Upload, the document icon opens an inline picker of the selected student's
+active, downloadable Diabetes documents. Each entry shows its filename and upload
+date; the administrator selects the plan to preview. PDF and PNG/JPEG/GIF/WebP
+previews load only after selection. The upload date does not establish the doctor's
+plan date, and no document is selected automatically. New parent uploads are
+expected to carry category Diabetes; other categories are not included or changed.
+Open student attachments remains a separate link to the native page in a new tab
+for missing matches, unsupported files, or failed/denied requests. The copied icon
+uses this plugin's namespaced image path. Native server authorization still applies;
+the integration adds no permission grants or submitted fields.
 
 Diabetes documentation uses the diabetic pump/meter contract when the student's
 current `SchoolID` is 310, matching the export's document-link substitution.
@@ -47,8 +70,8 @@ school used for section visibility.
   used for new selections. The sports question uses Yes (`1`), No (`0`), and
   Yes - With Accommodations radio buttons. No shows the restricted-activities
   text box; Yes - With Accommodations shows both dependent text boxes. The question
-  and restricted-activities label include the student's first name, with Physical
-  Education shown as an example below the restricted-activities box.
+  and restricted-activities label include the student's first name, with
+  `ie. Physical Education` as subtext below the label and above the text box.
 - Document methods: `DENTAL_PLAN_COLLECTION_METHOD`, `DIABETES_COLLECTION_METHOD`,
   `SEIZURE_PLAN_COLLECTION_METHOD`, `INHALER_COLLECTION_METHOD`,
   `ALLERGY_PLAN_COLLECTION_METHOD`, and `FOOD_PLAN_COLLECTION_METHOD`.

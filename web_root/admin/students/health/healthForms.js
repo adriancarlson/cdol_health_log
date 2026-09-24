@@ -79,17 +79,142 @@ define(['angular', 'components/shared/index'], function (angular) {
         };
     });
 
-    // Display the parent's answer without posting or modifying it.
-    app.directive('healthParentReturn', function () {
+    // Reuse the native Attachments metadata contract and current user's session.
+    // Content authorization remains enforced by PowerSchool; never fall back to S3.
+    app.factory('healthAttachments', ['$http', '$q', '$window', function ($http, $q, $window) {
+        function list(value) { return value == null ? [] : (angular.isArray(value) ? value : [value]); }
+        function get(url, params) { return $http.get(url, { params: params, cache: false, timeout: 30000 }); }
+        function eligible(doc, categoryId) {
+            var change = list(doc.changeList)[0] || {};
+            return /^\d+$/.test(String(doc.id)) && doc.status === 'A' && doc.permission && doc.permission.download === true &&
+                (!doc.documentLocation || doc.documentLocation === 'L') &&
+                change.whoChangedName !== 'PowerSchool Registration Signature' &&
+                list(doc.categories).some(function (category) { return String(category.id) === String(categoryId); });
+        }
+        function find(frn, categoryName) {
+            if (!/^001\d+$/.test(frn || '') || !categoryName) { return $q.reject(new Error('Student attachment context is unavailable.')); }
+            var params = { entityname: 'STCM', entityid: frn.substring(3) };
+            return get('/ws/districtcategory').then(function (response) {
+                if (!response.data || !response.data.categories) { throw new Error('Invalid category response.'); }
+                var categories = list(response.data.categories).filter(function (category) { return category.name === categoryName; });
+                if (categories.length !== 1 || !/^\d+$/.test(String(categories[0].id))) { return []; }
+                var categoryId = categories[0].id;
+                params.q = 'category==(' + categoryId + ');status==active';
+                return get('/ws/k12drive/document/aggregates', params).then(function (aggregateResponse) {
+                    var aggregate = aggregateResponse.data && aggregateResponse.data.documentAggregates;
+                    var count = aggregate && Number(aggregate.count);
+                    if (!aggregate || !isFinite(count) || count < 0 || Math.floor(count) !== count || count > 10000) {
+                        throw new Error('Invalid attachment count.');
+                    }
+                    if (!count) { return []; }
+                    if (!/^\d+$/.test(String(aggregate.time))) { throw new Error('Invalid attachment snapshot.'); }
+                    params.q = 'category==(' + categoryId + ');lastmodifiedon=le=' + aggregate.time + ';status==active';
+                    params.pagesize = 100;
+                    params.order = 'filename;asc';
+                    var documents = [], seen = {};
+                    function page(number) {
+                        return get('/ws/k12drive/document', angular.extend({}, params, { page: number })).then(function (response) {
+                            if (!response.data || !response.data.documents || !response.data.documents.documentList) {
+                                throw new Error('Invalid attachment response.');
+                            }
+                            list(response.data.documents.documentList).forEach(function (doc) {
+                                if (eligible(doc, categoryId) && !seen[doc.id]) {
+                                    seen[doc.id] = true;
+                                    var change = list(doc.changeList)[0] || {};
+                                    documents.push({ id: doc.id, name: doc.name || 'Untitled document',
+                                        uploaded: change.whenChangedFormatted || 'Not available' });
+                                }
+                            });
+                            return number * params.pagesize < count ? page(number + 1) : documents;
+                        });
+                    }
+                    return page(1);
+                });
+            });
+        }
         return {
-            scope: { method: '@healthParentReturn' },
+            find: find,
+            preview: function (id) {
+                if (!/^\d+$/.test(String(id))) { return $q.reject(new Error('Invalid attachment ID.')); }
+                return $http.get('/ws/k12drive/document/content/' + id, { responseType: 'arraybuffer', cache: false, timeout: 30000 })
+                    .then(function (response) {
+                        var type = (response.headers('Content-Type') || '').split(';')[0].trim().toLowerCase();
+                        if (['application/pdf', 'image/png', 'image/jpeg', 'image/gif', 'image/webp'].indexOf(type) === -1 ||
+                                !response.data || !response.data.byteLength) {
+                            throw new Error('This file cannot be previewed here. Open student attachments to view or download it.');
+                        }
+                        return $window.URL.createObjectURL(new $window.Blob([response.data], { type: type }));
+                    });
+            },
+            release: function (url) { if (url) { $window.URL.revokeObjectURL(url); } }
+        };
+    }]);
+
+    // Display the parent's answer without posting or modifying it.
+    app.directive('healthParentReturn', ['healthAttachments', '$sce', function (attachments, $sce) {
+        return {
+            scope: { method: '@healthParentReturn', attachmentUrl: '@?', attachmentCategory: '@?', attachmentFrn: '@?', attachmentEnabled: '=?' },
             template: '<div class="health-parent-return" role="radiogroup" aria-label="Parent\'s Stated Return Method" aria-disabled="true">' +
                 '<label><input type="radio" value="Upload" ng-checked="method === \'Upload\'" disabled> Upload</label>' +
                 '<label><input type="radio" value="Return to school office" ng-checked="method === \'Return to school office\'" disabled> Return to school office</label>' +
                 '<span ng-if="!method">Not recorded</span>' +
-                '<span ng-if="method && method !== \'Upload\' && method !== \'Return to school office\'" ng-bind="method"></span></div>'
+                '<span ng-if="method && method !== \'Upload\' && method !== \'Return to school office\'" ng-bind="method"></span></div>' +
+                '<div class="health-parent-attachment" ng-if="method === \'Upload\' && attachmentUrl">' +
+                '<button class="health-document-link" type="button" ng-click="loadDocuments()" ng-disabled="loading" aria-expanded="{{!!opened}}">' +
+                '<img src="/images/cdol_health_log/bc-document-icon.png" alt="" width="24" height="24">' +
+                '<span>View {{attachmentCategory}} documents</span></button>' +
+                '<a class="health-attachments-fallback" ng-href="{{attachmentUrl}}" target="_blank" rel="noopener">Open student attachments</a></div>' +
+                '<section class="health-attachment-panel" ng-if="opened" aria-label="Action Plan documents" ng-keydown="$event.keyCode === 27 && closeDocuments(true)">' +
+                '<div class="health-attachment-heading"><strong>{{attachmentCategory}} documents</strong>' +
+                '<button type="button" ng-click="closeDocuments(true)">Close documents</button></div>' +
+                '<p role="status" aria-live="polite" ng-if="loading || message">{{loading ? "Loading documents..." : message}}</p>' +
+                '<ul class="health-attachment-list" ng-if="documents.length"><li ng-repeat="document in documents track by document.id">' +
+                '<button type="button" ng-click="previewDocument(document)" ng-disabled="previewLoading" ng-bind="document.name"></button>' +
+                '<span>Uploaded: <span ng-bind="document.uploaded"></span></span></li></ul>' +
+                '<p role="status" aria-live="polite" ng-if="previewLoading || previewMessage">{{previewLoading ? "Loading preview..." : previewMessage}}</p>' +
+                '<div ng-if="previewUrl"><div class="health-attachment-heading"><strong ng-bind="previewName"></strong>' +
+                '<button type="button" ng-click="closePreview()">Close preview</button></div>' +
+                '<iframe class="health-attachment-preview" ng-src="{{previewUrl}}" title="Action Plan document preview"></iframe></div></section>',
+            link: function (scope, element) {
+                var request = 0, blobUrl;
+                function release() { attachments.release(blobUrl); blobUrl = null; scope.previewUrl = null; }
+                scope.closePreview = function () { request++; release(); scope.previewLoading = false; scope.previewMessage = ''; };
+                scope.closeDocuments = function (restoreFocus) {
+                    scope.closePreview(); scope.opened = false; scope.loading = false; scope.documents = [];
+                    var button = element[0].querySelector('.health-document-link');
+                    if (restoreFocus && button) { button.focus(); }
+                };
+                scope.loadDocuments = function () {
+                    if (scope.method !== 'Upload' || scope.attachmentEnabled === false) { return; }
+                    scope.closePreview();
+                    var current = ++request;
+                    scope.opened = true; scope.loading = true; scope.documents = []; scope.message = '';
+                    attachments.find(scope.attachmentFrn, scope.attachmentCategory).then(function (documents) {
+                        if (current !== request) { return; }
+                        scope.documents = documents;
+                        scope.message = documents.length ? 'Select a document to preview. The upload date does not establish the plan date.' :
+                            'No available ' + scope.attachmentCategory + ' documents were found. Open student attachments to review the files.';
+                    }, function () {
+                        if (current === request) { scope.message = 'Documents could not be loaded. Open student attachments to review access and available files.'; }
+                    }).finally(function () { if (current === request) { scope.loading = false; } });
+                };
+                scope.previewDocument = function (document) {
+                    if (scope.documents.indexOf(document) === -1 || scope.previewLoading) { return; }
+                    release();
+                    var current = ++request;
+                    scope.previewLoading = true; scope.previewMessage = ''; scope.previewName = document.name;
+                    attachments.preview(document.id).then(function (url) {
+                        if (current !== request) { attachments.release(url); return; }
+                        blobUrl = url; scope.previewUrl = $sce.trustAsResourceUrl(url);
+                    }, function (error) {
+                        if (current === request) { scope.previewMessage = error.message || 'The preview could not be loaded. Open student attachments to review access and available files.'; }
+                    }).finally(function () { if (current === request) { scope.previewLoading = false; } });
+                };
+                scope.$watchGroup(['method', 'attachmentFrn', 'attachmentEnabled'], function () { scope.closeDocuments(); });
+                scope.$on('$destroy', function () { request++; release(); });
+            }
         };
-    });
+    }]);
 
     // Keep dependent controls in the DOM so their saved values can be initialized
     // and restored when a question is re-enabled. Hidden controls are not posted.
@@ -176,6 +301,7 @@ define(['angular', 'components/shared/index'], function (angular) {
             var yes = function (field) { return vm.answer(field) === '1'; };
             var school = String(vm.formSchool);
             switch (section) {
+            case 'daycareProvider': return school === '110';
             case 'dentalAgreement': return school === '120';
             case 'dentalPlan': return school === '104';
             case 'diabetesPlan': return school.indexOf('101') === -1 && yes('diabetes');

@@ -38,7 +38,7 @@
 
             .health-contact-grid {
                 display: grid;
-                gap: 24px;
+                gap: 0;
                 grid-template-columns: repeat(3, minmax(0, 1fr));
             }
 
@@ -122,7 +122,7 @@
                         <strong id="healthContactsHeading">Health Contacts</strong>
                     </div>
                 </div>
-                <div class="health-section-content health-contact-grid">
+                <div class="health-section-content health-contact-grid" ng-class="{'health-contact-grid-no-daycare': !vm.show('daycareProvider')}">
                     <div class="health-contact-column">
                         <div class="health-contact-field">
                             <label for="healthDoctorName">Physician's Name</label>
@@ -133,7 +133,7 @@
                             <input type="text" id="healthDoctorPhone" name="[01]Doctor_Phone" value="" required>
                         </div>
                     </div>
-                    <div class="health-contact-column">
+                    <div class="health-contact-column" ng-class="{'health-contact-last': !vm.show('daycareProvider')}">
                         <div class="health-contact-field">
                             <label for="healthDentistName">Dentist's Name</label>
                             <input type="text" id="healthDentistName" name="[students.StudentCoreFields]dentist_name" value="">
@@ -143,7 +143,7 @@
                             <input type="text" id="healthDentistPhone" name="[students.StudentCoreFields]dentist_phone" value="">
                         </div>
                     </div>
-                    <div class="health-contact-column">
+                    <div class="health-contact-column" id="healthDaycareCard" health-when="vm.show('daycareProvider')" ng-cloak>
                         <div class="health-contact-field">
                             <label for="healthDaycareProvider">Daycare Provider</label>
                             <input type="text" id="healthDaycareProvider"
@@ -233,8 +233,18 @@
                         </tr>
                     </table>
                     <div class="feedback-info health-plan-notice" health-when="vm.show('actionPlan')" ng-cloak>
-                        <strong>Action Plan</strong>
-                        <p>Please provide an updated action plan from the student's doctor, dated after May 1, by the end of the first week of school.</p>
+                        <strong id="actionPlanHeading">Action Plan</strong>
+                        <p id="diabetesActionPlanInstructions" ng-if="vm.answer('diabetes') === '1'">Parents are responsible for submitting
+                            ~(first_name)'s Diabetes Medical Management Plan (DMMP) to ~(schoolname) using
+                            <u>the health care provider’s form</u>. An updated plan from ~(first_name)'s doctor,
+                            dated after May 1, is required each year <mark>by the end of the first week of school.</mark></p>
+                        <div class="health-field health-plan-return" health-when="vm.answer('diabetes') === '1'">
+                            <div class="health-question-title">Parent's Stated Return Method</div>
+                            <div id="diabetesPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]DIABETES_COLLECTION_METHOD)"
+                                attachment-url="/admin/students/studentattachments.html?frn=~(studentfrn)" attachment-category="Diabetes"
+                                attachment-frn="~(studentfrn)" attachment-enabled="vm.answer('diabetes') === '1'"></div>
+                        </div>
+                        <p ng-if="vm.answer('diabetes') !== '1'">Please provide an updated action plan from the student's doctor, dated after May 1, by the end of the first week of school.</p>
                     </div>
 
                 </div>
@@ -255,10 +265,6 @@
                 <div class="health-section-banner"><div class="health-section-banner-content"><strong id="diabetesPlanHeading">Diabetes Documentation</strong></div></div>
                 <div class="health-section-content">
                     <p>An updated <a ng-show="vm.currentSchool === '310'" href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/Eb-RNkX_68VItk_KiTr23xsBjio5l2LId39SPSZc7MTQ-A?e=tezeDs" target="_blank" rel="noopener">Contract for Students Keeping a Diabetic Pump and Blood Glucose Testing Meter at School</a><a ng-show="vm.currentSchool !== '310'" href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EamboljcOtVBoAldQKBuwYwB8ay8K7PExkWQj-Ge9DXMYg?e=yKDFeZ" target="_blank" rel="noopener">Diabetes Action Plan</a> is required annually, by the end of the first week of school.</p>
-                    <div class="health-field">
-                        <div class="health-question-title">Parent's Stated Return Method</div>
-                        <div id="diabetesPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]DIABETES_COLLECTION_METHOD)"></div>
-                    </div>
                 </div>
             </section>
 
@@ -417,10 +423,10 @@
                     </div>
                     <div class="health-field" health-when="vm.show('restrictedActivities')" ng-cloak>
                         <label for="healthUnapprovedActivities">Activities ~(first_name) should NOT engage in</label>
+                        <div id="healthUnapprovedActivitiesExample" class="health-field-help">ie. Physical Education</div>
                         <textarea id="healthUnapprovedActivities"
                             name="[Students.U_STUDENT_ADDITIONAL_INFO]UNAPPROVED_ACTIVITES" rows="4"
                             cols="40" aria-describedby="healthUnapprovedActivitiesExample"></textarea>
-                        <div id="healthUnapprovedActivitiesExample">e.g., Physical Education</div>
                     </div>
                 </div>
             </section>
@@ -464,7 +470,7 @@
                 name="[students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_BY" value="">
             <input type="hidden" id="medLastUpdatedDate"
                 name="[students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_DATE" value="">
-            <div class="button-row health-submit-row"><input type="hidden" name="ac" value="prim"><button type="submit" class="health-submit-button" disabled ng-disabled="!vm.hasChanges() || vm.form.$invalid">Submit</button></div>
+            <div class="button-row health-submit-row"><input type="hidden" name="ac" value="prim"><button type="submit" disabled ng-disabled="!vm.hasChanges() || vm.form.$invalid">Submit</button></div>
         </form>
 
         </div>

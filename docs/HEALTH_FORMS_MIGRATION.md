@@ -175,3 +175,55 @@ Version 26.9.7.20 styles Physician, Dentist, and Daycare Provider as three separ
 cards, each containing the provider and phone fields. They use the OTC background,
 border, padding, corner radius, and focus color, retaining the existing responsive
 contact grid and field behavior.
+
+Version 26.9.7.21 makes the OTC and Medical History question tables fill their
+available content width with no centering margin, retaining their card styling
+and stacked layout on narrow screens.
+
+Version 26.9.7.22 removes Health History's custom Submit button appearance so it
+inherits native PowerSchool button styling, including its disabled state. Angular
+validation, change tracking, and native submission remain unchanged.
+
+Version 26.9.7.23 joins the Physician, Dentist, and Daycare Provider cards edge to
+edge with single shared borders and rounded outer corners. They remain joined
+when stacked on narrow screens.
+
+Version 26.9.7.24 shows the Daycare Provider card and both fields only when
+`U_STUDENT_ENROLLMENT_LOGIC.PSEE_SCHOOL_ID` is 110, consistent with other Health
+History section rules. Hidden daycare fields are excluded from submission and
+change tracking without clearing saved values. Other schools show two joined
+contact cards, with the Dentist card forming the rounded outer edge.
+
+Version 26.9.7.25 places `ie. Physical Education` directly below the restricted-
+activities question label, above its text box, as smaller supporting text.
+
+Version 26.9.7.26 adds the parent-supplied OTC medication statement to Medical
+Authorization's introductory OTC paragraphs, including the school-policy exception
+for medications provided for general use.
+
+Version 26.9.7.27 replaces the inline Action Plan notice's wording when Diabetes is
+Yes with the approved administrator-facing DMMP instructions and student/school
+names. The title remains Action Plan. The provider's form phrase is underlined,
+and the first-week-of-school deadline is highlighted. Seizure-only cases retain
+the general wording. The separate Diabetes Documentation section, its school rules,
+reference links, and parent's read-only return method remain unchanged.
+
+Version 26.9.7.28 moves the parent's diabetes return choice into the inline Action
+Plan notice below the DMMP instructions. It reads `DIABETES_COLLECTION_METHOD`
+and displays disabled Upload / Return to school office radios, or Not recorded
+when blank. The choice is never included in form submission and appears only once.
+
+Version 26.9.7.29 adds the supplied document-alert icon beside an Open student
+attachments link when the diabetes return method is Upload. It opens the selected
+student's native Attachments page in a new tab and identifies Diabetes as the
+category to look for. This uses the requested fallback because the supplied preview
+fragment depends on document IDs and permissions from the native attachment table.
+See `HEALTH_ACTION_PLAN_ATTACHMENTS.md` for plugin analysis and validation scope.
+
+Version 26.9.7.30 adds an inline Diabetes document picker and PDF/image preview,
+using the native metadata/category contract inspected on production. It resolves
+the category by name and the student from the FRN, handles all result pages, checks
+active/local/downloadable status, and keeps the native Attachments link. It never
+writes attachment metadata, changes the parent's method, or automatically chooses
+a plan. Future parent uploads are expected to have category Diabetes. Existing
+uncategorized or differently categorized documents remain on the native page.

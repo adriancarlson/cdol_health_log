@@ -2,6 +2,13 @@
 
 ## Highest-priority implementation work
 
+- Install Health Log 26.9.7.30 and validate the Diabetes document picker from
+  Health History: authorized versus denied staff, selected-student isolation,
+  PDF/image preview and close, multiple files, missing category/files, and the
+  native Attachments fallback. Production native metadata was inspected read-only;
+  Health History endpoint authorization and document-content behavior remain
+  live validation steps. See `HEALTH_ACTION_PLAN_ATTACHMENTS.md`.
+
 - Install both Health Log 26.9.7.13 packages and validate Medical Authorization JSON
   loading and schema API saves with checked, unchecked, blank, and absent-extension
   records. Verify failed requests do not enable saving or falsely report success;

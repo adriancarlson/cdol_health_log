@@ -1,5 +1,72 @@
 # Current State
 
+## Action Plan document preview (26.9.7.30)
+
+When the saved diabetes return choice is Upload, the document icon loads the
+selected student's active, downloadable Diabetes attachments. An inline picker
+shows filenames and native upload dates; choosing a file previews a PDF or common
+image without submitting the Health History form. The native Attachments link
+remains available for missing files, denied access, unsupported types, and errors.
+Category IDs are resolved by name, results are paginated, and Blob URLs are released
+on close or context changes. New parent uploads are expected to use Diabetes;
+historical categories are not changed. Local validation is documented in
+`HEALTH_ACTION_PLAN_ATTACHMENTS.md`; installed Health History validation remains
+pending. No new permissions or production record changes are included.
+
+## Action Plan attachment link (26.9.7.29)
+
+Diabetes return method Upload shows the copied document-alert icon and an Open
+student attachments link beneath the parent choice. It opens the selected student's
+native Attachments page in a new tab, with guidance to look for category Diabetes.
+The supplied preview fragment cannot independently resolve a permitted Diabetes
+document from Health History, so this uses the user-authorized navigation fallback.
+Plugin analysis and installed validation requirements are documented in
+`HEALTH_ACTION_PLAN_ATTACHMENTS.md`.
+
+## Action Plan parent return method (26.9.7.28)
+
+The inline Action Plan notice shows the parent's saved diabetes submission method
+below the instructions whenever Diabetes is Yes, including school 101. The existing
+display moves here from Diabetes Documentation. Disabled Upload / Return to school
+office radios show the saved value; blank values show Not recorded. The display
+cannot overwrite the parent's choice and is hidden for seizure-only cases.
+Installed PowerSchool validation remains pending.
+
+## Action Plan notice instructions (26.9.7.27)
+
+The existing inline Action Plan notice shows the approved DMMP instructions when
+Diabetes is Yes, including school 101. The text identifies the student and school,
+underlines the provider's form phrase, and highlights the first-week-of-school
+deadline. The title stays Action Plan; seizure-only cases keep the general wording.
+The separate Diabetes Documentation section and its existing rules remain unchanged.
+Installed PowerSchool validation remains pending.
+
+## School-specific daycare card (26.9.7.24)
+
+The Daycare Provider card and phone show only for enrollment school 110. Other
+schools show two joined provider cards. Hidden daycare fields are excluded from
+submission and change tracking, preserving existing values.
+Installed PowerSchool validation remains pending.
+
+## Joined Health Contacts cards (26.9.7.23)
+
+The Physician, Dentist, and Daycare Provider cards touch, using single shared
+borders and rounded outer corners in both desktop and stacked mobile layouts.
+Installed PowerSchool visual validation remains pending.
+
+## Native Health History Submit button (26.9.7.22)
+
+The bottom Health History Submit button now uses PowerSchool's native styling.
+Custom padding, corner radius, and disabled opacity/cursor overrides are removed.
+The existing Angular enable/disable and submit behavior is retained.
+Installed PowerSchool visual validation remains pending.
+
+## Full-width question grids (26.9.7.21)
+
+The OTC and Medical History question tables fill the available content width and
+align left. Card styling and the narrow-screen stacked layout are retained.
+Installed PowerSchool visual validation remains pending.
+
 ## Health Contacts cards (26.9.7.20)
 
 Physician, Dentist, and Daycare Provider each have a separate card containing the

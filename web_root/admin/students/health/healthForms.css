@@ -5,8 +5,19 @@
 .cdol-health-forms .ng-hide { display: none !important; }
 .cdol-health-forms .health-plan-notice { margin: 18px 0 0; }
 .cdol-health-forms .health-plan-notice p { margin: 6px 0 0; }
+.cdol-health-forms .health-plan-notice mark { background-color: #ffeb3b; color: inherit; }
+.cdol-health-forms .health-plan-return { margin-top: 12px; }
 .cdol-health-forms .health-parent-return { display: flex; flex-wrap: wrap; gap: 6px 24px; }
 .cdol-health-forms .health-field .health-parent-return label { display: inline-block; font-weight: normal; margin: 0; }
+.cdol-health-forms .health-parent-attachment { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 8px; }
+.cdol-health-forms .health-document-link { display: inline-flex; align-items: center; gap: 6px; }
+.cdol-health-forms .health-document-link img { width: 24px; height: 24px; border: 0; }
+.cdol-health-forms .health-attachment-panel { margin-top: 12px; padding: 12px; background: #fff; border: 1px solid #c6d3df; border-radius: 4px; }
+.cdol-health-forms .health-attachment-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.cdol-health-forms .health-attachment-list { list-style: none; padding: 0; margin: 12px 0; }
+.cdol-health-forms .health-attachment-list li { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 8px 0; border-bottom: 1px solid #dde4eb; }
+.cdol-health-forms .health-attachment-list button { white-space: normal; overflow-wrap: anywhere; text-align: left; }
+.cdol-health-forms .health-attachment-preview { display: block; width: 100%; height: 65vh; min-height: 350px; margin-top: 10px; border: 1px solid #c6d3df; }
 .cdol-health-forms .box-round.medical-section-box,
 .cdol-health-forms .box-round.health-section-box { padding-top: 0 !important; }
 .cdol-health-forms form:not(#medicalForm) input[type="text"]:not(.health-alert-control),
@@ -39,9 +50,8 @@
 .cdol-health-forms .health-contact-field + .health-contact-field { margin-top: 15px; }
 .cdol-health-forms .health-contact-field label,
 .cdol-health-forms .health-field label { margin: 0 0 5px; }
-.cdol-health-forms .health-submit-button { padding: 6px 12px; border-radius: 4px; }
-.cdol-health-forms button:not([type="submit"]):disabled,
-.cdol-health-forms .health-submit-button:disabled { opacity: .65; cursor: not-allowed; }
+.cdol-health-forms .health-field-help { margin: 0 0 5px; font-size: .9em; }
+.cdol-health-forms button:not([type="submit"]):disabled { opacity: .65; cursor: not-allowed; }
 .cdol-health-forms .parent-signature-row label { margin-left: 0; padding-left: 0; }
 .cdol-health-forms .parent-signature-row span { padding-left: 0; }
 @media (max-width: 760px) {
@@ -58,9 +68,9 @@
 
 /* Shared question styling for OTC medications and Medical History. */
 .cdol-health-forms .otc-medications {
-    margin: 0 auto;
+    margin: 0;
     max-width: 100%;
-    width: 900px;
+    width: 100%;
     border: 0;
     border-collapse: separate;
     border-spacing: 0;
@@ -130,12 +140,31 @@
 
 .cdol-health-forms .medical-history-content { padding: 8px 10px 10px; }
 
-/* Keep each provider and phone together in a separate OTC-style card. */
+/* Join the provider/phone cards with single shared borders, like OTC questions. */
 .cdol-health-forms .health-contact-column {
     min-width: 0;
     padding: 6px 10px;
     background: #f7f9fa;
     border: 1px solid #dce3e7;
-    border-radius: 10px;
+    border-width: 1px 1px 1px 0;
+    border-radius: 0;
 }
+.cdol-health-forms .health-contact-column:first-child {
+    border-left-width: 1px;
+    border-radius: 10px 0 0 10px;
+}
+.cdol-health-forms .health-contact-column:last-child,
+.cdol-health-forms .health-contact-last { border-radius: 0 10px 10px 0; }
 .cdol-health-forms .health-contact-column:focus-within { border-color: #8caaba; }
+@media (min-width: 901px) {
+    .cdol-health-forms .health-contact-grid-no-daycare { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+    .cdol-health-forms .health-contact-column { border-width: 0 1px 1px; }
+    .cdol-health-forms .health-contact-column:first-child {
+        border-top-width: 1px;
+        border-radius: 10px 10px 0 0;
+    }
+    .cdol-health-forms .health-contact-column:last-child,
+    .cdol-health-forms .health-contact-last { border-radius: 0 0 10px 10px; }
+}

@@ -16,6 +16,7 @@ if (!angularDir) throw new Error('Set HEALTH_ANGULAR_TEST_DIR to the AngularJS 1
 
 function fixture(file) {
     return fs.readFileSync(path.join(root, file), 'utf8')
+        .replace('<head>', '<head><base href="http://localhost/">')
         .replace(/~\[tlist_sql;[\s\S]*?\[\/tlist_sql\]/g, '')
         .replace(/~\[x:insertfile;[^\n]+/g, '')
         .replace(/~\[if\.[^\n]+/g, '')
@@ -48,6 +49,96 @@ function fixture(file) {
         .replace(/~\[self.page\]/g, 'fixture.html');
 }
 
+async function checkAttachments(page, method) {
+    const trigger = method.locator('.health-document-link');
+    const rows = method.locator('.health-attachment-list li');
+    async function load(mode) {
+        await page.evaluate(mode => { window.attachmentMode = mode; window.attachmentReads = []; }, mode);
+        await trigger.click();
+        await page.waitForFunction(() => !angular.element(document.querySelector('#diabetesPlanMethod')).isolateScope().loading);
+    }
+    assert.equal(await page.evaluate(() => window.attachmentReads.length), 0, 'no attachment requests until clicked');
+    const writesBefore = await page.evaluate(() => window.testWrites.length);
+    const submitsBefore = await page.evaluate(() => window.formSubmissions.length);
+    await load('multiple');
+    assert.equal(await rows.count(), 2, 'all pages loaded; inaccessible, unrelated and duplicate files excluded');
+    assert.match(await rows.first().innerText(), /Example plan.pdf.*Uploaded: 09\/01\/2026/s);
+    assert.match(await rows.last().innerText(), /Example additional plan.png/);
+    assert.equal(await method.locator('iframe').count(), 0, 'no automatic plan selection');
+    const reads = await page.evaluate(() => window.attachmentReads);
+    assert.equal(reads.filter(url => url.includes('/document?')).length, 2);
+    reads.filter(url => url.includes('/document')).forEach(url => {
+        const query = new URL(url, 'http://localhost').searchParams;
+        assert.equal(query.get('entityid'), '123');
+        assert.equal(query.get('entityname'), 'STCM');
+        assert.match(query.get('q'), /category==\(9\)/);
+    });
+    await rows.first().getByRole('button').click();
+    await page.waitForFunction(() => !angular.element(document.querySelector('#diabetesPlanMethod')).isolateScope().previewLoading);
+    assert.equal(await method.locator('iframe').count(), 1, await method.innerText());
+    await method.locator('iframe').waitFor();
+    const firstUrl = await method.locator('iframe').getAttribute('src');
+    assert.match(firstUrl, /^blob:/);
+    assert.equal(await page.evaluate(url => window.revokedAttachmentUrls.includes(url), firstUrl), false, 'URL lives while preview is open');
+    await method.getByRole('button', { name: 'Close preview', exact: true }).click();
+    assert.equal(await method.locator('iframe').count(), 0);
+    assert.equal(await page.evaluate(url => window.revokedAttachmentUrls.includes(url), firstUrl), true);
+
+    for (const mode of ['deniedContent', 'htmlContent', 'unsupportedContent', 'emptyContent']) {
+        await page.evaluate(mode => { window.attachmentMode = mode; }, mode);
+        await rows.first().getByRole('button').click();
+        await page.waitForFunction(() => !angular.element(document.querySelector('#diabetesPlanMethod')).isolateScope().previewLoading);
+        assert.equal(await method.locator('iframe').count(), 0, mode + ' does not become a preview');
+        assert.match(await method.innerText(), /Open student attachments to/);
+    }
+    await load('single');
+    assert.equal(await rows.count(), 1, 'single-object documents and category responses supported');
+    await page.evaluate(() => { window.attachmentMode = 'pdfContent'; });
+    await rows.first().getByRole('button').click();
+    await method.locator('iframe').waitFor();
+    if (process.env.HEALTH_ATTACHMENT_SCREENSHOT) {
+        await method.screenshot({ path: process.env.HEALTH_ATTACHMENT_SCREENSHOT });
+    }
+    const secondUrl = await method.locator('iframe').getAttribute('src');
+    await method.getByRole('button', { name: 'Close documents', exact: true }).click();
+    assert.equal(await method.locator('.health-attachment-panel').count(), 0);
+    assert.equal(await page.evaluate(url => window.revokedAttachmentUrls.includes(url), secondUrl), true);
+    assert.equal(await trigger.evaluate(el => el === document.activeElement), true);
+
+    await load('single');
+    await rows.first().getByRole('button').click();
+    await method.locator('iframe').waitFor();
+    const hiddenUrl = await method.locator('iframe').getAttribute('src');
+    await page.evaluate(() => {
+        window.mainVm.values['[students.u_student_additional_info]diabetes'] = '0';
+        angular.element(document.querySelector('.cdol-health-forms')).scope().$apply();
+    });
+    assert.equal(await method.locator('iframe').count(), 0, 'changing Diabetes to No removes the preview');
+    assert.equal(await page.evaluate(url => window.revokedAttachmentUrls.includes(url), hiddenUrl), true);
+    await page.evaluate(() => {
+        window.mainVm.values['[students.u_student_additional_info]diabetes'] = '1';
+        angular.element(document.querySelector('.cdol-health-forms')).scope().$apply();
+    });
+
+    for (const mode of ['empty', 'missingCategory', 'deniedList', 'loginResponse']) {
+        await load(mode);
+        assert.equal(await rows.count(), 0);
+        assert.match(await method.innerText(), /No available Diabetes documents|Documents could not be loaded/);
+        assert.equal(await method.locator('.health-attachments-fallback').isVisible(), true);
+    }
+    // Closing during a delayed response must not reopen a document or leak its URL.
+    await load('single');
+    await page.evaluate(() => { window.attachmentMode = 'delayedContent'; });
+    const createdBefore = await page.evaluate(() => window.createdAttachmentUrls.length);
+    await rows.first().getByRole('button').click();
+    await method.getByRole('button', { name: 'Close documents', exact: true }).click();
+    await page.waitForFunction(count => window.createdAttachmentUrls.length > count && window.createdAttachmentUrls.every(url => window.revokedAttachmentUrls.includes(url)), createdBefore);
+    assert.equal(await method.locator('iframe').count(), 0);
+    assert.equal(await page.evaluate(() => window.testWrites.length), writesBefore, 'attachment flow never writes student data');
+    assert.equal(await page.evaluate(() => window.formSubmissions.length), submitsBefore, 'preview buttons never submit the form');
+    console.log('PASS action plan attachments: pagination, permissions, category isolation, response shapes, previews, failures, URL cleanup, no writes');
+}
+
 async function main() {
     const browser = await chromium.launch({ channel: 'msedge', headless: true });
     try {
@@ -55,6 +146,26 @@ async function main() {
             const page = await browser.newPage();
             const errors = [];
             page.on('pageerror', error => errors.push(error.message));
+            // Use real XHR and synthetic bytes to exercise binary content handling.
+            await page.route('http://localhost/ws/k12drive/document/content/*', async route => {
+                const mode = await page.evaluate(url => { window.attachmentReads.push(url); return window.attachmentMode; }, route.request().url());
+                const type = mode === 'htmlContent' ? 'text/html' : mode === 'unsupportedContent' ? 'application/msword' : mode === 'pdfContent' ? 'application/pdf' : 'image/png';
+                let body = mode === 'emptyContent' || mode === 'deniedContent' ? Buffer.alloc(0) :
+                    Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jX1sAAAAASUVORK5CYII=', 'base64');
+                if (mode === 'pdfContent') {
+                    // A synthetic one-page PDF; no student or health information.
+                    const objects = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+                        '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >>'];
+                    let pdf = '%PDF-1.4\n', offsets = [0];
+                    objects.forEach((object, i) => { offsets.push(Buffer.byteLength(pdf)); pdf += `${i + 1} 0 obj\n${object}\nendobj\n`; });
+                    const xref = Buffer.byteLength(pdf);
+                    pdf += 'xref\n0 4\n0000000000 65535 f \n' + offsets.slice(1).map(offset => String(offset).padStart(10, '0') + ' 00000 n \n').join('');
+                    body = Buffer.from(pdf + `trailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+                }
+                await route.fulfill({ status: mode === 'deniedContent' ? 403 : 200, contentType: type,
+                    headers: { 'Access-Control-Allow-Origin': '*' }, body });
+            });
+            await page.route('http://localhost/images/cdol_health_log/bc-document-icon.png', route => route.fulfill({ path: path.resolve(root, '../../../images/cdol_health_log/bc-document-icon.png'), contentType: 'image/png' }));
             await page.setContent(fixture(file));
             if (renderedNames) {
                 // Reproduce server rendering, including native unchecked companions.
@@ -76,7 +187,13 @@ async function main() {
             }
             await page.addStyleTag({ path: path.join(root, 'healthForms.css') });
             await page.addScriptTag({ path: path.join(angularDir, 'angular.js') });
-            await page.addScriptTag({ path: path.join(angularDir, 'angular-mocks.js') });
+            // Angular 1.4's E2E passThrough drops responseType. Forward it to the
+            // real backend so content tests use the same ArrayBuffer path as production.
+            await page.addScriptTag({ content: fs.readFileSync(path.join(angularDir, 'angular-mocks.js'), 'utf8')
+                .replace('function $httpBackend(method, url, data, callback, headers, timeout, withCredentials)',
+                    'function $httpBackend(method, url, data, callback, headers, timeout, withCredentials, responseType)')
+                .replace('$delegate(method, url, data, callback, headers, timeout, withCredentials);',
+                    '$delegate(method, url, data, callback, headers, timeout, withCredentials, responseType);') });
             await page.evaluate(() => {
                 angular.module('powerSchoolModule', []).config(['$provide', function ($provide) {
                     // Reproduce the installed PowerSchool decorator's no-pssValidationForm branch.
@@ -108,7 +225,43 @@ async function main() {
                     parent_name: 'Example Guardian', parent_date: '09/22/2026', last_updated_message: 'Last Updated by Parent: Example Guardian - 09/22/2026' };
                 window.medications = [{ medication_id: '10', studentsdcid: '123', name: 'Example Medicine', dosage: '5', dosage_units: 'mg', frequency_taken: 'Daily' }];
                 if (startEmpty) { window.medications = []; window.studentData.student_medication = null; }
-                angular.module('healthTest', ['cdolHealthForms', 'ngMockE2E']).run(['$httpBackend', function (backend) {
+                angular.module('healthTest', ['cdolHealthForms', 'ngMockE2E']).run(['$httpBackend', 'healthAttachments', '$timeout', function (backend, attachmentApi, $timeout) {
+                    window.attachmentReads = [];
+                    window.createdAttachmentUrls = [];
+                    window.revokedAttachmentUrls = [];
+                    const createUrl = URL.createObjectURL.bind(URL), revokeUrl = URL.revokeObjectURL.bind(URL);
+                    URL.createObjectURL = blob => { const url = createUrl(blob); window.createdAttachmentUrls.push(url); return url; };
+                    URL.revokeObjectURL = url => { window.revokedAttachmentUrls.push(url); revokeUrl(url); };
+                    const doc = { id: 101, status: 'A', permission: { download: true }, documentLocation: 'L',
+                        categories: { id: 9, name: 'Diabetes' }, name: 'Example plan.pdf',
+                        changeList: { whenChangedFormatted: '09/01/2026', whoChangedName: 'Example Guardian' } };
+                    backend.whenGET(/\/ws\/districtcategory/).respond((m, url) => {
+                        window.attachmentReads.push(url);
+                        if (window.attachmentMode === 'loginResponse') return [200, '<html>Sign in</html>'];
+                        return [200, { categories: window.attachmentMode === 'missingCategory' ? [] : { id: 9, name: 'Diabetes' } }];
+                    });
+                    backend.whenGET(/\/ws\/k12drive\/document\/aggregates/).respond((m, url) => {
+                        window.attachmentReads.push(url);
+                        return [200, { documentAggregates: { count: window.attachmentMode === 'empty' ? 0 : window.attachmentMode === 'multiple' ? 101 : 1, time: 123456789 } }];
+                    });
+                    backend.whenGET(/\/ws\/k12drive\/document\?/).respond((m, url) => {
+                        window.attachmentReads.push(url);
+                        if (window.attachmentMode === 'deniedList') return [403, {}];
+                        let documents = doc;
+                        if (window.attachmentMode === 'multiple') {
+                            documents = new URL(url, 'http://localhost').searchParams.get('page') === '2' ?
+                                [doc, { ...doc, id: 102, name: 'Example additional plan.png', categories: [doc.categories], changeList: [doc.changeList] }] :
+                                [doc, { ...doc, id: 103, permission: { download: false } }, { ...doc, id: 104, status: 'P' },
+                                    { ...doc, id: 105, categories: { id: 10, name: 'Medical' } }, { ...doc, id: 106, documentLocation: 'R' },
+                                    { ...doc, id: 107, changeList: { whoChangedName: 'PowerSchool Registration Signature' } }];
+                        }
+                        return [200, { documents: { documentList: documents } }];
+                    });
+                    backend.whenGET(/\/ws\/k12drive\/document\/content\//).passThrough();
+                    // Make closure-before-response deterministic using a delayed mock service promise.
+                    const nativePreview = attachmentApi.preview;
+                    attachmentApi.preview = id => window.attachmentMode === 'delayedContent' ?
+                        $timeout(() => {}, 150).then(() => nativePreview(id)) : nativePreview(id);
                     backend.whenGET(/medicalAuthorization\.json/).respond(() => window.loadFails ? [200, '<html>Sign in</html>'] : [200, [window.studentData]]);
                     ['POST', 'PUT'].forEach(method => backend.when(method, /\/ws\/schema\/table\/u_student_additional_info/).respond((m, url, body) => {
                         window.testWrites.push({ method: m, url, body });
@@ -273,6 +426,43 @@ async function main() {
                 await page.locator('#healthDoctorName').fill('Example Doctor');
                 assert.equal(await page.evaluate(() => window.mainVm.form.$dirty), true);
                 assert.equal(await page.evaluate(() => window.mainVm.hasChanges()), false, 'reverted edit is not a data change');
+                const setDaycareSchool = async school => page.evaluate(school => {
+                    window.mainVm.formSchool = school;
+                    angular.element(document.querySelector('.cdol-health-forms')).scope().$apply();
+                }, school);
+                await setDaycareSchool('110');
+                assert.equal(await page.locator('#healthDaycareCard').isVisible(), true);
+                await page.locator('#healthDaycareProvider').fill('Example Daycare');
+                await page.locator('#healthDaycarePhone').fill('402-555-0123');
+                assert.equal(await page.evaluate(() => window.mainVm.hasChanges()), true);
+                assert.equal(await page.evaluate(name => new FormData(document.querySelector('form')).get(name), postedName('[students.U_STUDENT_ADDITIONAL_INFO]STUDENT_DAYCARE')), 'Example Daycare');
+                assert.equal(await page.evaluate(name => new FormData(document.querySelector('form')).get(name), postedName('[students.U_STUDENT_ADDITIONAL_INFO]STUDENT_DAYCARE_PHONE')), '402-555-0123');
+                for (const school of ['101', '999', '']) {
+                    await setDaycareSchool(school);
+                    assert.equal(await page.locator('#healthDaycareCard').isVisible(), false);
+                    assert.equal(await page.locator('.health-contact-column:visible').count(), 2);
+                    for (const [id, field] of [['healthDaycareProvider', 'STUDENT_DAYCARE'], ['healthDaycarePhone', 'STUDENT_DAYCARE_PHONE']]) {
+                        assert.equal(await page.locator('#' + id).isDisabled(), true);
+                        assert.equal(await page.evaluate(name => new FormData(document.querySelector('form')).has(name), postedName('[students.U_STUDENT_ADDITIONAL_INFO]' + field)), false);
+                    }
+                    assert.equal(await page.evaluate(() => window.mainVm.hasChanges()), false, 'hidden daycare edits do not cause an audit');
+                }
+                for (const width of [1200, 480]) {
+                    await page.setViewportSize({ width, height: 900 });
+                    const cards = await page.locator('.health-contact-column:visible').evaluateAll(cards => cards.map(card => {
+                        const rect = card.getBoundingClientRect();
+                        return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, radius: getComputedStyle(card).borderBottomRightRadius };
+                    }));
+                    assert.ok(Math.abs(width > 900 ? cards[0].right - cards[1].left : cards[0].bottom - cards[1].top) < 1, 'remaining cards stay joined');
+                    assert.equal(cards[1].radius, '10px', 'Dentist retains the rounded outer edge');
+                }
+                await page.setViewportSize({ width: 1280, height: 720 });
+                await setDaycareSchool('110');
+                assert.equal(await page.locator('#healthDaycareProvider').inputValue(), 'Example Daycare');
+                assert.equal(await page.locator('#healthDaycarePhone').inputValue(), '402-555-0123');
+                await page.locator('#healthDaycareProvider').fill('');
+                await page.locator('#healthDaycarePhone').fill('');
+                assert.equal(await page.evaluate(() => window.mainVm.hasChanges()), false);
                 const sports = value => page.locator('input[name="' + postedName('[students.U_STUDENT_ADDITIONAL_INFO]CAN_PLAY_SPORTS') + '"][value="' + value + '"]');
                 assert.equal(await sports('1').isChecked(), true);
                 assert.equal(await page.locator('#healthSportsAccommodations').isVisible(), false);
@@ -311,15 +501,67 @@ async function main() {
                 assert.equal(await page.evaluate(() => window.mainVm.show('inhalerContract')), false);
                 await setQuestion('EPIPEN', '0');
                 await setQuestion('SEIZURE_AGREE', '1');
+                assert.equal(await page.locator('#actionPlanHeading').isVisible(), true, 'seizures still show the general Action Plan notice');
+                assert.equal(await page.locator('#diabetesActionPlanInstructions').count(), 0, 'seizures alone do not show DMMP instructions');
+                assert.equal(await page.locator('#diabetesPlanMethod').isVisible(), false, 'seizures alone do not show the diabetes return method');
                 await page.evaluate(() => { window.mainVm.formSchool = '130'; angular.element(document.querySelector('.cdol-health-forms')).scope().$apply(); });
                 assert.equal(await page.evaluate(() => window.mainVm.show('seizurePlan')), true);
                 await setQuestion('SEIZURE_AGREE', '0');
+                assert.equal(await page.locator('#actionPlanHeading').isVisible(), false, 'blank diabetes and No seizures hide the notice');
                 await setQuestion('DIABETES', '1');
                 await page.evaluate(() => { window.mainVm.formSchool = '101'; angular.element(document.querySelector('.cdol-health-forms')).scope().$apply(); });
-                assert.equal(await page.evaluate(() => window.mainVm.show('diabetesPlan')), false);
+                assert.equal(await page.locator('#actionPlanHeading').isVisible(), true, 'Diabetes Yes shows the notice at school 101 too');
+                assert.equal(await page.locator('#diabetesPlanHeading').isVisible(), false, 'existing documentation school rules are retained');
+                assert.equal(await page.locator('#actionPlanHeading').innerText(), 'Action Plan');
+                const diabetesInstructions = await page.locator('#diabetesActionPlanInstructions').innerText();
+                assert.match(diabetesInstructions, /Example's Diabetes Medical Management Plan \(DMMP\)/);
+                assert.match(diabetesInstructions, /to Example School using\s+the health care provider’s form/);
+                assert.match(diabetesInstructions, /dated after May 1/);
+                assert.match(diabetesInstructions, /by the end of the first week of school/);
+                assert.equal(await page.locator('#diabetesActionPlanInstructions u').innerText(), 'the health care provider’s form');
+                assert.equal(await page.locator('#diabetesActionPlanInstructions mark').innerText(), 'by the end of the first week of school.');
+                assert.equal(await page.locator('#diabetesActionPlanInstructions mark').evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(255, 235, 59)');
+                const diabetesMethod = page.locator('.health-plan-notice #diabetesPlanMethod');
+                assert.equal(await page.locator('#diabetesPlanMethod').count(), 1, 'the return method appears only once');
+                assert.equal(await diabetesMethod.isVisible(), true, 'school 101 also displays the saved parent choice');
+                assert.equal(await diabetesMethod.locator('input:checked').inputValue(), 'Return to school office');
+                assert.equal(await diabetesMethod.locator('input:not(:disabled)').count(), 0);
+                assert.equal(await diabetesMethod.locator('input[name]').count(), 0, 'display-only radios cannot enter the submitted data');
+                for (const method of ['Upload', '', 'Unrecognized historical choice', 'Return to school office']) {
+                    await diabetesMethod.evaluate((element, method) => {
+                        const scope = angular.element(element).isolateScope();
+                        scope.$apply(() => { scope.method = method; });
+                    }, method);
+                    if (['Upload', 'Return to school office'].includes(method)) assert.equal(await diabetesMethod.locator('input:checked').inputValue(), method);
+                    else if (!method) {
+                        assert.equal(await diabetesMethod.locator('input:checked').count(), 0);
+                        assert.equal(await diabetesMethod.getByText('Not recorded', { exact: true }).isVisible(), true);
+                    } else {
+                        assert.equal(await diabetesMethod.locator('input:checked').count(), 0);
+                        assert.equal(await diabetesMethod.getByText(method, { exact: true }).isVisible(), true);
+                    }
+                    const documentLink = diabetesMethod.locator('.health-attachments-fallback');
+                    assert.equal(await documentLink.count(), method === 'Upload' ? 1 : 0);
+                    if (method === 'Upload') {
+                        assert.equal(await documentLink.getAttribute('href'), '/admin/students/studentattachments.html?frn=001123');
+                        assert.equal(await documentLink.getAttribute('target'), '_blank');
+                        assert.equal(await documentLink.getAttribute('rel'), 'noopener');
+                        assert.equal(await diabetesMethod.locator('.health-document-link img').getAttribute('src'), '/images/cdol_health_log/bc-document-icon.png');
+                        await checkAttachments(page, diabetesMethod);
+                        await page.context().route('http://localhost/admin/students/studentattachments.html?frn=001123', route => route.fulfill({ status: 200, contentType: 'text/html', body: '<h1>Example student attachments</h1>' }));
+                        const [attachmentPage] = await Promise.all([page.waitForEvent('popup'), documentLink.click()]);
+                        await attachmentPage.waitForURL('http://localhost/admin/students/studentattachments.html?frn=001123');
+                        assert.equal(await attachmentPage.evaluate(() => window.opener), null);
+                        await attachmentPage.close();
+                        await page.context().unroute('http://localhost/admin/students/studentattachments.html?frn=001123');
+                    }
+                }
+                assert.equal(await page.locator('[health-parent-return]:not(#diabetesPlanMethod) .health-document-link').count(), 0, 'other parent choices do not gain unrelated attachment links');
                 await page.evaluate(() => { window.mainVm.formSchool = '104'; angular.element(document.querySelector('.cdol-health-forms')).scope().$apply(); });
                 assert.equal(await page.evaluate(() => window.mainVm.show('diabetesPlan')), true);
                 await setQuestion('DIABETES', '0');
+                assert.equal(await page.locator('#diabetesPlanHeading').isVisible(), false, 'Diabetes No hides the plan');
+                assert.equal(await page.locator('#actionPlanHeading').isVisible(), false);
                 assert.equal(await page.locator('#dentalPlanMethod').getAttribute('name'), null, 'parent return method is not posted');
                 for (const group of await page.locator('[health-parent-return]').all()) {
                     assert.equal(await group.locator('input[type="radio"]').count(), 2);
