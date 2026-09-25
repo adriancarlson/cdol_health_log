@@ -4,7 +4,7 @@
 			"htmlID": "cdol-health-history",
 			"title": "Health History🔹",
 			"pageURL": "/admin/students/health/health_history.html?frn=~(studentfrn)",
-			"version": "26.9.6",
+			"version": "26.9.7.61",
 			"contextType": "student",
 			"districtLevelContext": 0,
 			"sortOrder": 100,
@@ -14,7 +14,7 @@
 			"htmlID": "cdol-medical",
 			"title": "Medical Authorization🔹",
 			"pageURL": "/admin/students/health/medical_authorization.html?frn=~(studentfrn)",
-			"version": "26.9.5",
+			"version": "26.9.7.61",
 			"contextType": "student",
 			"districtLevelContext": 0,
 			"sortOrder": 150,
@@ -42,7 +42,7 @@
 				{
 					"htmlID": "cdol-health-log",
 					"title": "Daily Health Log🔹",
-					"version": "0",
+					"version": "26.9.7.61",
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 0,
@@ -52,7 +52,7 @@
 				{
 					"htmlID": "cdol-conversation-log",
 					"title": "Conversation Log🔹",
-					"version": "0",
+					"version": "26.9.7.61",
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 200,
@@ -62,7 +62,7 @@
 				{
 					"htmlID": "cdol-athletic-injury",
 					"title": "Athletic Injury🔹",
-					"version": "0",
+					"version": "26.9.7.61",
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 300,
@@ -72,7 +72,7 @@
 				{
 					"htmlID": "cdol-concussion-eval",
 					"title": "Concussion Eval🔹",
-					"version": "0",
+					"version": "26.9.7.61",
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 400,
@@ -82,7 +82,7 @@
 				{
 					"htmlID": "cdol-injury-eval",
 					"title": "Injury Evaluation🔹",
-					"version": "0",
+					"version": "26.9.7.61",
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 500,
@@ -103,7 +103,7 @@
 				{
 					"htmlID": "cdol-medication-administration",
 					"title": "Administer Medication🔹",
-					"version": "0",
+					"version": "26.9.7.61",
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 0,
@@ -113,7 +113,7 @@
 				{
 					"htmlID": "cdol-medication-inventory",
 					"title": "Medication Inventory🔹",
-					"version": "0",
+					"version": "26.9.7.61",
 					"contextType": "student",
 					"districtLevelContext": 0,
 					"sortOrder": 200,
@@ -125,7 +125,7 @@
 		{
 			"htmlID": "cdol-health-code-sets",
 			"title": "CDOL Health Code Sets",
-			"version": "26.8.7.26",
+			"version": "26.9.7.61",
 			"contextType": "main",
 			"districtLevelContext": 2,
 			"parentHTMLID": "navDistrictManagementHealth",

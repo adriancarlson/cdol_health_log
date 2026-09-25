@@ -1,132 +1,6 @@
 <!--NoLink-->
 <form id="health-log-form" name="healthLogForm" data-ng-controller="healthLogEditCtrl">
     <div id="noTimer" pss-feedback-widget data-error="getErrorMessages()"></div>
-    <style>
-        .health-option-select option:last-child {
-            font-style: italic;
-        }
-
-        .health-option-add-control {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .health-option-add-input {
-            width: 220px;
-            max-width: 100%;
-        }
-
-        .health-option-add-button {
-            min-width: 30px;
-            font-weight: bold;
-        }
-
-        .health-option-add-error {
-            margin: 4px 0 0;
-            max-width: 500px;
-        }
-
-        .health-option-feedback-note {
-            margin: 4px 0 0 !important;
-        }
-
-        #health-log-form {
-            padding-top: 2px;
-        }
-
-        #health-log-fields > div {
-            margin: 0 !important;
-            padding-top: 8px;
-            padding-bottom: 8px;
-        }
-
-        #health-log-form label {
-            margin-left: 0 !important;
-            padding-left: 0 !important;
-        }
-
-        #health-log-notes-row > div {
-            width: 100% !important;
-            box-sizing: border-box;
-        }
-
-        #health-log-notes-row > div > textarea,
-        .health-log-notes-table textarea {
-            width: 100%;
-            max-width: none;
-            box-sizing: border-box;
-        }
-
-        .health-log-notes-table {
-            width: 100%;
-            margin: 0 !important;
-            box-sizing: border-box;
-        }
-
-        .health-log-notes-table td:last-child {
-            width: 100%;
-        }
-
-        .health-option-legacy-value {
-            display: inline-block;
-            max-width: 600px;
-            overflow-wrap: anywhere;
-            padding: 3px 0;
-        }
-
-        .health-conversation-methods {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 6px 18px;
-            margin: 2px 0 5px;
-        }
-
-        .health-conversation-method {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            margin: 0 !important;
-            padding: 0 !important;
-            white-space: nowrap;
-        }
-
-        .health-conversation-method input {
-            margin: 0;
-        }
-
-        .health-conversation-add-button {
-            margin: 0;
-        }
-
-        #health-conversation-row > div {
-            width: 100% !important;
-            box-sizing: border-box;
-        }
-
-        .health-conversation-selection-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            width: 100%;
-        }
-
-        .health-conversation-options-column {
-            flex: 1 1 auto;
-            min-width: 0;
-        }
-
-        .health-conversation-button-row {
-            display: flex;
-            flex: 0 0 auto;
-            align-items: center;
-            justify-content: flex-end;
-            align-self: stretch;
-            margin-left: auto;
-        }
-    </style>
     <div class="feedback-alert" role="alert" data-ng-if="$root.appData.healthOptionLoadError">
         {{$root.appData.healthOptionLoadError}}
     </div>
@@ -207,8 +81,8 @@
         </div>
         <div data-ng-if="logRecord.log_type =='Daily' || logRecord.log_type =='Athletic'">
             <div>
-                <label>Treatment <em><span class="req">*</span></em><span class="req"
-                        style="font-weight: normal !important;" data-ng-if="!logRecord.treatment"><em>
+                <label>Treatment <em><span class="req">*</span></em><span class="cdol-health-log-treatment-empty req"
+                        data-ng-if="!logRecord.treatment"><em>
                             Required</em></span></label>
                 <textarea id="log-treatment" spellcheck="true" wrap="absolute" rows="5" cols="75" maxlength="250"
                     data-ng-model="logRecord.treatment" data-ng-change="checkReqFields()"></textarea>
@@ -261,12 +135,12 @@
             <div>
                 <label>Total Symptoms:</label>
                 <input type="text" inputmode="numeric" data-ng-model="logRecord.total_systems_score" min="0" max="21"
-                    style="width: 3ch; text-align: right;"> /21 Total Symptoms
+                    class="text-right cdol-health-log-symptoms-total"> /21 Total Symptoms
             </div>
             <div>
                 <label>Symptoms Score:</label>
                 <input type="text" inputmode="numeric" data-ng-model="logRecord.systems_score" min="0" max="126"
-                    style="width: 4ch; text-align: right;"> /126 Symptoms Score
+                    class="text-right cdol-health-log-symptoms-score"> /126 Symptoms Score
             </div>
         </div>
         <div id="health-conversation-row" data-ng-if="logRecord.log_type =='Conversation'">
@@ -397,49 +271,49 @@
                     data-ng-if="logRecord.log_type =='Concussion' || logRecord.log_type =='Eval'">
                     <tbody>
                         <tr data-ng-if="logRecord.log_type =='Concussion'">
-                            <td style="vertical-align:top" for="log-notes-memory"><strong>Memory</strong>:</td>
+                            <td for="log-notes-memory" class="cdol-health-log-notes-label"><strong>Memory</strong>:</td>
                             <td>
                                 <textarea id="log-notes-memory" spellcheck="true" wrap="absolute" rows="5" cols="60"
                                     data-ng-model="logRecord.notes_memory"></textarea>
                             </td>
                         </tr>
                         <tr data-ng-if="logRecord.log_type =='Concussion'">
-                            <td style="vertical-align:top" for="log-notes-bess"><strong>BESS</strong>:</td>
+                            <td for="log-notes-bess" class="cdol-health-log-notes-label"><strong>BESS</strong>:</td>
                             <td>
                                 <textarea id="log-notes-bess" spellcheck="true" wrap="absolute" rows="5" cols="60"
                                     data-ng-model="logRecord.notes_bess"></textarea>
                             </td>
                         </tr>
                         <tr data-ng-if="logRecord.log_type =='Concussion'">
-                            <td style="vertical-align:top" for="log-notes-voms"><strong>VOMS</strong>:</td>
+                            <td for="log-notes-voms" class="cdol-health-log-notes-label"><strong>VOMS</strong>:</td>
                             <td>
                                 <textarea spellcheck="true" wrap="absolute" rows="5" cols="60"
                                     data-ng-model="logRecord.notes_voms"></textarea>
                             </td>
                         </tr>
                         <tr data-ng-if="logRecord.log_type =='Eval'">
-                            <td style="vertical-align:top" for="log-notes-s"><strong>S</strong>:</td>
+                            <td for="log-notes-s" class="cdol-health-log-notes-label"><strong>S</strong>:</td>
                             <td>
                                 <textarea id="log-notes-s" spellcheck="true" wrap="absolute" rows="5" cols="60"
                                     data-ng-model="logRecord.notes_s"></textarea>
                             </td>
                         </tr>
                         <tr data-ng-if="logRecord.log_type =='Eval'">
-                            <td style="vertical-align:top" for="log-notes-o"><strong>O</strong>:</td>
+                            <td for="log-notes-o" class="cdol-health-log-notes-label"><strong>O</strong>:</td>
                             <td>
                                 <textarea id="log-notes-o" spellcheck="true" wrap="absolute" rows="5" cols="60"
                                     data-ng-model="logRecord.notes_o"></textarea>
                             </td>
                         </tr>
                         <tr data-ng-if="logRecord.log_type =='Eval'">
-                            <td style="vertical-align:top" for="log-notes-a"><strong>A</strong>:</td>
+                            <td for="log-notes-a" class="cdol-health-log-notes-label"><strong>A</strong>:</td>
                             <td>
                                 <textarea id="log-notes-a" spellcheck="true" wrap="absolute" rows="5" cols="60"
                                     data-ng-model="logRecord.notes_a"></textarea>
                             </td>
                         </tr>
                         <tr data-ng-if="logRecord.log_type =='Eval'">
-                            <td style="vertical-align:top" for="log-notes-p"><strong>P</strong>:</td>
+                            <td for="log-notes-p" class="cdol-health-log-notes-label"><strong>P</strong>:</td>
                             <td>
                                 <textarea id="log-notes-p" spellcheck="true" wrap="absolute" rows="5" cols="60"
                                     data-ng-model="logRecord.notes_p"></textarea>
@@ -447,7 +321,7 @@
                         </tr>
                         <tr>
                             <td data-ng-if="logRecord.log_type =='Concussion'" for="log-notes"
-                                style="vertical-align:top"><strong>Other</strong>: </span></td>
+                                class="cdol-health-log-notes-label"><strong>Other</strong>: </span></td>
                             <td data-ng-if="logRecord.log_type !='Eval'">
                                 <textarea id="log-notes" spellcheck="true" wrap="absolute" rows="5"
                                     data-ng-model="logRecord.notes"></textarea>

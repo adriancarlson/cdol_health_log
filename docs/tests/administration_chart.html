@@ -3,11 +3,12 @@
 <head>
     <meta charset="utf-8">
     <title>Medication Administration Chart fixture</title>
+    <link href="/images/css/cdol.css" rel="stylesheet">
     <style>
         body { margin: 12px; font-family: Arial, sans-serif; }
     </style>
 </head>
-<body>
+<body class="cdol-health-administration">
     <div class="fixture-powerschool-header">PowerSchool header fixture (must not print)</div>
     <div class="fixture-student-header">Student banner fixture (must not print)</div>
     <main id="administration-chart-print-boundary" class="administration-chart-active">
@@ -62,16 +63,9 @@
         </section>
     </main>
     <script>
-        fetch('/web_root/admin/students/medication/administration.html')
+        fetch('/fixtures/administration-source.html')
             .then(response => response.text())
              .then(source => {
-                 const css = source.match(/<style>([\s\S]*?)<\/style>/)[1]
-                     .replace(/~\[if#[^\]]+\]/g, '')
-                     .replace(/\[\/if#[^\]]+\]/g, '')
-                 const style = document.createElement('style')
-                 style.textContent = css
-                 document.head.appendChild(style)
-
                  history.replaceState(null, '', '?view=chart')
                  const printPreparation = source.match(/<script>\s*([\s\S]*?prepareAdministrationChartPrint[\s\S]*?)<\/script>/)[1]
                  Function(printPreparation)()

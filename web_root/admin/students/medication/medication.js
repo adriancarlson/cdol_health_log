@@ -2398,7 +2398,7 @@ define([
 
 			psConfirm({
 				title: 'Mark Administration as Entered in Error',
-				message: `<div style="padding: 8px 10px 12px;">This will preserve the original record, mark it Entered in Error, and restore ${vm.administration.quantity_administered} ${vm.administration.inventory_unit} to calculated inventory. Continue only if this administration should not count as medication given.</div>`,
+				message: `<div class="cdol-health-administration-confirmation">This will preserve the original record, mark it Entered in Error, and restore ${vm.administration.quantity_administered} ${vm.administration.inventory_unit} to calculated inventory. Continue only if this administration should not count as medication given.</div>`,
 				oktext: 'Mark Entered in Error',
 				canceltext: 'Cancel',
 				ok: () => postCorrection(closeDrawer)

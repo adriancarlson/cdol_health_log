@@ -1,5 +1,39 @@
 # Action Plan attachment access
 
+## Request reuse and refresh (26.9.7.60)
+
+District category requests are shared within the page for 60 seconds, including
+concurrent requests from separate sections. Failures are not cached. Successful
+discovery metadata may be consumed once when opening the same section within
+30 seconds. Context changes or disabling a section clear that metadata; late
+responses cannot replace the current context. Lists and document content are
+not stored in browser persistent storage.
+
+The document panel includes Refresh documents, which fetches fresh categories
+and document metadata. Reopening after consuming discovery also reloads document
+metadata. Every preview still requests content from PowerSchool, preserving
+server authorization and existing Blob URL cleanup.
+
+The Prescription Authorization Form block uses category Prescription and native
+RX_COLLECTION_METHOD. Its custom saved options are Upload, Return to school office, and
+Student does not require prescription medication to be administered at school.
+The last choice remains visible even when the medication card is hidden; an
+existing matching document can still show the icon. Preview and permission rules
+are shared with the other blocks, and return-method values never enter API writes.
+
+Medical Authorization's OTC block uses this same integration with the exact
+category Non-Prescription. Its saved NON_RX_COLLECTION_METHOD is rendered through
+a native page token into read-only tags. Upload or a matching active document
+shows the icon; no-match, denied download, and lookup failure use the existing
+fallback behavior. Metadata discovery waits until the form has loaded. Document
+viewing does not submit or change medication authorizations.
+
+School 104's Dental Examination block also uses this shared integration with the
+exact category Dental. Its DENTAL_PLAN_COLLECTION_METHOD remains read-only. Upload
+or matching active metadata shows the icon, with the same download-permission
+checks, preview, and native-page fallback. Leaving school 104 clears the preview
+and disables metadata discovery. Installed Dental-category validation is pending.
+
 ## Supplied plugins reviewed
 
 ### Student Document Attachments Preview 2025.08.25.2
@@ -170,3 +204,64 @@ verified, and the packaged JS/CSS/HTML/icon compared byte for byte with source.
 The local picker layout was inspected using synthetic data. The headless tests
 verify PDF/image response handling and iframe creation, not the installed browser's
 PDF viewer rendering or real production content authorization.
+
+## Seizure integration (26.9.7.35)
+
+The same directive now serves SEIZURE_PLAN_COLLECTION_METHOD in the Action Plan
+section whenever SEIZURE_AGREE is Yes. It resolves the exact category name Seizure;
+the diabetes instance still resolves Diabetes. Independent directive scopes keep
+the lists, return methods, and Blob URLs separate when both plans are displayed.
+Changing Seizures to No closes and releases its preview, while leaving an applicable
+diabetes plan available. The previous school-limited seizure section is removed.
+
+Local tests cover personalized seizure instructions, provider underline, highlighted
+deadline, one saved return-method display, category isolation, preview creation and
+cleanup, both conditions together, and applicability across the ten school fixtures.
+Installed Seizure-category resolution and access remain live validation steps.
+
+## Icon visibility from attachment presence (26.9.7.37)
+
+The Upload-only visibility rule is superseded for both plans. When a plan applies,
+Upload always shows its icon. Other saved methods trigger the native metadata lookup
+and show the icon if an active document is returned in the exact matching category.
+Existence is determined from metadata rows, not inferred from aggregate counts.
+The lookup result separates `hasMatches` from the downloadable `documents` list,
+so icon visibility does not bypass preview access checks. Opening the picker
+refreshes metadata before presenting eligible files.
+
+Discovery does not open the picker or request file content. It is skipped for
+unconfigured return-method displays and inapplicable conditions. Context/method
+changes clear previous results, close previews, and invalidate outstanding discovery
+responses. Failed discovery for non-Upload values leaves the native Attachments
+link with an explicit availability-check message; it does not report no matches.
+
+Local tests pass for both categories across Upload/office/blank/historical choices,
+matching and absent documents, wrong categories, metadata without download
+permission, denied metadata, preview from an office-return choice, and no automatic
+content requests. Installed metadata access and visual validation remain pending.
+
+## Allergy or Asthma documents (26.9.7.41)
+
+The shared Asthma/Severe Allergy block uses ALLERGY_PLAN_COLLECTION_METHOD and is
+enabled by INHALER OR EPIPEN. Its display label is Asthma/Severe Allergy; its lookup
+names are Allergy and Asthma, confirmed by the user. `attachment-categories`
+supports this explicit list while existing single-category instances keep using
+`attachment-category`. Names resolve to IDs through the native category endpoint.
+The native filter accepts comma-separated IDs (`category==(id1,id2)`), as constructed
+by the inspected native filter builder. Client-side membership checks accept either
+ID, and the existing ID deduplication handles documents in both categories.
+
+Local tests cover Allergy-only, Asthma-only, dual-category, duplicate, and unrelated
+documents, plus both trigger fields and existing icon/preview access checks.
+Installed multi-category query semantics and access still require live validation.
+
+## Meal Accommodation direct link (26.9.7.45)
+
+The separate Meal Accommodation section uses a plain icon/text link to
+`/admin/students/studentattachments.html?frn=~(studentfrn)` with `target="_blank"`
+and `rel="noopener"`. No attachment category exists for this workflow, so it does
+not use discovery or the document picker. The link is available whenever the
+section is shown (current SchoolID 130/131 and ALLERGY_AGREE = 1), independent of
+the saved FOOD_PLAN_COLLECTION_METHOD. The shared return-method directive is used
+only for its read-only text display. Local tests confirm direct navigation and no
+additional category requests.

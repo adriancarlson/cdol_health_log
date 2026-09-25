@@ -1,0 +1,14 @@
+~[if#doseUnitAccess.security.pagemod=/admin/students/health/medical_authorization.html]
+~[tlist_sql;
+SELECT COALESCE(JSON_ARRAYAGG(JSON_OBJECT(
+    'code' VALUE u_cdol_health_option.code,
+    'displayvalue' VALUE u_cdol_health_option.displayvalue,
+    'uidisplayorder' VALUE u_cdol_health_option.uidisplayorder
+    NULL ON NULL RETURNING CLOB
+) ORDER BY u_cdol_health_option.id RETURNING CLOB), TO_CLOB('[]')) AS json_result
+FROM u_cdol_health_option
+WHERE UPPER(u_cdol_health_option.codetype) = 'MED_DOSE_UNIT'
+AND TRIM(u_cdol_health_option.code) IS NOT NULL
+AND (u_cdol_health_option.isvisible IS NULL OR u_cdol_health_option.isvisible <> 0)
+;]~(data)[/tlist_sql]
+[else#doseUnitAccess][][/if#doseUnitAccess]

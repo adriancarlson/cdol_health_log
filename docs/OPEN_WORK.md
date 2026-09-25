@@ -2,7 +2,14 @@
 
 ## Highest-priority implementation work
 
-- Install Health Log 26.9.7.30 and validate the Diabetes document picker from
+- Install CDOL CSS 26.9.0.3, then both Health Log 26.9.7.61 packages. Validate
+  Health History, Medical Authorization, medication pages and drawers, Health
+  Logs, and district Health Code Sets at desktop and narrow widths. Confirm
+  chart printing stays landscape, Quick Sheet printing retains its existing
+  layout, and other plugins retain their styling.
+
+- Install Health Log 26.9.7.41 and validate the Diabetes, Seizure, and shared
+  Asthma/Severe Allergy document pickers (including the Allergy/Asthma category union) from
   Health History: authorized versus denied staff, selected-student isolation,
   PDF/image preview and close, multiple files, missing category/files, and the
   native Attachments fallback. Production native metadata was inspected read-only;

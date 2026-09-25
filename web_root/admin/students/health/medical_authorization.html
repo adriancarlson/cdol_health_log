@@ -6,183 +6,13 @@
         ~[wc:commonscripts]
         <link href="/images/css/screen.css" rel="stylesheet" media="screen">
         <link href="/images/css/print.css" rel="stylesheet" media="print">
-        <link href="/admin/students/health/healthForms.css" rel="stylesheet">
+        <link href="/images/css/cdol.css?~[time]" rel="stylesheet">
     </head>
 
     <body>
         ~[wc:admin_header_frame_css]
         ~[wc:admin_navigation_frame_css]
         ~[wc:title_student_begin_css]Medical Authorization~[wc:title_student_end_css]
-
-        <style>
-            .topsubmit {
-                float: right;
-                margin-top: -90px;
-            }
-
-            .consent-question td {
-                padding: 12px 18px;
-                background: #fff;
-            }
-
-            .consent-question p {
-                margin: 0 0 14px;
-            }
-
-            .consent-option {
-                display: block;
-                margin-top: 8px;
-            }
-
-            .medical-consent-table {
-                margin-bottom: 0 !important;
-            }
-
-            #prescriptionMedicationsTable {
-                width: 100%;
-            }
-
-            .box-round.medical-section-box {
-                margin: 0 10px 10px !important;
-                overflow: hidden;
-            }
-
-            .medical-form-fields {
-                border: 0;
-                background: transparent !important;
-                margin: 0;
-                padding: 0;
-                min-width: 0;
-            }
-
-            #medicalForm .medical-sections-container {
-                background: transparent;
-                margin: 0;
-                padding: 0;
-            }
-
-            .medical-form-submit-row {
-                margin: 0 10px 10px !important;
-            }
-
-            .prescription-medication-content { padding: 8px 10px 10px; }
-            .prescription-required-question {
-                padding: 6px 10px;
-                border: 0;
-            }
-            .prescription-required-question strong { display: block; margin-bottom: 4px; }
-            .prescription-required-question label { display: inline-block; min-width: 68px; }
-            .prescription-medication-actions-row { margin: 8px 0; text-align: right; }
-
-            #prescriptionMedicationFeedback {
-                margin: 4px 10px 0;
-            }
-
-            #prescriptionMedicationFeedback:not(:empty)+.prescription-medications-box {
-                margin-top: 4px;
-            }
-
-            .medical-section-banner {
-                background-color: #a6bfcd;
-                margin: 0 !important;
-            }
-
-            .medical-section-banner-content {
-                padding: 5px 10px !important;
-            }
-
-            .medical-section-banner-content::after {
-                clear: both;
-                content: "";
-                display: table;
-            }
-
-            .agreements-banner-content {
-                align-items: center;
-                display: flex;
-                gap: 12px;
-                justify-content: space-between;
-            }
-
-            .agreements-banner-content::after {
-                display: none;
-            }
-
-            .otc-medications-content {
-                padding: 8px 10px 10px;
-            }
-
-            .parent-signature-row {
-                display: flex;
-                gap: 24px;
-                justify-content: flex-start;
-                margin: 16px 10px 10px;
-                max-width: 725px;
-            }
-
-            .parent-signature-field {
-                flex: 0 0 480px;
-            }
-
-            .parent-signature-date-field {
-                flex: 0 0 220px;
-            }
-
-            .parent-signature-row label {
-                display: block;
-                font-weight: bold;
-                margin-bottom: 6px;
-            }
-
-            .parent-signature-row input[readonly] {
-                box-sizing: border-box;
-                font-size: 14px;
-                height: 28px;
-                padding: 5px 10px !important;
-                width: 100%;
-            }
-
-            .parent-signature-row span {
-                box-sizing: border-box;
-                display: block;
-                font-size: 18px;
-                font-style: italic;
-                line-height: 28px;
-                padding-left: 10px;
-                width: 100%;
-            }
-
-            .medical-last-updated {
-                font-weight: normal;
-                margin-left: auto;
-                text-align: right;
-            }
-
-            #prescriptionMedicationsTable[aria-busy="true"] tbody {
-                pointer-events: none;
-                opacity: 0.65;
-            }
-
-            #prescriptionMedicationsTable input[type="text"],
-            #prescriptionMedicationsTable select {
-                box-sizing: border-box;
-                width: 100%;
-            }
-
-            #prescriptionMedicationsTable .prescription-medication-actions {
-                white-space: nowrap;
-                width: 1%;
-            }
-
-            #prescriptionMedicationsTable .prescription-medication-actions button {
-                margin-left: 4px;
-            }
-
-            #prescriptionMedicationsTable tr.prescription-medication-editing {
-                cursor: default;
-            }
-        </style>
-
 
         <div class="cdol-health-forms" data-require-path="./healthForms.js" data-module-name="cdolHealthForms"
             data-bootstrap-local="true" ng-controller="medicalAuthorizationController as vm" ng-cloak ng-hide="vm.initializing"
@@ -206,7 +36,7 @@
                     </div>
                     <table border="0" cellspacing="0" cellpadding="4" class="linkDescList medical-consent-table">
                         <colgroup>
-                            <col style="width:40%">
+                            <col class="cdol-health-prescription-name-column">
                             <col>
                         </colgroup>
                         <tr class="consent-question">
@@ -219,8 +49,8 @@
                                     followed.
                                 </p>
                                 <label class="consent-option"><input type="checkbox"
-                                        name="med_share_consent" ng-model="vm.appData.med_share_consent" ng-true-value="'1'" ng-false-value="'0'"> Parents
-                                    consent to Emergency Treatment</label>
+                                        name="med_share_consent" ng-model="vm.appData.med_share_consent" ng-true-value="'1'" ng-false-value="'0'"> Parent/Guardian
+                                    consents to Emergency Treatment</label>
                             </td>
                         </tr>
                         <tr class="consent-question">
@@ -229,8 +59,8 @@
                                 </p>
                                 <label class="consent-option"><input type="checkbox"
                                         name="med_first_aid_consent" ng-model="vm.appData.med_first_aid_consent" ng-true-value="'1'" ng-false-value="'0'">
-                                    Parents
-                                    consent to Basic First Aid Care</label>
+                                    Parent/Guardian
+                                    consents to Basic First Aid Care</label>
                             </td>
                         </tr>
                         <tr class="consent-question">
@@ -240,15 +70,15 @@
                                     first responders may determine which hospital to transport ~(first_name) for
                                     treatment.
                                     If the first responders do not determine which hospital, the school will attempt to
-                                    contact parents, if possible, while coordinating with emergency responders to
+                                    contact the Parent/Guardian, if possible, while coordinating with emergency responders to
                                     determine
                                     the most appropriate hospital for transport. If the school is unable to reach a
-                                    parent,
+                                    Parent/Guardian,
                                     ~(first_name) will be transported either to the nearest hospital or a hospital
                                     chosen by
                                     the school.</p>
                                 <label class="consent-option"><input type="checkbox" id="hospitalConsentCheckbox" ng-model="vm.appData.hospital_consent" ng-true-value="'1'" ng-false-value="'0'">
-                                    Parents agree to Hospital Consent</label>
+                                    Parent/Guardian agrees to Hospital Consent</label>
                             </td>
                         </tr>
                     </table>
@@ -262,13 +92,13 @@
                         </div>
                     </div>
                     <div class="otc-medications-content">
-                        <p>Parent/Guardian(s) have consented to allow the following OTC medications to be
+                        <p>Parent/Guardian has consented to allow the following OTC medications to be
                             administered to ~(first_name) by ~(schoolname).
                             <u>Dosage should be administered per age/weight instructions on medication container.</u></p>
                         <p>These medications will be administered on an as needed basis. All medications will
                             be kept in the nurse's/school secretaries office. The medications may be given at
                             their discretion.</p>
-                        <p>Over-the-counter medications should be supplied by the parents, unless the school’s
+                        <p>Over-the-counter medications should be supplied by the Parent/Guardian, unless the school’s
                             policy states the school will provide the over-the-counter medications for general use.</p>
                         <table class="otc-medications">
                             <tr>
@@ -348,6 +178,16 @@
                                 <td></td>
                             </tr>
                         </table>
+                        <div class="health-otc-document" role="group" aria-labelledby="otcAuthorizationHeading">
+                            <strong id="otcAuthorizationHeading" class="health-otc-document-heading">OTC Authorization Form</strong>
+                            <p id="otcAuthorizationInstructions">Parent/Guardian is responsible for submitting ~(first_name)'s <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/IQA-9t_KxDPQRrA6l46vjiXjAUkgwe_lkP-cC-uJL2MKJJ0?e=ZMzbw9" target="_blank" rel="noopener">Over-the-Counter (OTC) Medication Authorization Form</a> to ~(schoolname) annually <mark>by the end of the first week of school.</mark> This form authorizes school staff to administer OTC medication according to the directions on the original bottle or container.</p>
+                            <div class="health-plan-return">
+                                <strong>Parent/Guardian's Stated Return Method for OTC Medication Authorization Form</strong>
+                                <div id="otcAuthorizationMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]NON_RX_COLLECTION_METHOD)"
+                                    attachment-url="/admin/students/studentattachments.html?frn=~(studentfrn)" attachment-category="Non-Prescription"
+                                    attachment-frn="~(studentfrn)" attachment-enabled="vm.loaded"></div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -356,7 +196,7 @@
         <div ng-controller="prescriptionController as rx">
 
 
-                <div id="prescriptionMedicationFeedback" role="status" aria-live="polite" ng-if="rx.feedback" ng-class="rx.error ? 'feedback-alert' : 'feedback-confirm'" ng-cloak>
+                <div id="prescriptionMedicationError" class="feedback-alert" role="status" aria-live="polite" ng-if="rx.feedback && rx.error" ng-cloak>
                     <span ng-bind="rx.feedback"></span>
                     <button type="button" ng-if="rx.auditPending" ng-click="rx.retryAudit()" ng-disabled="vm.busy || !vm.loaded || rx.busy">Retry Audit Stamp</button>
                 </div>
@@ -377,11 +217,15 @@
                                 ng-disabled="!vm.loaded || vm.busy || vm.medicationBlocked">No</label>
                         </div>
                         <div ng-show="vm.appData.student_medication === '1'" ng-cloak>
-                            <p>Parent/Guardian(s) have consented to allow the following Prescription Medication to be
+                            <p>Parent/Guardian has consented to allow the following Prescription Medication to be
                                 administered to ~(first_name) by ~(schoolname). All prescription medications to be
                                 administered during school hours must be listed here.<br>
                                 Press the <strong>Add Medication</strong>
                                 button to add additional medications.</p>
+                            <div class="health-prescription-card">
+                            <div id="prescriptionMedicationFeedback" class="feedback-confirm" role="status" aria-live="polite" ng-if="rx.feedback && !rx.error" ng-cloak>
+                                <span ng-bind="rx.feedback"></span>
+                            </div>
                             <div class="prescription-medication-actions-row">
                                 <button type="button" id="addPrescriptionMedicationButton" disabled ng-click="rx.edit()"
                                     ng-disabled="vm.busy || !vm.loaded || rx.busy || rx.editor || rx.auditPending || !rx.loaded || !rx.units.length">Add Medication</button>
@@ -402,18 +246,7 @@
                                     </thead>
                                     <tbody ng-cloak>
                                         <tr ng-if="!rx.rows.length && !rx.editor && !rx.busy"><td colspan="5"><span ng-if="rx.loaded">No Prescription Medications for ~(first_name) ~(last_name).</span><span ng-if="!rx.loaded">Prescription medications could not be loaded.</span></td></tr>
-                                        <tr ng-if="rx.editor && !rx.editingId" ng-form="rx.editorForm" class="prescription-medication-editing" ng-keydown="rx.keydown($event)">
-                                            <td><input type="text" name="medicationName" ng-model="rx.editor.name" ng-disabled="vm.busy || !vm.loaded || rx.busy" aria-label="Medication Name" required></td>
-                                                <td><input type="text" name="dosage" ng-model="rx.editor.dosage" ng-disabled="vm.busy || !vm.loaded || rx.busy" aria-label="Dosage" required></td>
-                                                <td><select name="doseUnit" ng-model="rx.editor.dosage_units" ng-disabled="vm.busy || !vm.loaded || rx.busy" ng-options="unit.code as unit.label for unit in rx.units" aria-label="Dosage Units" required>
-                                                    <option value="">Select a Dosage Unit</option>
-                                                </select><small ng-if="rx.originalUnit && !rx.editor.dosage_units">Previous value: {{rx.originalUnit}}. Select an active unit.</small></td>
-                                                <td><input type="text" name="frequency" ng-model="rx.editor.frequency_taken" ng-disabled="vm.busy || !vm.loaded || rx.busy" aria-label="Frequency Taken" required></td>
-                                                <td class="prescription-medication-actions actions center">
-                                                    <button type="button" ng-click="rx.cancel()" ng-disabled="vm.busy || !vm.loaded || rx.busy">Cancel</button>
-                                                    <button type="button" ng-click="rx.save()" ng-disabled="vm.busy || !vm.loaded || rx.busy || !rx.valid() || !rx.changed() || !rx.loaded">Submit</button>
-                                                </td>
-                                        </tr>
+                                        <tr ng-if="rx.editor && !rx.editingId" ng-form="rx.editorForm" class="prescription-medication-editing" ng-keydown="rx.keydown($event)" prescription-editor></tr>
                                         <tr ng-repeat-start="record in rx.rows track by record.medication_id" ng-show="rx.editingId !== record.medication_id.toString()">
                                             <td ng-bind="record.name"></td><td ng-bind="record.dosage"></td>
                                             <td ng-bind="rx.unitLabel(record.dosage_units)"></td><td ng-bind="record.frequency_taken"></td>
@@ -422,23 +255,24 @@
                                                 <button type="button" title="Delete Prescription Medication" aria-label="Delete Prescription Medication" ng-click="rx.remove(record)" ng-disabled="vm.busy || !vm.loaded || rx.busy || rx.editor || rx.auditPending || !rx.loaded"><em class="ui-icon-white ui-icon ui-icon-minusthick"></em></button>
                                             </td>
                                         </tr>
-                                        <tr ng-repeat-end ng-if="rx.editingId === record.medication_id.toString()" ng-form="rx.editorForm" class="prescription-medication-editing" ng-keydown="rx.keydown($event)">
-                                            <td><input type="text" name="medicationName" ng-model="rx.editor.name" ng-disabled="vm.busy || !vm.loaded || rx.busy" aria-label="Medication Name" required></td>
-                                                <td><input type="text" name="dosage" ng-model="rx.editor.dosage" ng-disabled="vm.busy || !vm.loaded || rx.busy" aria-label="Dosage" required></td>
-                                                <td><select name="doseUnit" ng-model="rx.editor.dosage_units" ng-disabled="vm.busy || !vm.loaded || rx.busy" ng-options="unit.code as unit.label for unit in rx.units" aria-label="Dosage Units" required>
-                                                    <option value="">Select a Dosage Unit</option>
-                                                </select><small ng-if="rx.originalUnit && !rx.editor.dosage_units">Previous value: {{rx.originalUnit}}. Select an active unit.</small></td>
-                                                <td><input type="text" name="frequency" ng-model="rx.editor.frequency_taken" ng-disabled="vm.busy || !vm.loaded || rx.busy" aria-label="Frequency Taken" required></td>
-                                                <td class="prescription-medication-actions actions center">
-                                                    <button type="button" ng-click="rx.cancel()" ng-disabled="vm.busy || !vm.loaded || rx.busy">Cancel</button>
-                                                    <button type="button" ng-click="rx.save()" ng-disabled="vm.busy || !vm.loaded || rx.busy || !rx.valid() || !rx.changed() || !rx.loaded">Submit</button>
-                                                </td>
-                                        </tr>
+                                        <tr ng-repeat-end ng-if="rx.editingId === record.medication_id.toString()" ng-form="rx.editorForm" class="prescription-medication-editing" ng-keydown="rx.keydown($event)" prescription-editor></tr>
                                     </tbody>
                                 </table>
                             </td>
                         </tr>
                     </table>
+                        </div>
+                        </div>
+                        <div class="health-prescription-document" role="group" aria-labelledby="prescriptionAuthorizationHeading">
+                            <strong id="prescriptionAuthorizationHeading" class="health-prescription-document-heading">Prescription Authorization Form</strong>
+                            <p id="prescriptionAuthorizationInstructions">Parent/Guardian is responsible for submitting ~(first_name)'s diocesan-approved <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/IQCmGhLAp31YQpsIqD6L3xZlAVLBs9GuI5elHdrD4fvi0Io?e=MfKczj" target="_blank" rel="noopener">Prescription Medication Authorization Form</a> to ~(schoolname) annually <mark>by the end of the first week of school</mark> <em>if ~(first_name) requires prescription medication to be administered at school.</em> This form authorizes school staff to administer prescription medication according to the health care provider’s orders.</p>
+                            <div class="health-plan-return">
+                                <strong>Parent/Guardian's Stated Return Method for Prescription Medication Authorization Form</strong>
+                                <div id="prescriptionAuthorizationMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]RX_COLLECTION_METHOD)"
+                                    return-options="['Upload', 'Return to school office', 'Student does not require prescription medication to be administered at school']"
+                                    attachment-url="/admin/students/studentattachments.html?frn=~(studentfrn)" attachment-category="Prescription"
+                                    attachment-frn="~(studentfrn)" attachment-enabled="vm.loaded"></div>
+                            </div>
                         </div>
                     </div>
                 </section>

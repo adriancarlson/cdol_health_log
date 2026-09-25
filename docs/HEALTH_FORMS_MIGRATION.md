@@ -12,6 +12,12 @@ entries. No table schema is transferred or changed.
 
 ## Deployment
 
+Health Log 26.9.7.61 uses `/images/css/cdol.css` from CDOL CSS 26.9.0.3 for
+all custom presentation. Install that CSS package first. The local
+`healthForms.css` and embedded form styles are removed; future style edits belong
+in the shared file's `CDOL Health Log` section. The AngularJS browser fixture also
+loads that sibling repository's stylesheet.
+
 Update CDOL Student Info, CDOL Health Log, and CDOL Health Log - Data Access together
 on the test server. Verify the old named query is released from Student Info before
 enabling its new Health Log owner; the query identifier is deliberately retained.
@@ -24,6 +30,38 @@ Access package. The named query travels with the application; the prescription
 permission mappings travel with Data Access.
 
 ## AngularJS behavior
+
+Version 26.9.7.60 retrieves dose units through
+`/admin/students/health/data/medicationDoseUnits.json`, guarded by Medical
+Authorization page access. The endpoint selects only MED_DOSE_UNIT records with
+nonblank codes and nonzero or null visibility; the three returned fields are
+code, displayvalue, and uidisplayorder. It uses the same secured tlist_sql JSON
+pattern as medicalAuthorization.json. The existing save and audit APIs are
+unchanged. Verify the new endpoint and its permission guard after installation.
+
+Prescription Add/Edit rows use the shared prescriptionEditor directive. Local
+tests also exercise the attachment cache and refresh behavior in
+`docs/tests/health_forms_optimization.test.cjs`, using the same runtime variables
+as the main form tests.
+
+Prescription medication instructions sit above a bordered card containing Add
+Medication and the table. On load, existing rows for the selected student promote
+a saved No or blank STUDENT_MEDICATION answer to Yes after both loads finish.
+This is a pending change saved through normal Submit; the original baseline and
+subsequent administrator edits are preserved. Empty/failed lists do not promote
+the answer. Below the card, the
+Prescription Authorization Form block uses native RX_COLLECTION_METHOD and
+category Prescription. The three original saved choices are display-only and
+remain available when the medication card is hidden. The shared return-method
+directive accepts an optional custom option list; existing forms keep their
+default choices. No field permissions or API save mappings are added.
+
+The OTC section includes authorization-form instructions and the saved
+U_STUDENT_ADDITIONAL_INFO.NON_RX_COLLECTION_METHOD below the medication grid.
+This display uses the shared return-method tags and Non-Prescription category
+document picker. The value is read from a native token, has no input name, and
+is excluded from the API's editable-field list. The exact category spelling is
+intentional and matches the user's configuration. Installed validation is pending.
 
 The pages load PowerSchool's RequireJS `angular` module, targeting AngularJS 1.4.7.
 They do not ship a second Angular runtime or a global Bootstrap stylesheet.
@@ -103,6 +141,13 @@ subtle background and border. Questions stack on narrow screens.
 Version 26.9.7.7 corrects post-submit scrolling to reset PowerSchool's inner
 `content-main` panel in addition to the window after a verified save.
 
+Version 26.9.7.50 shares that smooth scroll with Health History. It starts on an
+accepted submit while preserving the native POST, then also runs after loading
+the returned page when `changesSaved=true`. The return-page marker uses the same
+parameter as the existing native confirmation; ordinary loads do not scroll.
+Both controllers cancel pending animation work on destruction. Full native
+navigation and scroll restoration still require installed validation.
+
 Version 26.9.7.8 joins OTC cards edge to edge and reduces padding and blank space.
 
 Version 26.9.7.10 uses the saved Boolean `STUDENT_MEDICATION` answer to show the
@@ -129,7 +174,7 @@ from a response is not part of this plugin update. No student data was changed.
 Health History's rules and field mappings now follow the supplied Form Builder
 24779195 JSON export, with the user-approved exceptions in `HEALTH_HISTORY_RULES.md`.
 Physician, dentist, and daycare fields always display. The form's document return
-methods are disabled radio buttons showing parent-response values with no submission names; this page
+methods are read-only text badges showing parent-response values with no submission names; this page
 does not upload documents or overwrite those parent choices.
 
 Allergies remain a single editable native field saved by the main form, with
@@ -219,6 +264,10 @@ student's native Attachments page in a new tab and identifies Diabetes as the
 category to look for. This uses the requested fallback because the supplied preview
 fragment depends on document IDs and permissions from the native attachment table.
 See `HEALTH_ACTION_PLAN_ATTACHMENTS.md` for plugin analysis and validation scope.
+
+Version 26.9.7.32 removes the old Diabetes Documentation section and its school
+101 exclusion and school 310 document-link substitution. The standalone Action
+Plan section introduced in 26.9.7.31 supersedes that workflow at every school.
 
 Version 26.9.7.30 adds an inline Diabetes document picker and PDF/image preview,
 using the native metadata/category contract inspected on production. It resolves

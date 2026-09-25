@@ -6,7 +6,7 @@
         ~[wc:commonscripts]
         <link href="/images/css/screen.css" rel="stylesheet" media="screen">
         <link href="/images/css/print.css" rel="stylesheet" media="print">
-        <link href="/admin/students/health/healthForms.css" rel="stylesheet">
+        <link href="/images/css/cdol.css?~[time]" rel="stylesheet">
     </head>
 
     <body>
@@ -17,99 +17,8 @@
         ~[wc:admin_navigation_frame_css]
         ~[wc:title_student_begin_css]Health History~[wc:title_student_end_css]
 
-        <style>
-            .box-round.health-section-box {
-                margin: 0 10px 10px !important;
-                overflow: hidden;
-            }
-
-            .health-section-banner {
-                background-color: #a6bfcd;
-                margin: 0 !important;
-            }
-
-            .health-section-banner-content {
-                padding: 5px 10px !important;
-            }
-
-            .health-section-content {
-                padding: 12px 16px 16px;
-            }
-
-            .health-contact-grid {
-                display: grid;
-                gap: 0;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-
-            .health-contact-field + .health-contact-field {
-                margin-top: 10px;
-            }
-
-            .health-contact-field label,
-            .health-field label {
-                display: block;
-                font-weight: bold;
-                margin-bottom: 5px;
-            }
-
-            .health-contact-field input[type="text"] {
-                box-sizing: border-box;
-                width: 100%;
-            }
-
-            .health-question-grid,
-            .health-field-grid {
-                display: grid;
-                gap: 20px 36px;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .health-question-title {
-                font-weight: bold;
-                margin-bottom: 8px;
-            }
-
-            .health-radio-option {
-                display: inline-block;
-                min-width: 120px;
-            }
-
-            .health-field input[type="text"],
-            .health-field select,
-            .health-field textarea {
-                box-sizing: border-box;
-                max-width: 100%;
-            }
-
-            .health-field-wide {
-                grid-column: 1 / -1;
-            }
-
-            .health-field-wide input[type="text"],
-            .health-field-wide textarea {
-                width: 100%;
-            }
-
-            .health-submit-row {
-                margin: 0 10px 10px !important;
-            }
-
-            @media (max-width: 900px) {
-                .health-contact-grid,
-                .health-question-grid,
-                .health-field-grid {
-                    grid-template-columns: 1fr;
-                }
-
-                .health-field-wide {
-                    grid-column: auto;
-                }
-            }
-        </style>
-
         <div class="cdol-health-forms" data-require-path="./healthForms.js" data-module-name="cdolHealthForms"
-            data-bootstrap-local="true" ng-controller="healthFormController as vm"
+            data-bootstrap-local="true" ng-controller="healthFormController as vm" data-changes-saved="~(gpv.changesSaved)"
             data-student-dcid="~(rn)" data-form-school="~([students.U_STUDENT_ENROLLMENT_LOGIC]PSEE_SCHOOL_ID)" data-current-school="~(schoolid)" data-audit-user="~[x:username;firstlast]" data-audit-date="~[date]">
         <form health-bound-form name="vm.form" health-submit="vm.submit($event)" id="healthHistoryForm" action="/~[self.page]?frn=~(studentfrn)&changesSaved=true" method="POST">
             <p class="feedback-alert" ng-if="vm.message" ng-bind="vm.message" ng-cloak role="status"></p>
@@ -122,7 +31,7 @@
                         <strong id="healthContactsHeading">Health Contacts</strong>
                     </div>
                 </div>
-                <div class="health-section-content health-contact-grid" ng-class="{'health-contact-grid-no-daycare': !vm.show('daycareProvider')}">
+                <div class="health-section-content health-contact-grid">
                     <div class="health-contact-column">
                         <div class="health-contact-field">
                             <label for="healthDoctorName">Physician's Name</label>
@@ -155,14 +64,6 @@
                                 name="[students.U_STUDENT_ADDITIONAL_INFO]STUDENT_DAYCARE_PHONE" value="">
                         </div>
                     </div>
-                </div>
-            </section>
-
-            <section class="box-round health-section-box" health-when="vm.show('dentalAgreement')" ng-cloak aria-labelledby="dentalAgreementHeading">
-                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="dentalAgreementHeading">Dental Agreement</strong></div></div>
-                <div class="health-section-content">
-                    <label><input type="checkbox" name="[students.U_STUDENT_ADDITIONAL_INFO]DENTAL_AGREE" value="1">
-                        Parents confirm that ~(first_name) is under the care of a dentist and is seen at least annually.</label>
                 </div>
             </section>
 
@@ -212,6 +113,9 @@
                                 <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]INHALER" value="0"> No</label>
                                 </div>
                             </td>
+                            <td></td>
+                        </tr>
+                        <tr>
                             <td>
                                 <strong id="allergyQuestion">Does ~(first_name) have allergies or dietary restrictions?</strong>
                                 <div role="radiogroup" aria-labelledby="allergyQuestion">
@@ -219,8 +123,6 @@
                                 <label class="otc-option"><input type="radio" name="[students.U_STUDENT_ADDITIONAL_INFO]ALLERGY_AGREE" value="0"> No</label>
                                 </div>
                             </td>
-                        </tr>
-                        <tr>
                             <td>
                                 <strong id="epipenQuestion">Has ~(first_name) been prescribed an EpiPen?</strong>
                                 <div role="radiogroup" aria-labelledby="epipenQuestion">
@@ -229,52 +131,66 @@
                                 </div>
                             </td>
                             <td></td>
-                            <td></td>
                         </tr>
                     </table>
-                    <div class="feedback-info health-plan-notice" health-when="vm.show('actionPlan')" ng-cloak>
-                        <strong id="actionPlanHeading">Action Plan</strong>
-                        <p id="diabetesActionPlanInstructions" ng-if="vm.answer('diabetes') === '1'">Parents are responsible for submitting
+                </div>
+            </section>
+
+            <section class="box-round health-section-box health-action-plan" health-when="vm.show('actionPlan')" ng-cloak aria-labelledby="actionPlanHeading">
+                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="actionPlanHeading">Action Plan</strong></div></div>
+                <div class="health-section-content">
+                    <div class="health-action-plan-item" health-when="vm.answer('diabetes') === '1'" role="group" aria-label="Diabetes Action Plan">
+                        <p id="diabetesActionPlanInstructions">Parent/Guardian is responsible for submitting
                             ~(first_name)'s Diabetes Medical Management Plan (DMMP) to ~(schoolname) using
-                            <u>the health care provider’s form</u>. An updated plan from ~(first_name)'s doctor,
-                            dated after May 1, is required each year <mark>by the end of the first week of school.</mark></p>
-                        <div class="health-field health-plan-return" health-when="vm.answer('diabetes') === '1'">
-                            <div class="health-question-title">Parent's Stated Return Method</div>
+                            <u>~(first_name)'s health care provider’s form</u>.<br>An updated plan from ~(first_name)'s doctor,
+                            dated after May 1<sup>st</sup>, is required each year <mark>by the end of the first week of school.</mark></p>
+                        <div class="health-field health-plan-return">
+                            <div class="health-question-title">Parent/Guardian's Stated Return Method for Diabetes Medical Management Plan (DMMP)</div>
                             <div id="diabetesPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]DIABETES_COLLECTION_METHOD)"
                                 attachment-url="/admin/students/studentattachments.html?frn=~(studentfrn)" attachment-category="Diabetes"
                                 attachment-frn="~(studentfrn)" attachment-enabled="vm.answer('diabetes') === '1'"></div>
                         </div>
-                        <p ng-if="vm.answer('diabetes') !== '1'">Please provide an updated action plan from the student's doctor, dated after May 1, by the end of the first week of school.</p>
                     </div>
-
-                </div>
-            </section>
-
-            <section class="box-round health-section-box" health-when="vm.show('dentalPlan')" ng-cloak aria-labelledby="dentalPlanHeading">
-                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="dentalPlanHeading">Dental Examination</strong></div></div>
-                <div class="health-section-content">
-                    <p>An updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/Ed1IH3Wq1npNqMN32DNG1rABGza4DISTStTbImiJy7q_2A?e=jt1qDO" target="_blank" rel="noopener">Report of Dental Examination</a> is required annually, by the end of the first week of school.</p>
-                    <div class="health-field">
-                        <div class="health-question-title">Parent's Stated Return Method</div>
-                        <div id="dentalPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]DENTAL_PLAN_COLLECTION_METHOD)"></div>
+                    <div class="health-action-plan-item" health-when="vm.answer('seizure_agree') === '1'" role="group" aria-label="Seizure Action Plan">
+                        <p id="seizureActionPlanInstructions">Parent/Guardian is responsible for submitting
+                            ~(first_name)'s Seizure Action Plan to ~(schoolname) using
+                            <u>~(first_name)'s health care provider’s form</u>.<br>An updated plan from ~(first_name)'s doctor,
+                            dated after May 1<sup>st</sup>, is required each year <mark>by the end of the first week of school.</mark></p>
+                        <div class="health-field health-plan-return">
+                            <div class="health-question-title">Parent/Guardian's Stated Return Method for Seizure Action Plan</div>
+                            <div id="seizurePlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]SEIZURE_PLAN_COLLECTION_METHOD)"
+                                attachment-url="/admin/students/studentattachments.html?frn=~(studentfrn)" attachment-category="Seizure"
+                                attachment-frn="~(studentfrn)" attachment-enabled="vm.answer('seizure_agree') === '1'"></div>
+                        </div>
+                    </div>
+                    <div class="health-action-plan-item" health-when="vm.show('asthmaAllergyPlan')" role="group" aria-label="Asthma/Severe Allergy Action Plan">
+                        <p id="asthmaAllergyActionPlanInstructions">Parent/Guardian is responsible for submitting
+                            ~(first_name)'s Asthma/Severe Allergy Action Plan to ~(schoolname) using
+                            <u>~(first_name)'s health care provider’s form</u>.<br>An updated plan from ~(first_name)'s doctor,
+                            dated after May 1<sup>st</sup>, is required each year <mark>by the end of the first week of school.</mark></p>
+                        <div class="health-field health-plan-return">
+                            <div class="health-question-title">Parent/Guardian's Stated Return Method for Asthma/Severe Allergy Action Plan</div>
+                            <div id="asthmaAllergyPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]ALLERGY_PLAN_COLLECTION_METHOD)"
+                                attachment-url="/admin/students/studentattachments.html?frn=~(studentfrn)" attachment-category="Asthma/Severe Allergy"
+                                attachment-categories="Allergy,Asthma" attachment-frn="~(studentfrn)" attachment-enabled="vm.show('asthmaAllergyPlan')"></div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section class="box-round health-section-box" health-when="vm.show('diabetesPlan')" ng-cloak aria-labelledby="diabetesPlanHeading">
-                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="diabetesPlanHeading">Diabetes Documentation</strong></div></div>
+            <section class="box-round health-section-box health-meal-plan" health-when="vm.show('mealPlan')" ng-cloak aria-labelledby="mealPlanHeading">
+                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="mealPlanHeading">Meal Accommodation</strong></div></div>
                 <div class="health-section-content">
-                    <p>An updated <a ng-show="vm.currentSchool === '310'" href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/Eb-RNkX_68VItk_KiTr23xsBjio5l2LId39SPSZc7MTQ-A?e=tezeDs" target="_blank" rel="noopener">Contract for Students Keeping a Diabetic Pump and Blood Glucose Testing Meter at School</a><a ng-show="vm.currentSchool !== '310'" href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EamboljcOtVBoAldQKBuwYwB8ay8K7PExkWQj-Ge9DXMYg?e=yKDFeZ" target="_blank" rel="noopener">Diabetes Action Plan</a> is required annually, by the end of the first week of school.</p>
-                </div>
-            </section>
-
-            <section class="box-round health-section-box" health-when="vm.show('seizurePlan')" ng-cloak aria-labelledby="seizurePlanHeading">
-                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="seizurePlanHeading">Seizure Action Plan</strong></div></div>
-                <div class="health-section-content">
-                    <p>An updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EdMWOZGj5kVMn24LFIAwZZYBhP4-f0Xx4sSZK3WTagK7aQ?e=HoMSHg" target="_blank" rel="noopener">Seizure Action Plan</a> is required annually, by the end of the first week of school.</p>
-                    <div class="health-field">
-                        <div class="health-question-title">Parent's Stated Return Method</div>
-                        <div id="seizurePlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]SEIZURE_PLAN_COLLECTION_METHOD)"></div>
+                    <p>Parent/Guardian is responsible for submitting an updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EZUf0I9b9J1BsVBUbjMsiBkB-6c_WmAjHZ-i0re3cfLg6g?e=FcFKyd" target="_blank" rel="noopener">Request for Meal Accommodation</a> for ~(first_name) annually <mark>by the end of the first week of school.</mark></p>
+                    <div class="health-field health-plan-return">
+                        <div class="health-question-title">Parent/Guardian's Stated Return Method for Meal Accommodation</div>
+                        <div id="mealPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]FOOD_PLAN_COLLECTION_METHOD)"></div>
+                        <div class="health-parent-attachment">
+                            <a class="health-document-link" href="/admin/students/studentattachments.html?frn=~(studentfrn)" target="_blank" rel="noopener" title="Open student attachments (opens in a new tab)">
+                                <img src="/images/cdol_health_log/bc-document-icon.png" alt="" width="24" height="24">
+                                <span>Open student attachments</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -284,42 +200,42 @@
                 <div class="health-section-content">
                     <p>An updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/ESCZEwPPO_FPqIoIWkUaAYoBuI8-fttPIsDF0TFJoyupbA?e=dhQeYn" target="_blank" rel="noopener">Contract for Students Keeping Inhalers With Them While at School</a> is required annually, by the end of the first week of school.</p>
                     <div class="health-field">
-                        <div class="health-question-title">Parent's Stated Return Method</div>
+                        <div class="health-question-title">Parent/Guardian's Stated Return Method</div>
                         <div id="inhalerContractMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]INHALER_COLLECTION_METHOD)"></div>
                     </div>
                 </div>
             </section>
 
-            <section class="box-round health-section-box" health-when="vm.show('asthmaAllergyPlan')" ng-cloak aria-labelledby="asthmaAllergyPlanHeading">
-                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="asthmaAllergyPlanHeading">Asthma/Allergy Action Plan</strong></div></div>
-                <div class="health-section-content">
-                    <p>An updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EXAZ9lcDSEFOlIElK0DKRpMBSXYqRjEu0kzDA75QmfRaUg?e=2wgXCk" target="_blank" rel="noopener">Asthma/Allergy Action Plan</a> (<a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EXw6mFEjCvhAsKD8u_j_YpIBetaWvCQamBvJYxl4QoLHMg?e=kqa5lK" target="_blank" rel="noopener">en Español</a>) or a current plan from the student's doctor is required annually, by the end of the first week of school.</p>
-                    <div class="health-field">
-                        <div class="health-question-title">Parent's Stated Return Method</div>
-                        <div id="asthmaAllergyPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]ALLERGY_PLAN_COLLECTION_METHOD)"></div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="box-round health-section-box" health-when="vm.show('mealPlan')" ng-cloak aria-labelledby="mealPlanHeading">
-                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="mealPlanHeading">Meal Accommodation</strong></div></div>
-                <div class="health-section-content">
-                    <p health-when="vm.show('mealPlanInstructions')">An updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/EZUf0I9b9J1BsVBUbjMsiBkB-6c_WmAjHZ-i0re3cfLg6g?e=FcFKyd" target="_blank" rel="noopener">Request for Meal Accommodation</a> is required annually, by the end of the first week of school.</p>
-                    <div class="health-field">
-                        <div class="health-question-title">Parent's Stated Return Method</div>
-                        <div id="mealPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]FOOD_PLAN_COLLECTION_METHOD)"></div>
-                    </div>
-                </div>
-            </section>
             <section class="box-round health-section-box" health-when="vm.show('medicalCareNotice')" ng-cloak aria-labelledby="medicalCareNoticeHeading">
                 <div class="health-section-banner"><div class="health-section-banner-content"><strong id="medicalCareNoticeHeading">Medical Care Authorization Notice</strong></div></div>
                 <div class="health-section-content">
-                    <p>This is to certify that I, parent or guardian of ~(first_name) ~(last_name), hereby grant permission for
+                    <p>This is to certify that I, Parent/Guardian of ~(first_name) ~(last_name), hereby grant permission for
                     ~([students.U_STUDENT_ENROLLMENT_LOGIC]PSEE_SCHOOL_NAME) to obtain medical care from any licensed physician,
-                    hospital or medical clinic for the student named herein at such time as either parent or guardian cannot
+                    hospital or medical clinic for the student named herein at such time as the Parent/Guardian cannot
                     be contacted in person or by phone. We do hereby waive, release, absolve, indemnify, and agree to hold the
                     activity sponsors, organizers, supervisors, and participants, for any claim arising out of injury to the
                     student or accidents that may occur during the school day or activity.</p>
+                </div>
+            </section>
+
+            <section class="box-round health-section-box health-dental" health-when="vm.show('dental')" ng-cloak aria-labelledby="dentalHeading">
+                <div class="health-section-banner"><div class="health-section-banner-content"><strong id="dentalHeading">Dental</strong></div></div>
+                <div class="health-section-content">
+                    <div health-when="vm.show('dentalAgreement')" role="group" aria-labelledby="dentalAgreementHeading">
+                        <div class="health-question-title" id="dentalAgreementHeading">Dental Agreement</div>
+                        <label class="consent-option"><input type="checkbox" id="healthDentalAgree" name="[students.U_STUDENT_ADDITIONAL_INFO]DENTAL_AGREE" value="1">
+                            Parent/Guardian confirms that ~(first_name) is under the care of a dentist and is being seen at least annually.</label>
+                    </div>
+                    <div health-when="vm.show('dentalPlan')" role="group" aria-labelledby="dentalPlanHeading">
+                        <div class="health-question-title" id="dentalPlanHeading">Dental Examination</div>
+                        <p id="dentalPlanInstructions">Parent/Guardian is responsible for submitting an updated <a href="https://cdolinc.sharepoint.com/:b:/s/EnrollmentFiles/Ed1IH3Wq1npNqMN32DNG1rABGza4DISTStTbImiJy7q_2A?e=jt1qDO" target="_blank" rel="noopener">Report of Dental Examination</a> for ~(first_name) annually <mark>by the end of the first week of school.</mark></p>
+                        <div class="health-field health-plan-return">
+                            <div class="health-question-title">Parent/Guardian's Stated Return Method for Report of Dental Examination</div>
+                            <div id="dentalPlanMethod" health-parent-return="~([students.U_STUDENT_ADDITIONAL_INFO]DENTAL_PLAN_COLLECTION_METHOD)"
+                                attachment-url="/admin/students/studentattachments.html?frn=~(studentfrn)" attachment-category="Dental"
+                                attachment-frn="~(studentfrn)" attachment-enabled="vm.show('dentalPlan')"></div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -336,8 +252,8 @@
                     <table class="linkDescList">
                         <tr>
                             <td class="bold w-25">Allergy Alert</td>
-                            <td colspan="2"><input title="Allergies" type="text" class="health-alert-control" id="healthAllergies" name="[students.StudentCoreFields]allergies" value=""
-                                    size="25"></td>
+                            <td><textarea title="Allergies" id="healthAllergies" name="[students.StudentCoreFields]allergies" rows="6" cols="80"
+                                    class="standardalerts health-alert-control"></textarea></td>
                         </tr>
                     </table>
                 </div>
@@ -359,8 +275,8 @@
                         </tr>
                     </table>
                 </div>
-                <h2 class="toggle expanded alerts-headder">Medical Action Plan Alert<img style="margin-left: 7px;"
-                        src="/images/img/alert_map.png" alt="Medical Action Plan alert"></h2>
+                <h2 class="toggle expanded alerts-headder">Medical Action Plan Alert<img
+                        src="/images/img/alert_map.png" alt="Medical Action Plan alert" class="cdol-health-action-plan-icon"></h2>
                 <div class="ps-25">
                     <table class="linkDescList">
                         <tr>
@@ -422,47 +338,14 @@
                             cols="40"></textarea>
                     </div>
                     <div class="health-field" health-when="vm.show('restrictedActivities')" ng-cloak>
-                        <label for="healthUnapprovedActivities">Activities ~(first_name) should NOT engage in</label>
-                        <div id="healthUnapprovedActivitiesExample" class="health-field-help">ie. Physical Education</div>
+                        <label for="healthUnapprovedActivities" class="health-example-label">Activities ~(first_name) should NOT engage in</label>
+                        <div id="healthUnapprovedActivitiesExample" class="otc-example">ie. Physical Education</div>
                         <textarea id="healthUnapprovedActivities"
                             name="[Students.U_STUDENT_ADDITIONAL_INFO]UNAPPROVED_ACTIVITES" rows="4"
                             cols="40" aria-describedby="healthUnapprovedActivitiesExample"></textarea>
                     </div>
                 </div>
             </section>
-
-            ~[if#Peter.SchoolID = 110]
-            <section class="box-round health-section-box" aria-labelledby="extendedCareHeading">
-                <div class="health-section-banner">
-                    <div class="health-section-banner-content">
-                        <strong id="extendedCareHeading">Extended Care</strong>
-                    </div>
-                </div>
-                <div class="health-section-content health-question-grid">
-                    <div class="health-question">
-                        <div class="health-question-title" id="extendedCareQuestion">Does ~(first_name) attend
-                            Extended Care at ~(schoolname)?</div>
-                        <div role="radiogroup" aria-labelledby="extendedCareQuestion">
-                            <label class="health-radio-option"><input type="radio"
-                                    name="[students.U_STUDENT_ADDITIONAL_INFO]EXTENDED_CARE" value="1"> Yes</label>
-                            <label class="health-radio-option"><input type="radio"
-                                    name="[students.U_STUDENT_ADDITIONAL_INFO]EXTENDED_CARE" value="0"> No</label>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            [else#Peter]
-            [/if#Peter]
-
-            <div class="box-round health-section-box">
-                <table border="0" cellspacing="0" cellpadding="4" class="linkDescList">
-                    <colgroup>
-                        <col style="width:40%">
-                        <col>
-                    </colgroup>
-                    ~[x:insertfile;../state/emergency~[displaypref:districtstate].html]
-                </table>
-            </div>
 
             <input type="hidden" id="medLastUpdatedUserType"
                 name="[students.U_STUDENT_ADDITIONAL_INFO]MED_LAST_UPDATED_USER_TYPE" value="">

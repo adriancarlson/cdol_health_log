@@ -54,6 +54,10 @@ class Handler(SimpleHTTPRequestHandler):
         url = urlparse(path).path
         if url == "/admin/reports_pscb_dev_pro/health/cdol_missed_daily_administration.html":
             return str(ROOT / "docs/tests/missed_report_destination.html")
+        if url == "/fixtures/administration-source.html":
+            return str(ROOT / "web_root/admin/students/medication/administration.html")
+        if url == "/images/css/cdol.css":
+            return str(ROOT.parent / "cdol_css/web_root/images/css/cdol.css")
         if url == "/images/css/cdol_toolbar_counts.css":
             return str(ROOT.parent / "cdol_css/web_root/images/css/cdol_toolbar_counts.css")
         if url == "/tests/icon-meds-reference.svg":

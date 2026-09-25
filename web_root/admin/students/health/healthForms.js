@@ -29,7 +29,6 @@ define(['angular', 'components/shared/index'], function (angular) {
     });
 
     // Seed ngModel from PowerSchool's rendered values before Angular renders the controls.
-    // This also covers controls supplied by the state emergency include.
     app.directive('healthBoundForm', function () {
         function fieldKey(field) {
             if (field.name.charAt(0) === '[') { return field.name.toLowerCase(); }
@@ -75,6 +74,18 @@ define(['angular', 'components/shared/index'], function (angular) {
                         control.attr('ng-false-value', "'0'");
                     }
                 });
+                // PowerSchool's hidden checkbox companions post the unchecked
+                // value. Disable them with their conditional checkbox, without binding
+                // them to ngModel or allowing them to seed/overwrite its saved value.
+                var conditionalCheckboxes = element[0].querySelectorAll('input[type="checkbox"][health-field-condition]');
+                angular.forEach(element[0].querySelectorAll('input[type="hidden"][name]'), function (field) {
+                    if (fieldKey(field)) { return; }
+                    angular.forEach(conditionalCheckboxes, function (checkbox) {
+                        if (checkbox.name === field.name) {
+                            angular.element(field).attr('ng-disabled', '!(' + checkbox.getAttribute('health-field-condition') + ')');
+                        }
+                    });
+                });
             }
         };
     });
@@ -84,48 +95,70 @@ define(['angular', 'components/shared/index'], function (angular) {
     app.factory('healthAttachments', ['$http', '$q', '$window', function ($http, $q, $window) {
         function list(value) { return value == null ? [] : (angular.isArray(value) ? value : [value]); }
         function get(url, params) { return $http.get(url, { params: params, cache: false, timeout: 30000 }); }
-        function eligible(doc, categoryId) {
-            var change = list(doc.changeList)[0] || {};
-            return /^\d+$/.test(String(doc.id)) && doc.status === 'A' && doc.permission && doc.permission.download === true &&
-                (!doc.documentLocation || doc.documentLocation === 'L') &&
-                change.whoChangedName !== 'PowerSchool Registration Signature' &&
-                list(doc.categories).some(function (category) { return String(category.id) === String(categoryId); });
+        var categoryRequest, categoryExpires = 0;
+        function categories(refresh) {
+            if (refresh || (categoryExpires && Date.now() >= categoryExpires)) { categoryRequest = null; }
+            if (!categoryRequest) {
+                categoryExpires = 0;
+                var request = get('/ws/districtcategory').then(function (response) {
+                    if (!response.data || !response.data.categories) { throw new Error('Invalid category response.'); }
+                    if (categoryRequest === request) { categoryExpires = Date.now() + 60000; }
+                    return list(response.data.categories);
+                }).catch(function (error) {
+                    if (categoryRequest === request) { categoryRequest = null; categoryExpires = 0; }
+                    return $q.reject(error);
+                });
+                categoryRequest = request;
+            }
+            return categoryRequest;
         }
-        function find(frn, categoryName) {
+        function matches(doc, categoryIds) {
+            return /^\d+$/.test(String(doc.id)) && doc.status === 'A' &&
+                list(doc.categories).some(function (category) { return categoryIds.indexOf(String(category.id)) !== -1; });
+        }
+        function eligible(doc, categoryIds) {
+            var change = list(doc.changeList)[0] || {};
+            return matches(doc, categoryIds) && doc.permission && doc.permission.download === true &&
+                (!doc.documentLocation || doc.documentLocation === 'L') &&
+                change.whoChangedName !== 'PowerSchool Registration Signature';
+        }
+        function find(frn, categoryName, refresh) {
             if (!/^001\d+$/.test(frn || '') || !categoryName) { return $q.reject(new Error('Student attachment context is unavailable.')); }
             var params = { entityname: 'STCM', entityid: frn.substring(3) };
-            return get('/ws/districtcategory').then(function (response) {
-                if (!response.data || !response.data.categories) { throw new Error('Invalid category response.'); }
-                var categories = list(response.data.categories).filter(function (category) { return category.name === categoryName; });
-                if (categories.length !== 1 || !/^\d+$/.test(String(categories[0].id))) { return []; }
-                var categoryId = categories[0].id;
-                params.q = 'category==(' + categoryId + ');status==active';
+            return categories(refresh).then(function (available) {
+                var names = list(categoryName);
+                var selected = available.filter(function (category) { return names.indexOf(category.name) !== -1; });
+                if (!selected.length) { return { documents: [], hasMatches: false }; }
+                var categoryIds = selected.map(function (category) { return String(category.id); });
+                if (!categoryIds.every(function (id) { return /^\d+$/.test(id); })) { throw new Error('Invalid category IDs.'); }
+                params.q = 'category==(' + categoryIds.join(',') + ');status==active';
                 return get('/ws/k12drive/document/aggregates', params).then(function (aggregateResponse) {
                     var aggregate = aggregateResponse.data && aggregateResponse.data.documentAggregates;
                     var count = aggregate && Number(aggregate.count);
                     if (!aggregate || !isFinite(count) || count < 0 || Math.floor(count) !== count || count > 10000) {
                         throw new Error('Invalid attachment count.');
                     }
-                    if (!count) { return []; }
+                    if (!count) { return { documents: [], hasMatches: false }; }
                     if (!/^\d+$/.test(String(aggregate.time))) { throw new Error('Invalid attachment snapshot.'); }
-                    params.q = 'category==(' + categoryId + ');lastmodifiedon=le=' + aggregate.time + ';status==active';
+                    params.q = 'category==(' + categoryIds.join(',') + ');lastmodifiedon=le=' + aggregate.time + ';status==active';
                     params.pagesize = 100;
                     params.order = 'filename;asc';
-                    var documents = [], seen = {};
+                    var documents = [], seen = {}, hasMatches = false;
                     function page(number) {
                         return get('/ws/k12drive/document', angular.extend({}, params, { page: number })).then(function (response) {
                             if (!response.data || !response.data.documents || !response.data.documents.documentList) {
                                 throw new Error('Invalid attachment response.');
                             }
                             list(response.data.documents.documentList).forEach(function (doc) {
-                                if (eligible(doc, categoryId) && !seen[doc.id]) {
+                                if (matches(doc, categoryIds)) { hasMatches = true; }
+                                if (eligible(doc, categoryIds) && !seen[doc.id]) {
                                     seen[doc.id] = true;
                                     var change = list(doc.changeList)[0] || {};
                                     documents.push({ id: doc.id, name: doc.name || 'Untitled document',
                                         uploaded: change.whenChangedFormatted || 'Not available' });
                                 }
                             });
-                            return number * params.pagesize < count ? page(number + 1) : documents;
+                            return number * params.pagesize < count ? page(number + 1) : { documents: documents, hasMatches: hasMatches };
                         });
                     }
                     return page(1);
@@ -151,21 +184,21 @@ define(['angular', 'components/shared/index'], function (angular) {
     }]);
 
     // Display the parent's answer without posting or modifying it.
-    app.directive('healthParentReturn', ['healthAttachments', '$sce', function (attachments, $sce) {
+    app.directive('healthParentReturn', ['healthAttachments', '$sce', '$q', function (attachments, $sce, $q) {
         return {
-            scope: { method: '@healthParentReturn', attachmentUrl: '@?', attachmentCategory: '@?', attachmentFrn: '@?', attachmentEnabled: '=?' },
-            template: '<div class="health-parent-return" role="radiogroup" aria-label="Parent\'s Stated Return Method" aria-disabled="true">' +
-                '<label><input type="radio" value="Upload" ng-checked="method === \'Upload\'" disabled> Upload</label>' +
-                '<label><input type="radio" value="Return to school office" ng-checked="method === \'Return to school office\'" disabled> Return to school office</label>' +
-                '<span ng-if="!method">Not recorded</span>' +
-                '<span ng-if="method && method !== \'Upload\' && method !== \'Return to school office\'" ng-bind="method"></span></div>' +
-                '<div class="health-parent-attachment" ng-if="method === \'Upload\' && attachmentUrl">' +
-                '<button class="health-document-link" type="button" ng-click="loadDocuments()" ng-disabled="loading" aria-expanded="{{!!opened}}">' +
+            scope: { method: '@healthParentReturn', returnOptions: '=?', attachmentUrl: '@?', attachmentCategory: '@?', attachmentCategories: '@?', attachmentFrn: '@?', attachmentEnabled: '=?' },
+            template: '<div class="health-parent-return" role="group" aria-label="Parent/Guardian\'s Stated Return Method">' +
+                '<span class="health-return-value" ng-bind="method || \'Not recorded\'"></span>' +
+                '<span class="health-return-unselected" ng-repeat="option in (returnOptions || [\'Upload\', \'Return to school office\']) track by $index" ng-if="method !== option" ng-bind="option"></span></div>' +
+                '<div class="health-parent-attachment" ng-if="attachmentUrl && attachmentEnabled !== false && (method === \'Upload\' || hasMatches || lookupFailed || opened)">' +
+                '<button class="health-document-link" ng-if="method === \'Upload\' || hasMatches" type="button" ng-click="loadDocuments()" ng-disabled="loading" aria-expanded="{{!!opened}}">' +
                 '<img src="/images/cdol_health_log/bc-document-icon.png" alt="" width="24" height="24">' +
                 '<span>View {{attachmentCategory}} documents</span></button>' +
-                '<a class="health-attachments-fallback" ng-href="{{attachmentUrl}}" target="_blank" rel="noopener">Open student attachments</a></div>' +
+                '<a class="health-attachments-fallback" ng-href="{{attachmentUrl}}" target="_blank" rel="noopener">Open student attachments</a>' +
+                '<span ng-if="lookupFailed" role="status">Document availability could not be checked.</span></div>' +
                 '<section class="health-attachment-panel" ng-if="opened" aria-label="Action Plan documents" ng-keydown="$event.keyCode === 27 && closeDocuments(true)">' +
                 '<div class="health-attachment-heading"><strong>{{attachmentCategory}} documents</strong>' +
+                '<button type="button" ng-click="loadDocuments(true)" ng-disabled="loading">Refresh documents</button>' +
                 '<button type="button" ng-click="closeDocuments(true)">Close documents</button></div>' +
                 '<p role="status" aria-live="polite" ng-if="loading || message">{{loading ? "Loading documents..." : message}}</p>' +
                 '<ul class="health-attachment-list" ng-if="documents.length"><li ng-repeat="document in documents track by document.id">' +
@@ -176,7 +209,8 @@ define(['angular', 'components/shared/index'], function (angular) {
                 '<button type="button" ng-click="closePreview()">Close preview</button></div>' +
                 '<iframe class="health-attachment-preview" ng-src="{{previewUrl}}" title="Action Plan document preview"></iframe></div></section>',
             link: function (scope, element) {
-                var request = 0, blobUrl;
+                var request = 0, discovery = 0, blobUrl, discovered;
+                function categoryNames() { return scope.attachmentCategories ? scope.attachmentCategories.split(',').map(function (name) { return name.trim(); }) : scope.attachmentCategory; }
                 function release() { attachments.release(blobUrl); blobUrl = null; scope.previewUrl = null; }
                 scope.closePreview = function () { request++; release(); scope.previewLoading = false; scope.previewMessage = ''; };
                 scope.closeDocuments = function (restoreFocus) {
@@ -184,15 +218,18 @@ define(['angular', 'components/shared/index'], function (angular) {
                     var button = element[0].querySelector('.health-document-link');
                     if (restoreFocus && button) { button.focus(); }
                 };
-                scope.loadDocuments = function () {
-                    if (scope.method !== 'Upload' || scope.attachmentEnabled === false) { return; }
+                scope.loadDocuments = function (refresh) {
+                    if ((scope.method !== 'Upload' && !scope.hasMatches && !scope.opened) || scope.attachmentEnabled === false || scope.loading) { return; }
                     scope.closePreview();
                     var current = ++request;
                     scope.opened = true; scope.loading = true; scope.documents = []; scope.message = '';
-                    attachments.find(scope.attachmentFrn, scope.attachmentCategory).then(function (documents) {
+                    var pending = !refresh && discovered && Date.now() < discovered.expires ?
+                        $q.when(discovered.result) : attachments.find(scope.attachmentFrn, categoryNames(), refresh);
+                    discovered = null;
+                    pending.then(function (result) {
                         if (current !== request) { return; }
-                        scope.documents = documents;
-                        scope.message = documents.length ? 'Select a document to preview. The upload date does not establish the plan date.' :
+                        scope.documents = result.documents; scope.hasMatches = result.hasMatches; scope.lookupFailed = false;
+                        scope.message = result.documents.length ? 'Select a document to preview. The upload date does not establish the plan date.' :
                             'No available ' + scope.attachmentCategory + ' documents were found. Open student attachments to review the files.';
                     }, function () {
                         if (current === request) { scope.message = 'Documents could not be loaded. Open student attachments to review access and available files.'; }
@@ -210,8 +247,26 @@ define(['angular', 'components/shared/index'], function (angular) {
                         if (current === request) { scope.previewMessage = error.message || 'The preview could not be loaded. Open student attachments to review access and available files.'; }
                     }).finally(function () { if (current === request) { scope.previewLoading = false; } });
                 };
-                scope.$watchGroup(['method', 'attachmentFrn', 'attachmentEnabled'], function () { scope.closeDocuments(); });
-                scope.$on('$destroy', function () { request++; release(); });
+                scope.$watchGroup(['method', 'attachmentFrn', 'attachmentCategory', 'attachmentCategories', 'attachmentEnabled'], function () {
+                    scope.closeDocuments();
+                    discovered = null;
+                    var current = ++discovery;
+                    scope.hasMatches = false; scope.lookupFailed = false; scope.checkingDocuments = false;
+                    // Upload already qualifies. Other choices need a metadata-only lookup;
+                    // no document content is requested until the administrator selects it.
+                    if (!scope.attachmentUrl || !scope.attachmentCategory || !scope.attachmentFrn ||
+                            scope.attachmentEnabled === false || scope.method === 'Upload') { return; }
+                    scope.checkingDocuments = true;
+                    attachments.find(scope.attachmentFrn, categoryNames()).then(function (result) {
+                        if (current === discovery) {
+                            scope.hasMatches = result.hasMatches;
+                            discovered = { result: result, expires: Date.now() + 30000 };
+                        }
+                    }, function () {
+                        if (current === discovery) { scope.lookupFailed = true; }
+                    }).finally(function () { if (current === discovery) { scope.checkingDocuments = false; } });
+                });
+                scope.$on('$destroy', function () { request++; discovery++; discovered = null; release(); });
             }
         };
     }]);
@@ -288,11 +343,56 @@ define(['angular', 'components/shared/index'], function (angular) {
         };
     }]);
 
-    app.controller('healthFormController', ['$element', '$scope', 'healthChangeTracking', 'healthAudit', function ($element, $scope, tracking, audit) {
+    // Scroll PowerSchool's inner student panel as well as the browser window.
+    app.factory('healthConfirmationScroll', ['$timeout', '$window', function ($timeout, $window) {
+        return function (root) {
+            var scrollFrame, scrollTimer;
+            function scrollToConfirmation() {
+                var content = root.ownerDocument.getElementById('content-main');
+                var panelTop = content ? content.scrollTop : 0;
+                var windowTop = $window.pageYOffset, windowLeft = $window.pageXOffset;
+                var started;
+                $window.cancelAnimationFrame(scrollFrame);
+                function step(timestamp) {
+                    if (started === undefined) { started = timestamp; }
+                    var progress = Math.min((timestamp - started) / 600, 1);
+                    var remaining = (1 + Math.cos(Math.PI * progress)) / 2;
+                    if (content) { content.scrollTop = Math.round(panelTop * remaining); }
+                    $window.scrollTo(windowLeft, Math.round(windowTop * remaining));
+                    if (progress < 1) { scrollFrame = $window.requestAnimationFrame(step); }
+                }
+                scrollFrame = $window.requestAnimationFrame(step);
+            }
+            function cancel() {
+                $timeout.cancel(scrollTimer);
+                $window.cancelAnimationFrame(scrollFrame);
+                $window.removeEventListener('load', start);
+            }
+            function start() {
+                cancel();
+                scrollTimer = $timeout(scrollToConfirmation, 0, false);
+            }
+            return {
+                start: start,
+                afterLoad: function () {
+                    if (root.ownerDocument.readyState === 'complete') { start(); }
+                    else { $window.addEventListener('load', start); }
+                },
+                cancel: cancel
+            };
+        };
+    }]);
+
+    app.controller('healthFormController', ['$element', '$scope', 'healthChangeTracking', 'healthAudit', 'healthConfirmationScroll', function ($element, $scope, tracking, audit, createScroll) {
         var vm = this;
         vm.values = {};
         vm.original = {};
         vm.fieldConditions = {};
+        var confirmationScroll = createScroll($element[0]);
+        $scope.$on('$destroy', confirmationScroll.cancel);
+        if ($element[0].getAttribute('data-changes-saved') === 'true') {
+            confirmationScroll.afterLoad();
+        }
         vm.message = '';
         vm.formSchool = $element[0].getAttribute('data-form-school') || '';
         vm.currentSchool = $element[0].getAttribute('data-current-school') || '';
@@ -302,31 +402,29 @@ define(['angular', 'components/shared/index'], function (angular) {
             var school = String(vm.formSchool);
             switch (section) {
             case 'daycareProvider': return school === '110';
-            case 'dentalAgreement': return school === '120';
-            case 'dentalPlan': return school === '104';
-            case 'diabetesPlan': return school.indexOf('101') === -1 && yes('diabetes');
-            case 'actionPlan': return yes('diabetes') || yes('seizure_agree');
-            case 'seizurePlan': return ['130', '131'].indexOf(school) !== -1 && yes('seizure_agree');
+            case 'dental': return ['120', '104'].indexOf(String(vm.currentSchool)) !== -1;
+            case 'dentalAgreement': return String(vm.currentSchool) === '120';
+            case 'dentalPlan': return String(vm.currentSchool) === '104';
+            case 'actionPlan': return yes('diabetes') || yes('seizure_agree') || vm.show('asthmaAllergyPlan');
             case 'asthmaAllergyPlan': return yes('inhaler') || yes('epipen');
             case 'inhalerContract': return school === '311' && yes('inhaler');
             case 'medicalCareNotice': return ['210', '211'].indexOf(school) !== -1 && (yes('inhaler') || yes('epipen'));
             case 'allergies': return yes('allergy_agree');
-            case 'mealPlan': return yes('allergy_agree') && ['110', '130', '131'].indexOf(school) !== -1;
-            case 'mealPlanInstructions': return yes('allergy_agree') && ['130', '131'].indexOf(school) !== -1;
+            case 'mealPlan': return yes('allergy_agree') && ['130', '131'].indexOf(String(vm.currentSchool)) !== -1;
             case 'sportsAccommodations': return vm.answer('can_play_sports').toLowerCase() === 'yes - with accommodations';
             case 'restrictedActivities': return vm.answer('can_play_sports') === '0' || vm.show('sportsAccommodations');
             default: return false;
             }
         };
         vm.hasChanges = function () {
-            var current = {}, original = {};
-            angular.forEach(vm.values, function (value, key) {
-                if (!vm.fieldConditions[key] || $scope.$eval(vm.fieldConditions[key])) {
-                    current[key] = value;
-                    original[key] = vm.original[key];
+            for (var key in vm.values) {
+                if (Object.prototype.hasOwnProperty.call(vm.values, key) &&
+                        (!vm.fieldConditions[key] || $scope.$eval(vm.fieldConditions[key])) &&
+                        tracking.changed(vm.values[key], vm.original[key])) {
+                    return true;
                 }
-            });
-            return tracking.changed(current, original);
+            }
+            return false;
         };
         vm.submit = function (event) {
             if (vm.medicationBlocked || (vm.form && vm.form.$invalid)) {
@@ -341,6 +439,7 @@ define(['angular', 'components/shared/index'], function (angular) {
             }
             audit.stamp($element[0]);
             vm.message = '';
+            confirmationScroll.start();
         };
     }]);
 
@@ -412,7 +511,7 @@ define(['angular', 'components/shared/index'], function (angular) {
         };
     }]);
 
-    app.controller('medicalAuthorizationController', ['$element', '$scope', '$q', '$timeout', '$window', 'medicalAuthorizationApi', function ($element, $scope, $q, $timeout, $window, api) {
+    app.controller('medicalAuthorizationController', ['$element', '$scope', '$q', 'healthConfirmationScroll', 'medicalAuthorizationApi', function ($element, $scope, $q, createScroll, api) {
         var vm = this, root = $element[0];
         var context = { dcid: root.getAttribute('data-student-dcid'), frn: root.getAttribute('data-student-frn'),
             user: root.getAttribute('data-audit-user') };
@@ -424,23 +523,8 @@ define(['angular', 'components/shared/index'], function (angular) {
         vm.initializing = true;
         vm.prescriptionBusy = true;
         vm.message = '';
-        var dialogOpen = false, scrollFrame, scrollTimer;
-        function scrollToConfirmation() {
-            var content = root.ownerDocument.getElementById('content-main');
-            var panelTop = content ? content.scrollTop : 0;
-            var windowTop = $window.pageYOffset, windowLeft = $window.pageXOffset;
-            var started;
-            $window.cancelAnimationFrame(scrollFrame);
-            function step(timestamp) {
-                if (started === undefined) { started = timestamp; }
-                var progress = Math.min((timestamp - started) / 600, 1);
-                var remaining = (1 + Math.cos(Math.PI * progress)) / 2;
-                if (content) { content.scrollTop = Math.round(panelTop * remaining); }
-                $window.scrollTo(windowLeft, Math.round(windowTop * remaining));
-                if (progress < 1) { scrollFrame = $window.requestAnimationFrame(step); }
-            }
-            scrollFrame = $window.requestAnimationFrame(step);
-        }
+        var dialogOpen = false;
+        var confirmationScroll = createScroll(root);
         $scope.$watch(function () { return vm.busy || vm.prescriptionBusy; }, function (busy) {
             if (busy && !dialogOpen) { loadingDialog(); dialogOpen = true; }
             if (!busy) {
@@ -450,8 +534,7 @@ define(['angular', 'components/shared/index'], function (angular) {
         });
         $scope.$on('$destroy', function () {
             if (dialogOpen) { closeLoading(); }
-            $timeout.cancel(scrollTimer);
-            $window.cancelAnimationFrame(scrollFrame);
+            confirmationScroll.cancel();
         });
         vm.hasParentSignature = function () {
             var name = vm.record.parent_name;
@@ -469,12 +552,23 @@ define(['angular', 'components/shared/index'], function (angular) {
             vm.appData = saved.values;
             vm.original = angular.copy(saved.values);
             vm.loaded = true;
+            vm.applyPrescriptionDefault();
             if (vm.form) { vm.form.$setPristine(); vm.form.$setUntouched(); }
         }
-        vm.hasChanges = function () { return vm.loaded && Object.keys(changedValues()).length > 0; };
+        vm.hasChanges = function () {
+            return vm.loaded && api.fields.some(function (field) { return vm.appData[field] !== vm.original[field]; });
+        };
+        vm.applyPrescriptionDefault = function () {
+            // Wait for both independent loads. Keep the saved baseline so the
+            // corrected Yes value is persisted only through normal Submit.
+            if (!vm.loaded || !angular.isArray(vm.prescriptionRows) || vm.prescriptionDefaultApplied) { return; }
+            vm.prescriptionDefaultApplied = true;
+            if (vm.prescriptionRows.length) { vm.appData.student_medication = '1'; }
+        };
         vm.load = function () {
             if (vm.busy) { return; }
             vm.busy = true; vm.loaded = false; vm.initializing = true; vm.message = '';
+            vm.prescriptionDefaultApplied = false;
             return api.load(context).then(accept, function () {
                 vm.error = true;
                 vm.message = 'Medical authorizations could not be loaded. Retry loading before making changes.';
@@ -488,7 +582,7 @@ define(['angular', 'components/shared/index'], function (angular) {
                 accept(saved);
                 vm.error = false; vm.message = 'Medical authorizations saved.';
                 // Wait for the loading dialog to close before scrolling to the confirmation.
-                scrollTimer = $timeout(scrollToConfirmation, 0, false);
+                confirmationScroll.start();
             }, function () {
                 vm.loaded = false; vm.error = true;
                 vm.message = 'The save could not be verified. Reload the saved values before making another change.';
@@ -510,37 +604,26 @@ define(['angular', 'components/shared/index'], function (angular) {
     }]);
 
     app.factory('prescriptionApi', ['$http', '$q', function ($http, $q) {
-        function unwrap(data, table) {
-            if (data && data.tables && data.tables[table] !== undefined) {
-                var rows = data.tables[table];
-                return angular.isArray(rows) ? rows : (rows ? [rows] : []);
-            }
-            var records = data && (data.record || data.result) || [];
-            return (angular.isArray(records) ? records : [records]).map(function (row) {
-                return row && row.tables && row.tables[table];
-            }).filter(Boolean);
-        }
-        function loadOptions(page) {
-            return $http.get('/ws/schema/table/u_cdol_health_option', { params: { projection: '*', pagesize: 100, page: page } }).then(function (response) {
-                var rows = unwrap(response.data, 'u_cdol_health_option');
-                return rows.length < 100 ? rows : loadOptions(page + 1).then(function (next) { return rows.concat(next); });
-            });
-        }
         return {
             options: function () {
-                return loadOptions(1).then(function (rows) {
+                return $http.get('/admin/students/health/data/medicationDoseUnits.json', { cache: false, timeout: 30000 }).then(function (response) {
+                    var rows = typeof psUtils !== 'undefined' && psUtils.htmlEntitiesToCharCode ?
+                        psUtils.htmlEntitiesToCharCode(response.data) : response.data;
+                    if (typeof rows === 'string') { rows = JSON.parse(rows); }
+                    if (!angular.isArray(rows) || !rows.every(function (row) {
+                        return row && typeof row.code === 'string' && Object.prototype.hasOwnProperty.call(row, 'displayvalue') &&
+                            Object.prototype.hasOwnProperty.call(row, 'uidisplayorder');
+                    })) { throw new Error('Invalid medication dose unit response.'); }
                     var seen = {};
                     return rows.map(function (row) {
                         return {
-                            type: row.codeType || row.codetype,
                             code: String(row.code || '').trim(),
-                            label: row.displayValue || row.displayvalue || row.code,
-                            active: row.isVisible !== undefined ? row.isVisible : row.isvisible,
-                            order: Number(row.uiDisplayOrder !== undefined ? row.uiDisplayOrder : row.uidisplayorder) || 0
+                            label: row.displayvalue || row.code,
+                            order: Number(row.uidisplayorder) || 0
                         };
                     }).filter(function (row) {
                         var key = row.code.toLowerCase();
-                        if (String(row.type).toUpperCase() !== 'MED_DOSE_UNIT' || !key || row.active === false || String(row.active) === '0' || seen[key]) { return false; }
+                        if (!key || seen[key]) { return false; }
                         seen[key] = true;
                         return true;
                     }).sort(function (a, b) { return a.order - b.order || String(a.label).localeCompare(String(b.label)); });
@@ -574,6 +657,23 @@ define(['angular', 'components/shared/index'], function (angular) {
         };
     }]);
 
+    // Share the controls while retaining each row's ngIf/ngForm scope and position.
+    app.directive('prescriptionEditor', function () {
+        return {
+            restrict: 'A',
+            template: "<td><input type=\"text\" name=\"medicationName\" ng-model=\"rx.editor.name\" ng-disabled=\"vm.busy || !vm.loaded || rx.busy\" aria-label=\"Medication Name\" required></td>" +
+                "<td><input type=\"text\" name=\"dosage\" ng-model=\"rx.editor.dosage\" ng-disabled=\"vm.busy || !vm.loaded || rx.busy\" aria-label=\"Dosage\" required></td>" +
+                "<td><select name=\"doseUnit\" ng-model=\"rx.editor.dosage_units\" ng-disabled=\"vm.busy || !vm.loaded || rx.busy\" ng-options=\"unit.code as unit.label for unit in rx.units\" aria-label=\"Dosage Units\" required>" +
+                "<option value=\"\">Select a Dosage Unit</option>" +
+                "</select><small ng-if=\"rx.originalUnit && !rx.editor.dosage_units\">Previous value: {{rx.originalUnit}}. Select an active unit.</small></td>" +
+                "<td><input type=\"text\" name=\"frequency\" ng-model=\"rx.editor.frequency_taken\" ng-disabled=\"vm.busy || !vm.loaded || rx.busy\" aria-label=\"Frequency Taken\" required></td>" +
+                "<td class=\"prescription-medication-actions actions center\">" +
+                "<button type=\"button\" ng-click=\"rx.cancel()\" ng-disabled=\"vm.busy || !vm.loaded || rx.busy\">Cancel</button>" +
+                "<button type=\"button\" ng-click=\"rx.save()\" ng-disabled=\"vm.busy || !vm.loaded || rx.busy || !rx.valid() || !rx.changed() || !rx.loaded\">Submit</button>" +
+                "</td>"
+        };
+    });
+
     app.controller('prescriptionController', ['$scope', '$element', '$q', 'prescriptionApi', 'healthAudit', function ($scope, $element, $q, api, audit) {
         var rx = this;
         var root = $element[0].closest('.cdol-health-forms');
@@ -581,6 +681,7 @@ define(['angular', 'components/shared/index'], function (angular) {
         var studentDcid = root.getAttribute('data-student-dcid');
         rx.rows = [];
         rx.units = [];
+        var unitsByValue = Object.create(null);
         rx.busy = true;
         rx.loaded = false;
         rx.feedback = '';
@@ -593,7 +694,7 @@ define(['angular', 'components/shared/index'], function (angular) {
         }
         function findUnit(value) {
             var key = String(value || '').trim().toLowerCase();
-            return rx.units.filter(function (unit) { return unit.code.toLowerCase() === key || String(unit.label).toLowerCase() === key; })[0];
+            return unitsByValue[key];
         }
         rx.unitLabel = function (value) { var unit = findUnit(value); return unit ? unit.label : value; };
         function normalized(row) {
@@ -631,6 +732,8 @@ define(['angular', 'components/shared/index'], function (angular) {
             return api.list(studentDcid).then(function (rows) {
                 rx.rows = rows.filter(belongs);
                 rx.loaded = true;
+                vm.prescriptionRows = rx.rows;
+                if (vm.applyPrescriptionDefault) { vm.applyPrescriptionDefault(); }
             }, function () {
                 rx.loaded = false;
                 feedback('Prescription medications could not be loaded. Reload the page to try again.', true);
@@ -640,7 +743,7 @@ define(['angular', 'components/shared/index'], function (angular) {
             return (vm.saveAudit ? vm.saveAudit() : audit.save(root)).then(function (text) {
                 rx.auditPending = false;
                 var banner = root.querySelector('#medicalLastUpdated');
-                if (banner && !vm.saveAudit) { banner.textContent = text; banner.style.fontStyle = 'italic'; }
+                if (banner && !vm.saveAudit) { banner.textContent = text; banner.classList.add('cdol-health-audit-pending'); }
                 feedback(message);
             }, function () {
                 rx.auditPending = true;
@@ -691,6 +794,12 @@ define(['angular', 'components/shared/index'], function (angular) {
         block();
         $q.all([reload(), api.options().then(function (units) {
             rx.units = units;
+            unitsByValue = Object.create(null);
+            units.forEach(function (unit) {
+                [unit.code.toLowerCase(), String(unit.label).toLowerCase()].forEach(function (key) {
+                    if (!Object.prototype.hasOwnProperty.call(unitsByValue, key)) { unitsByValue[key] = unit; }
+                });
+            });
             if (!units.length) { feedback('No active Medication Dose Units are configured in CDOL Health Code Sets.', true); }
         }, function () { feedback('Medication Dose Units could not be loaded. Adding and editing are unavailable.', true); })]).finally(function () { rx.busy = false; block(); });
     }]);

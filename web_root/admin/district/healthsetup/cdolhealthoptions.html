@@ -7,72 +7,11 @@
     <title>CDOL Health Code Sets</title>
     ~[wc:commonscripts]
     <link href="/images/css/screen.css" rel="stylesheet" media="screen">
-    <link href="/images/css/cdol.css" rel="stylesheet" media="screen">
     <link href="/images/css/print.css" rel="stylesheet" media="print">
-    <style>
-        .health-options-toolbar {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 8px 10px;
-        }
-
-        .health-options-toolbar label {
-            display: block;
-            margin-bottom: 3px;
-        }
-
-        .health-options-toolbar select {
-            min-width: 300px;
-        }
-
-        .health-options-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .health-options-toolbar .health-options-inactive-toggle {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            margin: 0;
-            white-space: nowrap;
-        }
-
-        .health-options-table {
-            margin: 0 10px 10px;
-            width: calc(100% - 20px);
-        }
-
-        .health-option-inactive {
-            color: #666;
-            font-style: italic;
-        }
-
-        .health-options-empty {
-            text-align: center;
-            padding: 14px !important;
-        }
-
-        .health-options-feedback {
-            margin: 0 10px 8px;
-        }
-
-        .health-option-order-controls {
-            white-space: nowrap;
-        }
-
-        .health-option-order-button {
-            min-width: 25px;
-            margin: 0 1px;
-            padding: 1px 5px;
-        }
-    </style>
+        <link href="/images/css/cdol.css?~[time]" rel="stylesheet">
 </head>
 
-<body>
+<body class="cdol-health-options">
     ~[wc:admin_header_css]CDOL Health Code Sets~[wc:admin_navigation_css]
     <h1>CDOL Health Code Sets</h1>
     ~[if#district.~(curschoolid)=0]
@@ -113,13 +52,13 @@
             <table class="grid health-options-table">
                 <thead>
                     <tr>
-                        <th style="width: 80px;">Order</th>
-                        <th style="width: 180px;">Code</th>
+                        <th class="cdol-health-option-short-column">Order</th>
+                        <th class="cdol-health-option-code-column">Code</th>
                         <th>Display Value</th>
-                        <th style="width: 130px;">Created By</th>
-                        <th style="width: 100px;">Status</th>
-                        <th style="width: 80px;">Count</th>
-                        <th style="width: 80px;">Action</th>
+                        <th class="cdol-health-option-author-column">Created By</th>
+                        <th class="cdol-health-option-status-column">Status</th>
+                        <th class="cdol-health-option-short-column">Count</th>
+                        <th class="cdol-health-option-short-column">Action</th>
                     </tr>
                 </thead>
                 <tbody>

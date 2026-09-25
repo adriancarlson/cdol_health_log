@@ -1,5 +1,323 @@
 # Current State
 
+## Shared CSS extraction (26.9.7.61)
+
+CDOL CSS 26.9.0.3 owns Health Log presentation in the dedicated `CDOL Health Log`
+section of `web_root/images/css/cdol.css`. Health History, Medical Authorization,
+medication inventory/administration, their drawers, Health Log drawers/lists, and
+district Health Code Sets no longer ship embedded or inline CSS. The former
+`healthForms.css` file is removed. Shared alignment, alert-heading, width, and
+padding classes are reused; feature rules are scoped to their pages or drawer
+form IDs. The chart uses a named print page to keep landscape settings local.
+
+Install CDOL CSS 26.9.0.3 before the matching Health Log 26.9.7.61 application and
+Data Access packages. Refresh cached styles after updating. Installed PowerSchool
+screen, drawer, responsive, and print validation remains pending.
+
+Local validation: 48 page/drawer, viewport, and media comparisons retain the
+previous computed styles; all 349 new CSS rules are scoped. Existing shared CSS
+is preserved, and unrelated-selector checks pass. The fictional chart prints to
+one US Letter landscape page. Health form and optimization browser suites, 16
+medication/chart tests, XML/JSON parsing, JavaScript syntax, and diff checks pass.
+
+## Health form request and rendering improvements (26.9.7.60)
+
+Attachment sections share district-category requests for up to 60 seconds. Each
+section can reuse its discovery result once when opened within 30 seconds;
+student/category/visibility changes clear that result. Refresh documents bypasses
+both caches. Document content still requires a fresh authorized request, and
+failed category requests remain retryable.
+
+The secured medicationDoseUnits.json endpoint filters MED_DOSE_UNIT options on
+the server, excludes disabled/blank-code rows, and returns only code, label, and
+display order in one request. Null visibility retains the previous behavior.
+The client retains sorting, code deduplication, empty-state handling, and legacy
+label support; unit labels now use an index instead of repeated array scans.
+
+Both forms stop change detection at the first changed eligible field. Prescription
+Add/Edit rows share one control template, and redundant action-plan child
+visibility checks were removed. Save verification, audit checks, conditional
+field preservation, and the alert text-box styling are retained.
+
+Local AngularJS tests cover request sharing/expiry/refresh, context isolation,
+malformed responses, more than 100 dose units, form submissions, prescription
+CRUD, and audit retries. Installed Oracle endpoint/permission validation and live
+performance measurement remain pending.
+
+## Allergy Alert text area (26.9.7.59)
+
+The Allergy Alert field uses the same six-row, 80-column text area and
+standardalerts styling as the Medical Alert and other alert text boxes. It
+retains the StudentCoreFields.allergies binding and existing form submission and
+audit behavior. Installed PowerSchool visual and save validation remain pending.
+
+## Prescription confirmation placement and card padding (26.9.7.57)
+
+Green prescription save confirmations now appear inside the medication card,
+above Add Medication. Error messages and the audit retry remain outside the
+conditional card so they stay accessible if the medication answer is No or blank.
+The card has only 10px of right padding; top, bottom, and left padding are zero.
+Installed visual validation remains pending.
+
+## Prescription default and layout corrections (26.9.7.56)
+
+Prescription return options now use Return to school office, with the shorter
+Return to school option removed. The medication instructions sit above the card;
+only the Add Medication button and table remain inside it.
+
+On form load, the saved STUDENT_MEDICATION answer is the default. After both
+authorization and prescription loads complete, existing rows belonging to the
+selected student promote the answer to Yes. Empty, failed, or other-student lists
+do not promote it. The original saved value remains the change-tracking baseline,
+so the correction becomes a pending change saved by normal Submit, with audit and
+read-back verification. It is applied once per form load, preserving subsequent
+administrator edits and avoiding any automatic database write or record deletion.
+Tests cover both response arrival orders, blank/No/Yes defaults, rows/no rows,
+failed loads, ownership, visibility, and saving the correction. Installed
+PowerSchool validation remains pending.
+
+## OTC attachment category correction (26.9.7.55)
+
+The OTC authorization document picker now uses the corrected category
+Non-Prescription. Tests and documentation use the same spelling. The saved
+NON_RX_COLLECTION_METHOD field and attachment behavior are unchanged.
+
+## Prescription authorization documents and medication card (26.9.7.54)
+
+Prescription Medications now groups its medication instructions, Add Medication
+button, and editable table in a bordered card. The approved Prescription
+Authorization Form instructions appear below, with the linked diocesan form,
+pale deadline highlight, and italic prescription-requirement condition.
+
+RX_COLLECTION_METHOD supplies read-only tags for Upload, Return to school, and
+Student does not require prescription medication to be administered at school.
+The shared directive accepts custom options; other forms retain their existing
+choices. The authorization block stays visible when the medication card is hidden
+so the parent's not-required answer remains accessible. The Prescription category
+uses the existing Upload-or-matching-document icon, authorized preview, and native
+Attachments fallback. Return-method values are excluded from API writes.
+
+Tests cover card placement, approved wording/link, all three tags, category
+isolation, permissions, previews, cleanup, no document-induced writes, and existing
+medication editing/saving. Installed layout and field/category validation remain
+pending.
+
+## OTC document section break and approved wording (26.9.7.53)
+
+The document block below the OTC medication grid now has a thin divider, extra
+spacing, and an OTC Authorization Form subheading. The instructions use the
+approved two-sentence paragraph, retaining the linked form title and pale deadline
+highlight. The repeated annual-requirement sentence is removed. Saved return
+methods and document access are unchanged.
+
+## OTC authorization form links (26.9.7.52)
+
+Both mentions in the OTC document instructions now read "Over-the-Counter (OTC)
+Medication Authorization Form" and link to the supplied SharePoint form in a new
+tab. Return-method and document-preview behavior are unchanged.
+
+## OTC authorization document capture (26.9.7.51)
+
+Medical Authorization now displays the personalized OTC authorization instructions
+directly below the OTC medication grid. The annual requirement starts on a new
+line, with the shared pale-yellow first-week deadline. NON_RX_COLLECTION_METHOD
+supplies the read-only Parent/Guardian return-method tags through a native page
+token; it is not added to the authorization API save payload.
+
+The shared document picker uses the exact supplied category Non-Prescription.
+Upload or matching active metadata shows the icon, with existing permission,
+preview, and native Attachments fallback behavior. Discovery is enabled once
+the authorization form has loaded. Tests cover placement, wording, saved choice,
+icon conditions, category filtering, preview cleanup, and absence of form writes.
+Installed field/category and visual validation remain pending.
+
+## Health History submit scrolling (26.9.7.50)
+
+Health History now uses the same 600 ms smooth scroll as Medical Authorization,
+resetting both PowerSchool's content-main panel and the browser window. A valid,
+changed submit starts scrolling without intercepting or delaying the native POST.
+On the returned page, the existing changesSaved parameter also triggers scrolling
+after page load so the native confirmation is visible after scroll restoration.
+Ordinary loads and blocked/unchanged submits do not trigger scrolling.
+
+Both controllers share the scroll helper and cancel pending animation/timers when
+destroyed. Browser tests cover intermediate scroll positions, the saved-page
+controller initialization, no-change behavior, and unchanged native submission.
+Installed PowerSchool navigation/scroll restoration validation remains pending.
+
+## Remove Extended Care and empty state section (26.9.7.49)
+
+Health History no longer includes Extended Care or the state emergency include
+box beneath it. Sports Participation is now the last section before Submit.
+The removed controls no longer participate in this page's submission; stored
+values are unchanged. Installed visual validation remains pending.
+
+## School 104 Dental Examination documents (26.9.7.48)
+
+The school 104 Dental Examination block now uses personalized annual-submission
+instructions, the supplied SharePoint report link, and the same pale deadline
+highlight as Meal Accommodation. Parent/Guardian wording is retained. The saved
+DENTAL_PLAN_COLLECTION_METHOD uses read-only tags with a descriptive label.
+The shared attachment picker uses category Dental and is enabled only at current
+SchoolID 104. Upload or a matching active document shows the icon; permissions,
+preview, and native Attachments fallback follow the existing action-plan behavior.
+Tests cover saved-method visibility, category isolation, download permission,
+preview, and cleanup when leaving school 104. Installed validation remains pending.
+
+## Parent/Guardian wording (26.9.7.47)
+
+Health History and Medical Authorization now consistently use Parent/Guardian
+in visible instructions, consent labels, signatures, and return-method labels,
+including the shared return-method accessibility label. Singular verbs match the
+requested wording. Field names, bindings, and submission behavior are unchanged.
+
+## Dental section (26.9.7.46)
+
+Dental now appears immediately above Health Alerts for current Students.SchoolID
+120 or 104. School 120 shows a Dental Agreement heading and the DENTAL_AGREE
+checkbox, styled like Medical Agreements, with the requested personalized
+parent/guardian confirmation. School 104 retains its Dental Examination
+instructions and read-only parent return method within the same section.
+The previous standalone dental sections are removed. Both dental conditions now
+use current SchoolID rather than the enrollment workflow school.
+
+Conditional native checkbox companions are disabled with their checkbox so
+PowerSchool's generated unchecked-value input cannot clear a hidden agreement.
+Tests cover school visibility, section order, checked/unchecked values, native
+submission exclusion, and saved-value preservation. Installed validation remains
+pending.
+
+## Meal Accommodation section (26.9.7.45)
+
+Meal Accommodation now appears immediately below Action Plan as a separate section
+when the student's current SchoolID is 130 or 131 and ALLERGY_AGREE is 1. It uses
+the requested personalized wording and SharePoint form link, with a pale-yellow
+deadline, and displays FOOD_PLAN_COLLECTION_METHOD using the shared read-only tags.
+Its document icon links directly to the selected student's Attachments page in a
+new tab for every saved method; no category lookup or document preview is used.
+The previous meal section and separate instructions condition are replaced.
+Tests cover current-school versus enrollment-school differences, both allowed
+schools, school 110 exclusion, allergy No, section order, and direct navigation.
+Installed PowerSchool validation remains pending.
+
+## Action Plan instruction line breaks (26.9.7.44)
+
+The Diabetes, Seizure, and Asthma/Severe Allergy instructions each start
+"An updated plan" on a new line. Wording and conditional behavior are unchanged.
+
+## Fixed contact column widths (26.9.7.43)
+
+Health Contacts keeps its three equal desktop columns at every school. Physician
+and Dentist each occupy one third; Daycare appears in the third column only for
+school 110 (St. Peter's). Elsewhere that space stays blank, and the existing Daycare
+DOM/values remain preserved with fields hidden and excluded from submission.
+The two-column expansion override is removed. Mobile stacking is retained.
+
+## Medical History question grouping (26.9.7.42)
+
+Asthma/anaphylaxis and inhaler questions share the second row, with no third
+question. Allergies/dietary restrictions and EpiPen share the third row, also with
+no third question. The first row retains glasses, diabetes, and seizures. Existing
+values and conditional rules are unchanged. Joined-card outer corners follow the
+new desktop arrangement and retain the question order in the mobile stack.
+
+## Shared Asthma/Severe Allergy Action Plan (26.9.7.41)
+
+Action Plan now includes one Asthma/Severe Allergy block when INHALER or EPIPEN
+is Yes, including when both are Yes. ASTHMA alone does not show it. Personalized
+wording uses the student's name throughout, an underlined provider-form phrase,
+May 1 with superscript st, and the pale-yellow deadline. The existing
+ALLERGY_PLAN_COLLECTION_METHOD supplies its read-only return-method tags.
+
+The icon appears for Upload or matching Allergy/Asthma attachments. The shared
+picker resolves both category names, uses the native multi-category filter, checks
+either category on returned metadata, and deduplicates document IDs. Existing
+permissions, previews, and fallback apply. The old standalone Asthma/Allergy plan
+section is removed. Local tests cover each trigger, both together, neither,
+category union, duplicates, icon conditions, and previews. Installed multi-category
+filtering and visual verification remain pending.
+
+## Seizure return-method label (26.9.7.40)
+
+The seizure label now reads "Parent's Stated Return Method for Seizure Action Plan."
+The saved choice, styling, and attachment behavior remain unchanged.
+
+## Unselected return-method options (26.9.7.39)
+
+All return-method displays retain the saved choice as a text tag and show the
+unselected standard options beside it in smaller, muted, borderless text. Blank
+or historical values retain their tag and show both standard options. Everything
+remains read-only, with no form inputs or changes to attachment behavior.
+
+## Read-only return badges and date styling (26.9.7.38)
+
+All parent return methods now display one high-contrast text badge containing the
+saved choice, or Not recorded for a blank value. Disabled radios are removed; the
+display still cannot submit or edit the parent answer. Both May 1 references use
+`May 1<sup>st</sup>`, and Action Plan deadlines use pale yellow `#fff2cc` instead
+of bright yellow. Existing icon conditions and preview permissions are retained.
+The rendered-field Angular suite passed, and the local layout was inspected with
+synthetic data. Installed PowerSchool visual validation remains pending.
+
+## Attachment presence also shows plan icons (26.9.7.37)
+
+For each applicable Diabetes or Seizure plan, show the document icon when the saved
+return method is Upload OR the native metadata response contains an active document
+in that plan's category. Non-Upload methods trigger metadata discovery automatically;
+no file content is loaded until selection. Matching metadata can show an icon even
+if download permission is absent, but the picker still excludes files that cannot
+be previewed by the current account. Lookup failures retain a native Attachments
+link and a status message. Context changes discard stale lookup results. Parent
+choices and submitted fields are unchanged. Local tests pass for both categories,
+including blank/office/historical choices, no matches, denied access, and failures.
+Installed PowerSchool validation remains pending.
+
+## Diabetes return-method label (26.9.7.36)
+
+The diabetes label now reads "Parent's Stated Return Method for Diabetes Medical
+Management Plan (DMMP)." The stored field, display behavior, and other labels are
+unchanged.
+
+## Seizure Action Plan integration (26.9.7.35)
+
+When SEIZURE_AGREE is Yes, Action Plan shows personalized Seizure Action Plan
+instructions at every school, with the provider-form phrase underlined and the
+deadline highlighted. The saved SEIZURE_PLAN_COLLECTION_METHOD displays once as
+read-only radios. Upload enables the shared picker/preview for category Seizure.
+Diabetes and seizure blocks appear independently and both display when applicable.
+The old school-limited Seizure Action Plan section and logic are removed.
+Local Angular tests cover the combined/separate conditions, category isolation,
+seizure preview, and cleanup when seizures changes to No. Installed verification
+of the Seizure category and documents remains pending.
+
+## Personalized provider form wording (26.9.7.34)
+
+Action Plan now says `using ~(first_name)'s health care provider’s form`, with
+the student's name and provider-form phrase underlined as before.
+
+## Restricted activities example styling (26.9.7.33)
+
+The `ie. Physical Education` subtext now uses the shared OTC example style, with
+the same inherited text size and three-pixel bottom spacing. Its question label
+aligns with the example and textarea, with the same three-pixel gap as the OTC
+question headings. Wording, field mapping, and visibility are unchanged.
+Installed visual validation remains pending.
+
+## Action Plan replaces Diabetes Documentation (26.9.7.32)
+
+The duplicate Diabetes Documentation section and its school-specific visibility
+and document-link rules are removed. Action Plan handles the diabetes instructions,
+saved parent return method, and attachment picker at every school. Its existing
+Diabetes/seizure visibility rules remain in place.
+
+## Standalone Action Plan section (26.9.7.31)
+
+Action Plan is now a separate section immediately after Medical History, using
+the same box, banner, and content styling as Health Contacts and Health Alerts.
+The blue feedback alert styling is removed. Existing conditional visibility,
+wording, highlighted deadline, saved parent choice, and document picker/preview
+behavior are retained. Installed visual validation remains pending.
+
 ## Action Plan document preview (26.9.7.30)
 
 When the saved diabetes return choice is Upload, the document icon loads the

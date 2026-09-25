@@ -1,50 +1,4 @@
-<form data-ng-controller="healthOptionEditController as vm">
-    <style>
-        .health-option-form-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 18px;
-            padding: 12px 14px;
-        }
-
-        .health-option-form-row:nth-of-type(odd) {
-            background-color: #eee;
-        }
-
-        .health-option-form-field label {
-            display: block;
-            margin-bottom: 3px;
-            margin-left: 0 !important;
-            padding-left: 0 !important;
-            text-align: left;
-        }
-
-        .health-option-active-checkbox {
-            text-align: center;
-        }
-
-        .health-option-active-checkbox input {
-            margin: 0;
-        }
-
-        .health-option-display-input {
-            width: 260px;
-        }
-
-        .health-option-code-input {
-            width: 200px;
-        }
-
-        .health-option-audit-field {
-            flex: 1 1 220px;
-            min-width: 0;
-        }
-
-        .health-option-drawer-message {
-            margin: 10px 14px;
-        }
-    </style>
-
+<form id="cdol-health-option-form" data-ng-controller="healthOptionEditController as vm">
     <div class="health-option-form-row">
         <div class="health-option-form-field">
             <label>Code Set</label>
@@ -66,7 +20,7 @@
         </div>
         <div class="health-option-form-field">
             <label for="health-option-visible">Active</label>
-            <div class="health-option-active-checkbox">
+            <div class="health-option-active-checkbox text-center">
                 <input id="health-option-visible" type="checkbox" data-ng-model="vm.optionRecord.isVisible"
                     data-ng-change="vm.checkReqFields()">
             </div>

@@ -1,206 +1,6 @@
 <form id="med-inv-form" name="inventoryForm">
     <div id="med-inv-wrap" ng-class="{'fluid-form': vm.drawerMode === 'edit'}" ng-controller="editController as vm"
         ng-cloak>
-        <style id="med-inv-styles">
-            .fluid-form>div[id$="-row"] {
-                margin: 0 0 10px 0;
-            }
-
-            .dose-group {
-                display: inline-flex;
-                align-items: stretch;
-                max-width: 100%;
-            }
-
-            .dose-input {
-                width: 8ch;
-                min-width: 8ch;
-                max-width: 8ch;
-                border-radius: 4px 0 0 4px;
-            }
-
-            .option-add-control {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                margin-top: 0;
-            }
-
-            .option-add-input {
-                width: 180px;
-                max-width: 100%;
-            }
-
-            .option-add-button {
-                min-width: 30px;
-                font-weight: bold;
-            }
-
-            .option-add-error {
-                margin: 4px 0 0;
-                max-width: 420px;
-            }
-
-            .medication-option-select option:last-child {
-                font-style: italic;
-            }
-
-            .inv-input {
-                width: 8ch;
-                min-width: 8ch;
-                max-width: 8ch;
-            }
-
-            .inv-qty-edit-wrap {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-            }
-
-            .inv-qty-separator {
-                display: inline-block;
-                min-width: 0;
-                text-align: center;
-            }
-
-            .inv-readonly {
-                display: inline-block;
-                padding: 4px 6px;
-            }
-
-            .inv-qty-edit-wrap .inv-readonly {
-                padding-left: 0;
-                padding-right: 0;
-            }
-
-            .inv-history-note {
-                margin: 0 0 8px;
-                color: #555;
-            }
-
-            .inventory-form-grid {
-                margin: 0 !important;
-                width: 100% !important;
-                max-width: 100%;
-                box-sizing: border-box;
-            }
-
-            #inv-cancel-head {
-                width: 70px;
-            }
-
-            .inventory-form-table-section {
-                display: block !important;
-                width: 100% !important;
-                max-width: 100%;
-                margin: 0 !important;
-                padding: 0 8px 8px !important;
-                box-sizing: border-box;
-            }
-
-            .dose-unit {
-                width: fit-content;
-                min-width: 0;
-                margin-left: -1px;
-                border-radius: 0 4px 4px 0;
-            }
-
-            #inventory-transaction-mode {
-                display: block !important;
-                width: 100%;
-                margin-top: -6px;
-                box-sizing: border-box;
-            }
-
-            #transactions-label {
-                display: block;
-                margin: 0 0 4px;
-            }
-
-            #inventory-transactions-table {
-                table-layout: fixed;
-            }
-
-            #inventory-transactions-table td {
-                white-space: normal;
-                overflow-wrap: anywhere;
-            }
-
-            .transaction-fluid-form {
-                width: 100%;
-                margin-top: 0 !important;
-                padding-top: 0 !important;
-            }
-
-            #med-inv-wrap label {
-                margin-left: 0 !important;
-                padding-left: 0 !important;
-            }
-
-            #transaction-medication-row>div:first-child>label {
-                margin-left: 6px !important;
-            }
-
-            #transaction-medication-row {
-                display: grid !important;
-                grid-template-columns: 150px 90px 150px;
-                column-gap: 8px;
-                width: 100% !important;
-                margin-top: 0 !important;
-                padding-top: 8px !important;
-                padding-bottom: 8px !important;
-                box-sizing: border-box;
-            }
-
-            #transaction-medication-row>div {
-                width: auto !important;
-                min-width: 0;
-                margin: 0 !important;
-            }
-
-            .transaction-summary-center {
-                text-align: center;
-            }
-
-            .transaction-summary-value {
-                display: block;
-                margin-top: 4px;
-                line-height: 1.4;
-            }
-
-            .transaction-medication-value {
-                margin-left: 6px;
-            }
-
-            .transaction-fluid-form textarea {
-                width: 100%;
-                max-width: 520px;
-                box-sizing: border-box;
-            }
-
-            .transaction-explanation {
-                margin: 8px 10px;
-            }
-
-            .inventory-activity-status-pill {
-                display: inline-block;
-                margin-top: 3px;
-                padding: 1px 6px;
-                border: 1px solid #8a8a8a;
-                border-radius: 999px;
-                color: #555;
-                background: #f3f3f3;
-                font-size: 11px;
-                font-weight: bold;
-                white-space: nowrap;
-            }
-
-            .inventory-activity-status-pill.inventory-activity-status-error {
-                color: #a12622;
-                background-color: #faeeee;
-                border-color: #c84a4a;
-            }
-        </style>
         <div class="feedback-alert" role="alert" ng-if="$root.appData.medicationOptionLoadError">
             {{$root.appData.medicationOptionLoadError}}
         </div>
@@ -491,11 +291,11 @@
             <label id="transactions-label">Inventory Activity</label>
             <table id="inventory-transactions-table" class="grid inventory-form-grid">
                 <colgroup>
-                    <col style="width: 20%;">
-                    <col style="width: 13%;">
-                    <col style="width: 20%;">
-                    <col style="width: 20%;">
-                    <col style="width: 27%;">
+                    <col class="cdol-health-transaction-column-20">
+                    <col class="cdol-health-transaction-column-13">
+                    <col class="cdol-health-transaction-column-20">
+                    <col class="cdol-health-transaction-column-20">
+                    <col class="cdol-health-transaction-column-27">
                 </colgroup>
                 <thead>
                     <tr>
@@ -549,12 +349,12 @@
                         <span
                             class="transaction-summary-value transaction-medication-value">{{vm.removalMedication.medication_name}}</span>
                     </div>
-                    <div class="transaction-summary-center">
+                    <div class="text-center">
                         <label>Dosage</label>
                         <span class="transaction-summary-value">{{vm.removalMedication.dose_amount}}
                             {{$root.medicationOptionDisplayValue('dose_unit', vm.removalMedication.dose_unit)}}</span>
                     </div>
-                    <div class="transaction-summary-center">
+                    <div class="text-center">
                         <label>Available Inventory</label>
                         <span class="transaction-summary-value">{{vm.removalMedication.inventory_total_remaining}}
                             {{$root.medicationOptionDisplayValue('inventory_unit', vm.removalMedication.inventory_unit) |

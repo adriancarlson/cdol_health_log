@@ -7,146 +7,11 @@
         <title>Medication Inventory</title>
         ~[wc:commonscripts]
         <link href="/images/css/screen.css" rel="stylesheet" media="screen">
-        <link href="/images/css/cdol.css" rel="stylesheet" media="screen">
         <link href="/images/css/print.css" rel="stylesheet" media="print">
-        <style>
-            .med-top-of-table {
-                display: flex;
-                justify-content: space-between;
-                /* pushes left/right */
-                align-items: center;
-                /* vertical alignment */
-                margin: 0 10px 0 !important;
-            }
-
-            #medication-grid {
-                margin: 0 !important;
-            }
-
-            .inventory-cell {
-                text-align: right;
-                padding-right: 6px;
-            }
-
-            .inventory-cell-content {
-                padding-right: 2px;
-            }
-
-            .inventory-total-row {
-                border-top: 1px solid rgba(0, 0, 0, 0.12);
-                font-weight: bold;
-                background-color: #C2E2FF !important;
-            }
-
-            .inventory-total-row td {
-                background-color: #C2E2FF !important;
-            }
-
-            .inventory-batches-table {
-                border-collapse: separate;
-                border-spacing: 0;
-                border: 1px solid rgba(0, 0, 0, 0.12);
-                border-radius: 6px;
-                overflow: hidden;
-            }
-
-            .inventory-batches-table tr,
-            .inventory-batches-table td {
-                border: none !important;
-            }
-
-            .inventory-batches-table .inventory-batch-row td {
-                box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
-            }
-
-            .inventory-history {
-                min-width: 260px;
-            }
-
-            .inventory-history summary {
-                cursor: pointer;
-            }
-
-            .inventory-history-entry {
-                border-top: 1px solid rgba(0, 0, 0, 0.12);
-                padding: 6px 0;
-            }
-
-            .inventory-history-entry:first-of-type {
-                border-top: 0;
-            }
-
-            .inventory-change-negative {
-                color: #a12622;
-                font-weight: bold;
-            }
-
-            .inventory-change-positive {
-                color: #237804;
-                font-weight: bold;
-            }
-
-            .inventory-minus-symbol {
-                display: inline-block;
-                font-size: 20px;
-                font-weight: bold;
-                line-height: 12px;
-                vertical-align: middle;
-            }
-
-            .inventory-warning-low td {
-                color: #5f4700;
-                background-color: #fff4ce !important;
-                box-shadow: inset 0 0 0 1px #d6b656 !important;
-            }
-
-            .inventory-warning-critical td {
-                color: #8a3b00;
-                background-color: #ffe3cc !important;
-                box-shadow: inset 0 0 0 1px #d9822b !important;
-            }
-
-            .inventory-warning-out td {
-                color: #a12622;
-                background-color: #faeeee !important;
-                box-shadow: inset 0 0 0 1px #c84a4a !important;
-            }
-
-            .inventory-batches-table.inventory-warning-low {
-                border-color: #d6b656;
-            }
-
-            .inventory-batches-table.inventory-warning-critical {
-                border-color: #d9822b;
-            }
-
-            .inventory-batches-table.inventory-warning-out {
-                border-color: #c84a4a;
-            }
-
-            .inventory-status-text {
-                font-weight: bold;
-                padding-left: 10px;
-                text-align: left;
-            }
-
-            .inventory-row-content {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 8px;
-                width: 100%;
-            }
-
-            .inventory-quantity-text {
-                margin-left: auto;
-                text-align: right;
-                white-space: nowrap;
-            }
-        </style>
+        <link href="/images/css/cdol.css?~[time]" rel="stylesheet">
     </head>
 
-    <body>
+    <body class="cdol-health-inventory">
         ~[wc:admin_header_frame_css]
         ~[wc:admin_navigation_frame_css]
         ~[wc:title_student_begin_css]~(first_name)'s Medication Inventory~[wc:title_student_end_css]
@@ -182,7 +47,7 @@
                             <th>Inventory</th>
                             <th data-pss-sort-fields="created_date" data-primary-sort="ascending">Date Added</th>
                             <th>Notes</th>
-                            <th style="width: 145px;">Actions</th>
+                            <th class="cdol-health-inventory-actions-column">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -201,13 +66,13 @@
                             <td class="inventory-cell">
                                 <div class="inventory-cell-content"
                                     ng-if="medication.display_inventory_batches && medication.display_inventory_batches.length">
-                                    <table class="inventory-batches-table" style="width: 100%; margin: 0; padding: 0;"
+                                    <table class="cdol-health-inventory-batches inventory-batches-table"
                                         ng-class="medication.display_inventory_batches.length === 1 ? medication.inventory_status_row_class : ''">
                                         <tbody>
                                             <tr class="inventory-batch-row"
                                                 ng-class="medication.display_inventory_batches.length === 1 ? medication.inventory_status_row_class : ''"
                                                 ng-repeat="batch in medication.display_inventory_batches">
-                                                <td style="text-align: right; padding: 2px 4px 2px 0;">
+                                                <td class="text-right cdol-health-inventory-quantity-cell">
                                                     <div class="inventory-row-content">
                                                         <span class="inventory-status-text"
                                                             ng-if="medication.display_inventory_batches.length === 1 && medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
@@ -222,7 +87,7 @@
                                             <tr class="inventory-total-row"
                                                 ng-if="medication.display_inventory_batches.length > 1"
                                                 ng-class="medication.inventory_status_row_class">
-                                                <td style="text-align: right; padding: 2px 4px 2px 0;">
+                                                <td class="text-right cdol-health-inventory-quantity-cell">
                                                     <div class="inventory-row-content">
                                                         <span class="inventory-status-text"
                                                             ng-if="medication.inventory_status !== 'NORMAL'">{{medication.inventory_status_label}}</span>
@@ -239,11 +104,11 @@
                                 </div>
                                 <div class="inventory-cell-content"
                                     ng-if="medication.inventory_batches && medication.inventory_batches.length && (!medication.display_inventory_batches || medication.display_inventory_batches.length === 0)">
-                                    <table class="inventory-batches-table" style="width: 100%; margin: 0; padding: 0;"
+                                    <table class="cdol-health-inventory-batches inventory-batches-table"
                                         ng-class="medication.inventory_status_row_class">
                                         <tbody>
                                             <tr class="inventory-batch-row" ng-class="medication.inventory_status_row_class">
-                                                <td style="text-align: right; padding: 2px 4px 2px 0;">
+                                                <td class="text-right cdol-health-inventory-quantity-cell">
                                                     <div class="inventory-row-content">
                                                         <span class="inventory-status-text">{{medication.inventory_status_label}}</span>
                                                         <span class="inventory-quantity-text">0 / 0
