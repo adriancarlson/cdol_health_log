@@ -2,7 +2,10 @@
 
 ## Project
 
-**Name:** Medication Administration  
+**Name:** CDOL Health
+
+**Repository:** https://github.com/adriancarlson/cdol_health
+
 **Platform:** PowerSchool SIS  
 **Primary purpose:** Build a school nurse workflow for medication inventory and medication administration, including controlled medications, inventory auditing, daily administration records, missed-dose handling, and alerts.
 

@@ -1,6 +1,6 @@
 # Medical Authorization and Health History migration
 
-The Health Log plugin now owns these pages:
+The CDOL Health plugin (formerly CDOL Health Log) owns these pages:
 
 - `/admin/students/health/medical_authorization.html`
 - `/admin/students/health/health_history.html`
@@ -18,7 +18,7 @@ all custom presentation. Install that CSS package first. The local
 in the shared file's `CDOL Health Log` section. The AngularJS browser fixture also
 loads that sibling repository's stylesheet.
 
-Update CDOL Student Info, CDOL Health Log, and CDOL Health Log - Data Access together
+Update CDOL Student Info, CDOL Health, and CDOL Health - Data Access together
 on the test server. Verify the old named query is released from Student Info before
 enabling its new Health Log owner; the query identifier is deliberately retained.
 Check that each navigation link appears only once and that existing security groups

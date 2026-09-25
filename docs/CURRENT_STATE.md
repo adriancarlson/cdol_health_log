@@ -1,5 +1,16 @@
 # Current State
 
+## Repository and plugin rename (26.9.7.62)
+
+The repository is `adriancarlson/cdol_health`. The application plugin is now
+`CDOL Health`, and the generated permissions plugin is `CDOL Health - Data Access`.
+Both packages use version 26.9.7.62. The local checkout is named `cdol_health`.
+
+This is a packaging and repository rename. Existing schema/table names, page
+catalog IDs, feature labels, asset paths, and page URLs remain unchanged for
+compatibility. Earlier release notes retain their historical plugin names.
+PowerSchool installation and acceptance of the renamed plugins remain unverified.
+
 ## Shared CSS extraction (26.9.7.61)
 
 CDOL CSS 26.9.0.3 owns Health Log presentation in the dedicated `CDOL Health Log`
@@ -635,7 +646,7 @@ separate Basic First Aid response-to-student-field discrepancy found during diag
 - Health-log and active-staff reads are served by SQL-backed JSON pages in this plugin.
 - The application no longer calls the `net.cdolinc.health.healthLog.logs` or `net.cdolinc.health.healthLog.staff` PowerQueries at runtime.
 - The internal schema API permission mappings formerly supplied by `cdol_health_log_pqs` are maintained in this repository. Medication custom-page writes do not require external API field access requests.
-- The default VS Code build creates two installable plugins from the one repository and source `plugin.xml`: the main plugin without `permissions_root`, and a `CDOL Health Log - Data Access` plugin containing the permission mappings without `user_schema_root` or application files.
+- The default VS Code build creates two installable plugins from the one repository and source `plugin.xml`: the main plugin without `permissions_root`, and a `CDOL Health - Data Access` plugin containing the permission mappings without `user_schema_root` or application files.
 - PowerSchool rejects `/ws/district/codeset` as a target in a plugin permission-mapping file because that file cannot grant access to core-resource routes. Medication and Health Log option reads and additions use the internal schema API for `u_cdol_health_option`. The Health Log page receives only GET and POST access; option maintenance remains on the district manager.
 - Shared schema API reads request every 100-record page so imported and newly added options remain visible after the option table exceeds PowerSchool's default first-page limit.
 - Medication Administration Settings uses the standard PowerSchool admin page structure with School Setup breadcrumbs, a visible page heading, a rounded cutoff section, and an explicit unconfigured state. The cutoff appears in PowerSchool's two-column settings-table pattern with a bold label and separate value column. The time field uses an `HH:MM AM/PM` placeholder so an example value cannot be mistaken for a saved cutoff, and the controls do not depend on a newly introduced controller property that can be absent when PowerSchool retains an older cached script.

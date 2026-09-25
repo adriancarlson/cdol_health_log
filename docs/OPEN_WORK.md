@@ -2,7 +2,10 @@
 
 ## Highest-priority implementation work
 
-- Install CDOL CSS 26.9.0.3, then both Health Log 26.9.7.61 packages. Validate
+- Validate the renamed CDOL Health and CDOL Health - Data Access 26.9.7.62
+  packages in PowerSchool, including how the existing installations recognize
+  the changed plugin names.
+- Install CDOL CSS 26.9.0.3, then both CDOL Health 26.9.7.62 packages. Validate
   Health History, Medical Authorization, medication pages and drawers, Health
   Logs, and district Health Code Sets at desktop and narrow widths. Confirm
   chart printing stays landscape, Quick Sheet printing retains its existing
